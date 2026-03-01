@@ -3,27 +3,156 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title> Flashcard </title>
+  <title>Flashcard v3.0</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      min-height: 100vh; color: #fff;
-      padding: 12px; overflow-x: hidden;
-      touch-action: pan-y;
+      background: #f0f2f5;
+      min-height: 100vh; color: #1a1a2e;
+      overflow-x: hidden;
       -webkit-user-select: none; user-select: none;
+      display: flex;
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      width: 260px; min-width: 260px;
+      background: #fff;
+      border-right: 1px solid #e2e6ea;
+      display: flex; flex-direction: column;
+      height: 100vh; position: sticky; top: 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-header {
+      padding: 20px 18px 14px;
+      border-bottom: 1px solid #eef0f2;
+    }
+    .sidebar-logo {
+      font-size: 1.15rem; font-weight: 700;
+      color: #1a1a2e; display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar-logo .logo-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 0.85rem; font-weight: 700;
+    }
+    .sidebar-search {
+      margin-top: 12px; position: relative;
+    }
+    .sidebar-search input {
+      width: 100%; padding: 8px 12px 8px 34px;
+      border: 1.5px solid #e2e6ea; border-radius: 10px;
+      font-size: 0.85rem; color: #555; background: #f8f9fb;
+      outline: none; transition: border-color 0.2s;
+    }
+    .sidebar-search input:focus { border-color: #a78bfa; }
+    .sidebar-search .search-icon {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      font-size: 0.85rem; opacity: 0.4;
+    }
+
+    .sidebar-section {
+      padding: 14px 12px 6px;
+    }
+    .sidebar-section-title {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      color: #999; letter-spacing: 0.5px; padding: 0 6px; margin-bottom: 6px;
+    }
+
+    .folder-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 10px; cursor: pointer;
+      transition: background 0.15s; margin-bottom: 2px;
+      font-size: 0.88rem; font-weight: 500; color: #444;
+    }
+    .folder-item:hover { background: #f3f0ff; }
+    .folder-item.active { background: #ede9fe; color: #6c5ce7; font-weight: 600; }
+    .folder-item .folder-icon { font-size: 1rem; flex-shrink: 0; width: 22px; text-align: center; }
+    .folder-item .folder-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .folder-item .folder-arrow {
+      font-size: 0.65rem; color: #aaa; transition: transform 0.25s; flex-shrink: 0;
+    }
+    .folder-item.active .folder-arrow,
+    .folder-item.expanded .folder-arrow { transform: rotate(90deg); }
+
+    .folder-children {
+      padding-left: 16px;
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .folder-children.open { max-height: 400px; }
+
+    .file-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; color: #666; transition: background 0.15s;
+      margin-bottom: 1px;
+    }
+    .file-item:hover { background: #f5f3ff; }
+    .file-item.active { background: #ede9fe; color: #6c5ce7; font-weight: 600; }
+    .file-item .file-icon { font-size: 0.85rem; flex-shrink: 0; width: 20px; text-align: center; }
+    .file-item .file-status {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      background: #e0e0e0; transition: background 0.3s;
+    }
+    .file-item .file-status.solved { background: #4cd964; }
+    .file-item .file-status.exp-done { background: #a78bfa; }
+
+    .sidebar-footer {
+      margin-top: auto; padding: 14px 18px;
+      border-top: 1px solid #eef0f2;
+      font-size: 0.75rem; color: #aaa; text-align: center;
+    }
+
+    /* ===== Mobile sidebar toggle ===== */
+    .sidebar-toggle {
+      display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+      width: 40px; height: 40px; border-radius: 12px;
+      background: #fff; border: 1.5px solid #e2e6ea;
+      color: #555; font-size: 1.1rem; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      align-items: center; justify-content: center;
+    }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; z-index: 99;
+      background: rgba(0,0,0,0.3);
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed; left: 0; top: 0;
+        transform: translateX(-100%);
+        box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-toggle { display: flex; }
+      .sidebar-overlay.show { display: block; }
+      .main-content { margin-left: 0 !important; }
+    }
+
+    /* ===== Main Content ===== */
+    .main-content {
+      flex: 1; min-width: 0;
+      padding: 20px 24px;
+      overflow-y: auto; height: 100vh;
+      touch-action: pan-y;
     }
 
     /* ===== Header ===== */
-    .header { text-align: center; padding: 10px 0 6px; }
+    .header {
+      text-align: center; padding: 8px 0 10px;
+    }
     .header h1 {
-      font-size: 1.5rem; font-weight: 700;
-      background: linear-gradient(90deg, #f9d423, #ff4e50);
+      font-size: 1.6rem; font-weight: 800;
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .header .subtitle { font-size: 0.9rem; color: rgba(255,255,255,0.45); margin-top: 4px; }
+    .header .subtitle { font-size: 0.9rem; color: #999; margin-top: 4px; }
 
     /* ===== Navigation ===== */
     .nav-row {
@@ -31,133 +160,138 @@
       gap: 16px; margin: 10px 0;
     }
     .nav-btn {
-      width: 48px; height: 48px; border-radius: 50%;
-      background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.2);
-      color: #fff; font-size: 1.4rem; cursor: pointer;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: #fff; border: 1.5px solid #e2e6ea;
+      color: #555; font-size: 1.2rem; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s, transform 0.1s;
+      transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.04);
       flex-shrink: 0;
     }
-    .nav-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
-    .nav-btn.disabled { opacity: 0.25; pointer-events: none; }
+    .nav-btn:hover { background: #f5f3ff; border-color: #a78bfa; color: #6c5ce7; }
+    .nav-btn:active { transform: scale(0.92); }
+    .nav-btn.disabled { opacity: 0.3; pointer-events: none; }
     .nav-indicator {
-      font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.6);
+      font-size: 1rem; font-weight: 600; color: #888;
       min-width: 80px; text-align: center;
     }
 
-    /* ===== Single Question Card ===== */
+    /* ===== Question Card ===== */
     .question-card {
-      background: rgba(255,255,255,0.07);
-      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      border: 2.5px solid rgba(255,255,255,0.12);
-      border-radius: 20px; padding: 20px 16px;
+      background: #fff;
+      border: 2px solid #e8e8ee;
+      border-radius: 20px; padding: 24px 20px;
       min-height: 180px; display: flex; flex-direction: column;
-      position: relative; transition: border-color 0.3s, box-shadow 0.3s;
-      margin-bottom: 12px;
+      position: relative;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
     .question-card.drag-over-answer {
-      border-color: rgba(255,255,255,0.5);
-      box-shadow: 0 0 18px rgba(255,255,255,0.15);
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.15), 0 4px 16px rgba(0,0,0,0.06);
     }
     .question-card.drag-over-exp {
-      border-color: rgba(147,130,255,0.6);
-      box-shadow: 0 0 18px rgba(147,130,255,0.2);
+      border-color: #6c5ce7;
+      box-shadow: 0 0 0 3px rgba(108,92,231,0.15), 0 4px 16px rgba(0,0,0,0.06);
     }
     .question-card.solved {
       border-color: #4cd964;
-      box-shadow: 0 0 22px rgba(76,217,100,0.4), 0 0 44px rgba(76,217,100,0.15);
-      animation: glowPulse 2s ease-in-out infinite;
+      box-shadow: 0 0 0 3px rgba(76,217,100,0.2), 0 4px 20px rgba(76,217,100,0.1);
+      animation: glowPulse 2.5s ease-in-out infinite;
     }
     @keyframes glowPulse {
-      0%, 100% { box-shadow: 0 0 22px rgba(76,217,100,0.4), 0 0 44px rgba(76,217,100,0.15); }
-      50%      { box-shadow: 0 0 32px rgba(76,217,100,0.6), 0 0 60px rgba(76,217,100,0.25); }
+      0%, 100% { box-shadow: 0 0 0 3px rgba(76,217,100,0.2), 0 4px 20px rgba(76,217,100,0.1); }
+      50%      { box-shadow: 0 0 0 5px rgba(76,217,100,0.3), 0 4px 28px rgba(76,217,100,0.15); }
     }
 
     .q-number {
       display: inline-block;
-      background: linear-gradient(135deg, #f9d423, #ff4e50);
-      color: #1a1a2e; font-weight: 700; font-size: 0.85rem;
-      padding: 4px 12px; border-radius: 12px;
-      margin-bottom: 12px; align-self: flex-start;
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
+      color: #fff; font-weight: 700; font-size: 0.82rem;
+      padding: 4px 14px; border-radius: 12px;
+      margin-bottom: 14px; align-self: flex-start;
     }
     .q-text {
-      font-size: 1.1rem; line-height: 1.65; font-weight: 500;
-      word-break: break-word;
+      font-size: 1.15rem; line-height: 1.7; font-weight: 500;
+      color: #2d2d3a; word-break: break-word;
     }
     .q-chinese-toggle {
-      font-size: 0.9rem; color: rgba(255,255,255,0.5); cursor: pointer;
-      margin-top: 10px; display: flex; align-items: center; gap: 5px;
+      font-size: 0.9rem; color: #aaa; cursor: pointer;
+      margin-top: 12px; display: flex; align-items: center; gap: 5px;
+      transition: color 0.2s;
     }
+    .q-chinese-toggle:hover { color: #6c5ce7; }
     .q-chinese-toggle .arrow { transition: transform 0.3s; display: inline-block; }
     .q-chinese-toggle.open .arrow { transform: rotate(90deg); }
     .q-chinese {
-      font-size: 0.95rem; color: rgba(255,255,255,0.55); line-height: 1.6;
+      font-size: 0.95rem; color: #888; line-height: 1.6;
       max-height: 0; overflow: hidden;
       transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0;
     }
-    .q-chinese.show { max-height: 80px; opacity: 1; margin-top: 6px; }
+    .q-chinese.show { max-height: 80px; opacity: 1; margin-top: 8px; }
 
     /* ===== Answer Drop Zone ===== */
     .q-drop-zone {
-      margin-top: 12px; min-height: 48px;
-      border: 2.5px dashed rgba(255,255,255,0.2); border-radius: 14px;
+      margin-top: 14px; min-height: 50px;
+      border: 2.5px dashed #ddd; border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.95rem; color: rgba(255,255,255,0.3);
-      transition: border-color 0.2s, background 0.2s;
+      font-size: 0.95rem; color: #bbb;
+      transition: all 0.2s; background: #fafbfc;
     }
     .question-card.drag-over-answer .q-drop-zone {
-      border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05);
+      border-color: #a78bfa; background: #f8f5ff; color: #6c5ce7;
     }
     .question-card.solved .q-drop-zone {
       border-style: solid; border-color: #4cd964;
-      background: rgba(76,217,100,0.1); color: #4cd964;
+      background: #f0fdf4; color: #16a34a;
       font-weight: 600; font-size: 1.05rem;
     }
 
     /* ===== Explanation Zone ===== */
     .exp-zone {
-      margin-top: 12px; border-radius: 14px;
-      border: 2.5px dashed rgba(147,130,255,0.25);
-      padding: 10px; animation: fadeIn 0.4s ease;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      margin-top: 14px; border-radius: 14px;
+      border: 2.5px dashed #ddd;
+      padding: 12px; animation: fadeIn 0.4s ease;
+      transition: all 0.3s; background: #fafbfc;
     }
     .exp-zone-label {
-      font-size: 0.8rem; font-weight: 700; color: rgba(147,130,255,0.7);
-      margin-bottom: 6px;
+      font-size: 0.82rem; font-weight: 700; color: #6c5ce7;
+      margin-bottom: 8px;
     }
     .question-card.drag-over-exp .exp-zone {
-      border-color: rgba(147,130,255,0.6); background: rgba(147,130,255,0.05);
+      border-color: #6c5ce7; background: #f5f2ff;
     }
     .exp-zone.completed {
       border-style: solid; border-color: #a78bfa;
-      box-shadow: 0 0 18px rgba(167,139,250,0.4), 0 0 36px rgba(167,139,250,0.15);
-      animation: expGlow 2s ease-in-out infinite;
+      background: #f5f2ff;
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.2), 0 4px 16px rgba(167,139,250,0.08);
+      animation: expGlow 2.5s ease-in-out infinite;
     }
     @keyframes expGlow {
-      0%, 100% { box-shadow: 0 0 18px rgba(167,139,250,0.4), 0 0 36px rgba(167,139,250,0.15); }
-      50%      { box-shadow: 0 0 28px rgba(167,139,250,0.6), 0 0 50px rgba(167,139,250,0.25); }
+      0%, 100% { box-shadow: 0 0 0 3px rgba(167,139,250,0.2), 0 4px 16px rgba(167,139,250,0.08); }
+      50%      { box-shadow: 0 0 0 5px rgba(167,139,250,0.3), 0 4px 24px rgba(167,139,250,0.12); }
     }
 
     .exp-slot {
-      font-size: 0.82rem; line-height: 1.5;
-      padding: 6px 8px; margin: 4px 0;
-      border-radius: 8px; border: 1.5px dashed rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.25); min-height: 30px;
+      font-size: 0.85rem; line-height: 1.55;
+      padding: 8px 10px; margin: 5px 0;
+      border-radius: 10px; border: 1.5px dashed #e0e0e0;
+      color: #ccc; min-height: 34px;
       display: flex; align-items: center;
-      transition: all 0.3s ease;
+      transition: all 0.3s ease; background: #fff;
     }
     .exp-slot.filled {
-      border-style: solid; border-color: rgba(167,139,250,0.35);
-      background: rgba(167,139,250,0.08); color: rgba(255,255,255,0.8);
+      border-style: solid; border-color: #d4ccf7;
+      background: #faf8ff; color: #444;
       cursor: grab; touch-action: none; position: relative;
       animation: slotFill 0.4s ease;
     }
     .exp-slot.filled:active { cursor: grabbing; }
     .exp-slot.filled.reorder-source { opacity: 0.3; }
-    .exp-slot.insert-above { border-top: 2.5px solid #a78bfa !important; }
-    .exp-slot.insert-below { border-bottom: 2.5px solid #a78bfa !important; }
+    .exp-slot.insert-above { border-top: 2.5px solid #6c5ce7 !important; }
+    .exp-slot.insert-below { border-bottom: 2.5px solid #6c5ce7 !important; }
     @keyframes slotFill {
-      from { transform: scale(0.95); opacity: 0; }
+      from { transform: scale(0.97); opacity: 0; }
       to   { transform: scale(1); opacity: 1; }
     }
     @keyframes fadeIn {
@@ -167,12 +301,12 @@
 
     /* ===== Divider ===== */
     .divider {
-      text-align: center; font-size: 0.85rem;
-      color: rgba(255,255,255,0.3); margin: 10px 0; position: relative;
+      text-align: center; font-size: 0.82rem;
+      color: #bbb; margin: 12px 0; position: relative;
     }
     .divider::before, .divider::after {
       content: ''; position: absolute; top: 50%;
-      width: 22%; height: 1px; background: rgba(255,255,255,0.1);
+      width: 22%; height: 1px; background: #e2e6ea;
     }
     .divider::before { left: 0; }
     .divider::after  { right: 0; }
@@ -184,84 +318,89 @@
     }
 
     .answer-chip {
-      background: rgba(255,255,255,0.12);
-      border: 1.5px solid rgba(255,255,255,0.2);
-      border-radius: 14px; padding: 12px 18px;
-      font-size: 1rem; font-weight: 500; color: #fff;
+      background: #fff;
+      border: 1.5px solid #e2e6ea;
+      border-radius: 14px; padding: 12px 20px;
+      font-size: 1rem; font-weight: 500; color: #444;
       cursor: grab; touch-action: none;
-      transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+      transition: all 0.2s;
       white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     }
+    .answer-chip:hover { border-color: #a78bfa; background: #faf8ff; box-shadow: 0 2px 8px rgba(167,139,250,0.1); }
     .answer-chip:active { cursor: grabbing; }
     .answer-chip.dragging-source { opacity: 0.3; transform: scale(0.95); }
     .answer-chip.placed { display: none; }
 
     .exp-chip {
-      background: rgba(147,130,255,0.12);
-      border: 1.5px solid rgba(147,130,255,0.25);
-      border-radius: 12px; padding: 10px 14px;
-      font-size: 0.9rem; font-weight: 500; color: rgba(255,255,255,0.85);
+      background: #fff;
+      border: 1.5px solid #d4ccf7;
+      border-radius: 12px; padding: 10px 16px;
+      font-size: 0.9rem; font-weight: 500; color: #555;
       cursor: grab; touch-action: none;
-      transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
-      max-width: 100%; line-height: 1.5;
+      transition: all 0.2s;
+      max-width: 100%; line-height: 1.55;
+      box-shadow: 0 1px 4px rgba(108,92,231,0.06);
     }
+    .exp-chip:hover { border-color: #6c5ce7; background: #f8f5ff; }
     .exp-chip:active { cursor: grabbing; }
     .exp-chip.dragging-source { opacity: 0.3; transform: scale(0.95); }
     .exp-chip.placed { display: none; }
 
     /* ===== Highlight (reverse lookup) ===== */
     .question-card.highlighted {
-      border-color: #f9d423;
-      box-shadow: 0 0 20px rgba(249,212,35,0.5), 0 0 40px rgba(249,212,35,0.2);
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.2), 0 4px 20px rgba(245,158,11,0.1);
       animation: highlightPulse 1.5s ease-in-out infinite;
     }
     @keyframes highlightPulse {
-      0%, 100% { box-shadow: 0 0 20px rgba(249,212,35,0.5), 0 0 40px rgba(249,212,35,0.2); }
-      50%      { box-shadow: 0 0 28px rgba(249,212,35,0.7), 0 0 52px rgba(249,212,35,0.3); }
+      0%, 100% { box-shadow: 0 0 0 3px rgba(245,158,11,0.2), 0 4px 20px rgba(245,158,11,0.1); }
+      50%      { box-shadow: 0 0 0 5px rgba(245,158,11,0.3), 0 4px 28px rgba(245,158,11,0.15); }
     }
     .answer-chip.selected {
-      background: rgba(249,212,35,0.25); border-color: #f9d423;
-      box-shadow: 0 0 12px rgba(249,212,35,0.3);
+      background: #fffbeb; border-color: #f59e0b;
+      box-shadow: 0 0 0 2px rgba(245,158,11,0.15);
     }
     .reverse-lookup-tip {
-      text-align: center; font-size: 0.85rem; color: #f9d423;
+      text-align: center; font-size: 0.85rem; color: #f59e0b;
       opacity: 0; max-height: 0; overflow: hidden; transition: all 0.3s ease;
     }
-    .reverse-lookup-tip.show { opacity: 0.7; max-height: 30px; margin-bottom: 4px; }
+    .reverse-lookup-tip.show { opacity: 0.85; max-height: 30px; margin-bottom: 4px; }
 
     /* ===== Ghost ===== */
     .drag-ghost {
       position: fixed; z-index: 9999; pointer-events: none;
       border-radius: 14px; padding: 12px 16px;
-      font-size: 1rem; font-weight: 600; color: #fff;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.4);
-      transform: translate(-50%, -50%) scale(1.1);
+      font-size: 1rem; font-weight: 600;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+      transform: translate(-50%, -50%) scale(1.08);
       transition: none; max-width: 70vw;
     }
     .drag-ghost.ghost-answer {
-      background: rgba(249,212,35,0.2); border: 2px solid #f9d423;
+      background: #fff; border: 2px solid #a78bfa; color: #444;
       white-space: nowrap;
     }
     .drag-ghost.ghost-exp {
-      background: rgba(147,130,255,0.25); border: 2px solid #a78bfa;
-      font-size: 0.88rem; white-space: normal; line-height: 1.4;
+      background: #fff; border: 2px solid #6c5ce7; color: #444;
+      font-size: 0.88rem; white-space: normal; line-height: 1.45;
     }
 
     /* ===== Chaos Monkey ===== */
     .chaos-monkey {
-      cursor: pointer; font-size: 0.7rem; opacity: 0.45;
+      cursor: pointer; font-size: 0.75rem; opacity: 0.35;
       display: inline; transition: all 0.3s ease; vertical-align: middle;
     }
     .chaos-monkey:hover { opacity: 1; transform: scale(1.4); }
     .monkey-found-banner {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
       z-index: 10000; display: flex; align-items: center; justify-content: center;
       animation: fadeIn 0.3s ease;
     }
     .monkey-found-card {
-      background: rgba(255,255,255,0.1); border: 2px solid #f9d423;
-      border-radius: 20px; padding: 30px 24px; text-align: center; max-width: 300px;
+      background: #fff; border: 2px solid #f59e0b;
+      border-radius: 24px; padding: 36px 28px; text-align: center; max-width: 320px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
       animation: monkeyPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
     }
     @keyframes monkeyPop {
@@ -270,34 +409,44 @@
     }
     .monkey-found-card .big-monkey { font-size: 4rem; }
     .monkey-found-card h3 {
-      font-size: 1.2rem; margin: 12px 0 6px;
-      background: linear-gradient(90deg, #f9d423, #ff4e50);
+      font-size: 1.2rem; margin: 14px 0 8px; font-weight: 700;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .monkey-found-card p { font-size: 0.95rem; color: rgba(255,255,255,0.6); margin-bottom: 16px; }
+    .monkey-found-card p { font-size: 0.95rem; color: #888; margin-bottom: 18px; }
     .monkey-dismiss-btn {
-      padding: 10px 28px; font-size: 1rem; font-weight: 600; color: #1a1a2e;
-      background: linear-gradient(135deg, #f9d423, #ff4e50); border: none; border-radius: 12px; cursor: pointer;
+      padding: 10px 28px; font-size: 1rem; font-weight: 600; color: #fff;
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa); border: none; border-radius: 12px; cursor: pointer;
+      transition: transform 0.15s;
     }
+    .monkey-dismiss-btn:hover { transform: scale(1.03); }
+
     .monkey-hint-bar {
-      text-align: center; font-size: 0.8rem; color: rgba(255,255,255,0.25);
-      margin: 4px 0; transition: opacity 0.3s;
+      text-align: center; font-size: 0.8rem; color: #bbb;
+      margin: 6px 0; transition: all 0.3s;
     }
-    .monkey-hint-bar.found { color: #f9d423; opacity: 0.7; }
+    .monkey-hint-bar.found { color: #f59e0b; }
 
     /* ===== Completion ===== */
-    .completion-banner { text-align: center; margin-top: 20px; animation: fadeIn 0.6s ease; }
+    .completion-banner {
+      text-align: center; margin-top: 24px; animation: fadeIn 0.6s ease;
+      background: #fff; border-radius: 20px; padding: 30px 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
     .completion-banner .emoji { font-size: 3.5rem; }
     .completion-banner h2 {
-      font-size: 1.4rem; margin: 8px 0;
-      background: linear-gradient(90deg, #f9d423, #ff4e50);
+      font-size: 1.4rem; margin: 10px 0;
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .restart-btn {
       margin-top: 16px; padding: 14px 36px; font-size: 1.05rem; font-weight: 600;
-      color: #1a1a2e; background: linear-gradient(135deg, #f9d423, #ff4e50);
+      color: #fff; background: linear-gradient(135deg, #6c5ce7, #a78bfa);
       border: none; border-radius: 14px; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(108,92,231,0.25);
     }
+    .restart-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(108,92,231,0.3); }
 
     .section-hidden { display: none; }
     .spacer { height: 60px; }
@@ -305,34 +454,76 @@
 </head>
 <body>
 
-  <div class="header">
-    <h1>Flashcard v3.0</h1>
-    <div class="subtitle">把答案拖進正確的題目卡片中</div>
-  </div>
+  <!-- ===== 左側 Sidebar ===== -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-  <!-- 左右切換導航 -->
-  <div class="nav-row">
-    <button class="nav-btn" id="prevBtn" onclick="goPage(-1)">◀</button>
-    <div class="nav-indicator" id="navIndicator">1 / 4</div>
-    <button class="nav-btn" id="nextBtn" onclick="goPage(1)">▶</button>
-  </div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">F</div>
+        Flashcard v3.0
+      </div>
+      <div class="sidebar-search">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="搜尋題目..." oninput="filterSidebar(this.value)">
+      </div>
+    </div>
 
-  <div id="cardArea"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">題庫</div>
 
-  <div class="monkey-hint-bar" id="monkeyHint">🐒 Chaos Monkey 藏在某個詳解裡，找到牠！</div>
-  <div class="reverse-lookup-tip" id="reverseTip">💡 點擊的答案是這些題目的正確答案</div>
+      <div class="folder-item expanded" onclick="toggleFolder(this)">
+        <span class="folder-icon">📂</span>
+        <span class="folder-name">德語文法練習</span>
+        <span class="folder-arrow">▶</span>
+      </div>
+      <div class="folder-children open" id="questionFolder">
+        <!-- JS 渲染 -->
+      </div>
+    </div>
 
-  <div class="divider" id="answerDivider">⬇ 拖動答案到題目 · 點擊可反向查詢 ⬇</div>
-  <div class="chip-pool" id="answerPool"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">統計</div>
+      <div id="sidebarStats" style="padding: 4px 10px; font-size: 0.82rem; color: #888; line-height: 1.8;"></div>
+    </div>
 
-  <div class="divider section-hidden" id="expDivider">⬇ 拖動詳解到已答對的題目 ⬇</div>
-  <div class="chip-pool section-hidden" id="expPool"></div>
+    <div class="sidebar-footer">
+      🐒 Chaos Monkey Edition<br>
+      <span id="sidebarMonkey" style="font-size: 0.72rem; color: #ccc;">尚未找到</span>
+    </div>
+  </aside>
 
-  <div class="spacer"></div>
-  <div id="completionArea"></div>
+  <!-- ===== 右側主內容 ===== -->
+  <main class="main-content" id="mainContent">
+    <div class="header">
+      <h1>德語文法 Flashcard</h1>
+      <div class="subtitle">把答案拖進正確的題目卡片中</div>
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-btn" id="prevBtn" onclick="goPage(-1)">◀</button>
+      <div class="nav-indicator" id="navIndicator">1 / 4</div>
+      <button class="nav-btn" id="nextBtn" onclick="goPage(1)">▶</button>
+    </div>
+
+    <div id="cardArea"></div>
+
+    <div class="monkey-hint-bar" id="monkeyHint">🐒 Chaos Monkey 藏在某個詳解裡，找到牠！</div>
+    <div class="reverse-lookup-tip" id="reverseTip">💡 點擊的答案是這些題目的正確答案</div>
+
+    <div class="divider" id="answerDivider">⬇ 拖動答案到題目 · 點擊可反向查詢 ⬇</div>
+    <div class="chip-pool" id="answerPool"></div>
+
+    <div class="divider section-hidden" id="expDivider">⬇ 拖動詳解到已答對的題目 ⬇</div>
+    <div class="chip-pool section-hidden" id="expPool"></div>
+
+    <div class="spacer"></div>
+    <div id="completionArea"></div>
+  </main>
 
   <script>
-    // ==================== 題庫（完整詳解版）====================
+    // ==================== 題庫 ====================
     const questions = [
       {
         id: 1,
@@ -458,6 +649,62 @@
       return expPlacedMap.get(qid);
     }
 
+    // ==================== Sidebar ====================
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('show');
+    }
+    function toggleFolder(el) {
+      el.classList.toggle('expanded');
+      const children = el.nextElementSibling;
+      if (children) children.classList.toggle('open');
+    }
+    function filterSidebar(val) {
+      const v = val.toLowerCase();
+      document.querySelectorAll('#questionFolder .file-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(v) ? '' : 'none';
+      });
+    }
+
+    function renderSidebar() {
+      const folder = document.getElementById('questionFolder');
+      folder.innerHTML = questions.map((q, idx) => {
+        const isSolved = solvedSet.has(q.id);
+        const expDone = expCompletedSet.has(q.id);
+        let statusClass = '';
+        if (expDone) statusClass = 'exp-done';
+        else if (isSolved) statusClass = 'solved';
+        const isActive = idx === currentPage;
+        const preview = q.question.length > 28 ? q.question.slice(0, 28) + '…' : q.question;
+        return `<div class="file-item ${isActive ? 'active' : ''}" onclick="goToPage(${idx})">
+          <span class="file-icon">📄</span>
+          <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">第${q.id}題 ${preview}</span>
+          <span class="file-status ${statusClass}"></span>
+        </div>`;
+      }).join('');
+
+      // 統計
+      const stats = document.getElementById('sidebarStats');
+      stats.innerHTML = `
+        ✅ 答對：${solvedSet.size} / ${questions.length}<br>
+        📖 詳解完成：${expCompletedSet.size} / ${questions.length}<br>
+        📊 進度：${Math.round((solvedSet.size + expCompletedSet.size) / (questions.length * 2) * 100)}%
+      `;
+
+      // Monkey
+      const sm = document.getElementById('sidebarMonkey');
+      sm.textContent = monkeyFound ? '🐒 已抓到！' : '🐒 尚未找到';
+      sm.style.color = monkeyFound ? '#f59e0b' : '#ccc';
+    }
+
+    function goToPage(idx) {
+      currentPage = idx;
+      renderAll();
+      // mobile: close sidebar
+      if (window.innerWidth <= 768) toggleSidebar();
+    }
+
     // ==================== 分頁導航 ====================
     function goPage(delta) {
       currentPage = Math.max(0, Math.min(questions.length - 1, currentPage + delta));
@@ -491,7 +738,7 @@
       e.stopPropagation();
       if (monkeyFound) return;
       monkeyFound = true;
-      updateMonkeyHint();
+      updateMonkeyHint(); renderSidebar();
       const b = document.createElement('div');
       b.className = 'monkey-found-banner'; b.id = 'monkeyBanner';
       b.innerHTML = `<div class="monkey-found-card"><div class="big-monkey">🐒</div><h3>你找到 Chaos Monkey 了！</h3><p>牠藏在第 ${monkeyQuestionId} 題的詳解裡</p><button class="monkey-dismiss-btn" onclick="dismissMonkey()">知道了 👍</button></div>`;
@@ -504,7 +751,7 @@
       else { h.textContent = '🐒 Chaos Monkey 藏在某個詳解裡，找到牠！'; h.classList.remove('found'); }
     }
 
-    // ==================== 渲染：當前大卡片 ====================
+    // ==================== 渲染：大卡片 ====================
     function renderCard() {
       const q = questions[currentPage];
       const isSolved = solvedSet.has(q.id);
@@ -524,11 +771,11 @@
         }).join('');
         let emptyHtml = '';
         for (let i = 0; i < emptyCount; i++) {
-          emptyHtml += `<div class="exp-slot"><span style="opacity:0.35">⬜</span></div>`;
+          emptyHtml += `<div class="exp-slot"><span style="opacity:0.3">⬜ 拖入詳解</span></div>`;
         }
         expZoneHtml = `
           <div class="exp-zone ${expDone ? 'completed' : ''}" data-qid="${q.id}">
-            <div class="exp-zone-label">📖 詳解 (${filledCount}/${totalParts})</div>
+            <div class="exp-zone-label">📖 詳解區 (${filledCount}/${totalParts})</div>
             ${filledHtml}${emptyHtml}
           </div>`;
       }
@@ -542,20 +789,19 @@
           </div>
           <div class="q-chinese" id="ch-${q.id}">${q.chinese}</div>
           <div class="q-drop-zone" id="dz-${q.id}">
-            ${isSolved ? `(${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}` : '將答案拖到這裡'}
+            ${isSolved ? `✅ (${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}` : '將答案拖到這裡'}
           </div>
           ${expZoneHtml}
         </div>`;
     }
 
-    // 綁定已填入 slot 的拖動排序
     function bindReorderEvents() {
       document.querySelectorAll('.exp-slot.filled[data-chip-id]').forEach(el => {
         el.addEventListener('pointerdown', onReorderStart);
       });
     }
 
-    // ==================== 渲染：答案池（只顯示當前題目的選項）====================
+    // ==================== 渲染：答案池 ====================
     function renderAnswerPool() {
       const q = questions[currentPage];
       const pool = document.getElementById('answerPool');
@@ -570,13 +816,12 @@
       pool.querySelectorAll('.answer-chip:not(.placed)').forEach(el => {
         el.addEventListener('pointerdown', onDragStart);
       });
-      // 已答對 → 隱藏答案區
       const isSolved = solvedSet.has(q.id);
-      document.getElementById('answerDivider').classList.toggle('section-hidden', isSolved && getExpPlaced(q.id).length < q.expParts.length ? false : isSolved);
+      document.getElementById('answerDivider').classList.toggle('section-hidden', isSolved);
       pool.classList.toggle('section-hidden', isSolved);
     }
 
-    // ==================== 渲染：詳解池（只顯示當前題目）====================
+    // ==================== 渲染：詳解池 ====================
     function renderExpPool() {
       const q = questions[currentPage];
       const divider = document.getElementById('expDivider');
@@ -587,10 +832,6 @@
       if (!isSolved || expDone) {
         divider.classList.add('section-hidden');
         pool.classList.add('section-hidden');
-        // 已答對但詳解也完成時隱藏答案分隔線
-        if (isSolved && expDone) {
-          document.getElementById('answerDivider').classList.add('section-hidden');
-        }
         return;
       }
 
@@ -619,7 +860,7 @@
       document.getElementById(`ch-${qid}`).classList.toggle('show');
     }
 
-    // ==================== 統一拖放系統 ====================
+    // ==================== 統一拖放 ====================
     let dragState = null;
 
     function onDragStart(e) {
@@ -701,7 +942,7 @@
               if (chipData.questionId === targetQid) {
                 const placedArr = getExpPlaced(targetQid);
                 if (!placedArr.includes(chipData.chipId)) {
-                  placedArr.unshift(chipData.chipId);
+                  placedArr.push(chipData.chipId);
                   const tq = questions.find(q => q.id === targetQid);
                   if (placedArr.length === tq.expParts.length) expCompletedSet.add(targetQid);
                   renderAll();
@@ -718,7 +959,7 @@
       dragState = null;
     }
 
-    // ==================== 詳解排序拖放 ====================
+    // ==================== 詳解排序 ====================
     let reorderState = null;
 
     function onReorderStart(e) {
@@ -834,9 +1075,10 @@
       bindReorderEvents();
       renderAnswerPool();
       renderExpPool();
+      renderSidebar();
     }
 
-    // ==================== 完成判斷 ====================
+    // ==================== 完成 ====================
     function checkCompletion() {
       if (solvedSet.size === questions.length && expCompletedSet.size === questions.length) {
         document.getElementById('completionArea').innerHTML = `
@@ -856,13 +1098,14 @@
       dismissMonkey(); initChaosMonkey(); renderAll();
     }
 
-    // ==================== 左右滑動手勢 ====================
+    // ==================== 滑動手勢 ====================
     let swipeStartX = null;
-    document.addEventListener('touchstart', (e) => {
+    const mc = document.getElementById('mainContent');
+    mc.addEventListener('touchstart', (e) => {
       if (e.target.closest('.answer-chip, .exp-chip, .exp-slot.filled, .nav-btn')) return;
       swipeStartX = e.touches[0].clientX;
     }, { passive: true });
-    document.addEventListener('touchend', (e) => {
+    mc.addEventListener('touchend', (e) => {
       if (swipeStartX === null) return;
       const dx = e.changedTouches[0].clientX - swipeStartX;
       if (Math.abs(dx) > 60) goPage(dx < 0 ? 1 : -1);
