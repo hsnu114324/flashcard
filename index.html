@@ -20,57 +20,41 @@
     }
 
     /* ===== Header ===== */
-    .header {
-      text-align: center;
-      padding: 12px 0 8px;
-    }
+    .header { text-align: center; padding: 12px 0 8px; }
     .header h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
+      font-size: 1.4rem; font-weight: 700;
       background: linear-gradient(90deg, #f9d423, #ff4e50);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .header .subtitle {
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.45);
-      margin-top: 4px;
-    }
+    .header .subtitle { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-top: 4px; }
 
     /* ===== Questions Grid (2×2) ===== */
     .questions-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin: 12px 0;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin: 12px 0;
     }
 
     .question-card {
       background: rgba(255,255,255,0.07);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       border: 2px solid rgba(255,255,255,0.12);
-      border-radius: 16px;
-      padding: 14px 12px;
-      min-height: 160px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      border-radius: 16px; padding: 14px 12px;
+      min-height: 140px; display: flex; flex-direction: column;
+      position: relative; transition: border-color 0.3s, box-shadow 0.3s;
     }
-
-    .question-card.drag-over {
+    .question-card.drag-over-answer {
       border-color: rgba(255,255,255,0.5);
       box-shadow: 0 0 15px rgba(255,255,255,0.15);
     }
-
+    .question-card.drag-over-exp {
+      border-color: rgba(147,130,255,0.6);
+      box-shadow: 0 0 15px rgba(147,130,255,0.2);
+    }
     .question-card.solved {
       border-color: #4cd964;
-      box-shadow: 0 0 20px rgba(76, 217, 100, 0.4), 0 0 40px rgba(76, 217, 100, 0.15);
+      box-shadow: 0 0 20px rgba(76,217,100,0.4), 0 0 40px rgba(76,217,100,0.15);
       animation: glowPulse 2s ease-in-out infinite;
     }
-
     @keyframes glowPulse {
       0%, 100% { box-shadow: 0 0 20px rgba(76,217,100,0.4), 0 0 40px rgba(76,217,100,0.15); }
       50%      { box-shadow: 0 0 28px rgba(76,217,100,0.6), 0 0 56px rgba(76,217,100,0.25); }
@@ -79,208 +63,84 @@
     .q-number {
       display: inline-block;
       background: linear-gradient(135deg, #f9d423, #ff4e50);
-      color: #1a1a2e;
-      font-weight: 700;
-      font-size: 0.65rem;
-      padding: 2px 8px;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      align-self: flex-start;
+      color: #1a1a2e; font-weight: 700; font-size: 0.65rem;
+      padding: 2px 8px; border-radius: 10px;
+      margin-bottom: 8px; align-self: flex-start;
     }
-
     .q-text {
-      font-size: 0.82rem;
-      line-height: 1.55;
-      font-weight: 500;
-      flex: 1;
-      word-break: break-word;
+      font-size: 0.82rem; line-height: 1.55; font-weight: 500;
+      flex-shrink: 0; word-break: break-word;
     }
-
     .q-chinese-toggle {
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.45);
-      cursor: pointer;
-      margin-top: 6px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      font-size: 0.7rem; color: rgba(255,255,255,0.45); cursor: pointer;
+      margin-top: 6px; display: flex; align-items: center; gap: 4px;
     }
-    .q-chinese-toggle .arrow {
-      transition: transform 0.3s;
-      display: inline-block;
-    }
-    .q-chinese-toggle.open .arrow {
-      transform: rotate(90deg);
-    }
-
+    .q-chinese-toggle .arrow { transition: transform 0.3s; display: inline-block; }
+    .q-chinese-toggle.open .arrow { transform: rotate(90deg); }
     .q-chinese {
-      font-size: 0.72rem;
-      color: rgba(255,255,255,0.5);
-      line-height: 1.5;
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease, opacity 0.3s ease;
-      opacity: 0;
+      font-size: 0.72rem; color: rgba(255,255,255,0.5); line-height: 1.5;
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0;
     }
-    .q-chinese.show {
-      max-height: 60px;
-      opacity: 1;
-      margin-top: 4px;
-    }
+    .q-chinese.show { max-height: 60px; opacity: 1; margin-top: 4px; }
 
+    /* ===== Answer Drop Zone ===== */
     .q-drop-zone {
-      margin-top: 8px;
-      min-height: 36px;
-      border: 2px dashed rgba(255,255,255,0.2);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.3);
+      margin-top: 8px; min-height: 36px;
+      border: 2px dashed rgba(255,255,255,0.2); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: rgba(255,255,255,0.3);
       transition: border-color 0.2s, background 0.2s;
     }
-
-    .question-card.drag-over .q-drop-zone {
-      border-color: rgba(255,255,255,0.5);
-      background: rgba(255,255,255,0.05);
+    .question-card.drag-over-answer .q-drop-zone {
+      border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05);
     }
-
     .question-card.solved .q-drop-zone {
-      border-style: solid;
-      border-color: #4cd964;
-      background: rgba(76,217,100,0.1);
-      color: #4cd964;
-      font-weight: 600;
-      font-size: 0.78rem;
+      border-style: solid; border-color: #4cd964;
+      background: rgba(76,217,100,0.1); color: #4cd964;
+      font-weight: 600; font-size: 0.78rem;
     }
 
-    .q-explain-btn {
-      margin-top: 6px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(76,217,100,0.15);
-      border: 1px solid rgba(76,217,100,0.3);
-      border-radius: 8px;
-      padding: 5px 10px;
-      font-size: 0.65rem;
-      font-weight: 600;
-      color: #4cd964;
-      cursor: pointer;
-      transition: background 0.2s;
-      animation: fadeIn 0.4s ease;
+    /* ===== Explanation Zone (slots inside solved cards) ===== */
+    .exp-zone {
+      margin-top: 8px; border-radius: 10px;
+      border: 2px dashed rgba(147,130,255,0.25);
+      padding: 6px; animation: fadeIn 0.4s ease;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
-    .q-explain-btn:active {
-      background: rgba(76,217,100,0.25);
-    }
-
-    /* ===== Bottom Sheet ===== */
-    .sheet-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 8000;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-    }
-    .sheet-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .bottom-sheet {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      z-index: 8001;
-      background: linear-gradient(180deg, #1e1b4b, #0f0c29);
-      border-top-left-radius: 20px;
-      border-top-right-radius: 20px;
-      max-height: 80vh;
-      transform: translateY(100%);
-      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-    }
-    .bottom-sheet.open {
-      transform: translateY(0);
-    }
-    .bottom-sheet.dragging {
-      transition: none;
-    }
-
-    .sheet-handle-area {
-      padding: 12px 0 4px;
-      display: flex;
-      justify-content: center;
-      cursor: grab;
-      flex-shrink: 0;
-      touch-action: none;
-    }
-    .sheet-handle {
-      width: 36px;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(255,255,255,0.3);
-    }
-
-    .sheet-header {
-      padding: 4px 20px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .sheet-header .sheet-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #4cd964;
-    }
-    .sheet-header .sheet-close {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: rgba(255,255,255,0.6);
-      font-size: 1.1rem;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .sheet-body {
-      padding: 16px 20px 40px;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      flex: 1;
-    }
-    .sheet-body .sheet-question {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.9);
+    .exp-zone-label {
+      font-size: 0.6rem; font-weight: 700; color: rgba(147,130,255,0.7);
       margin-bottom: 4px;
-      line-height: 1.5;
     }
-    .sheet-body .sheet-answer-line {
-      font-size: 0.8rem;
-      color: #4cd964;
-      font-weight: 600;
-      margin-bottom: 14px;
+    .question-card.drag-over-exp .exp-zone {
+      border-color: rgba(147,130,255,0.6); background: rgba(147,130,255,0.05);
     }
-    .sheet-body .sheet-explanation {
-      font-size: 0.85rem;
-      line-height: 1.75;
-      color: rgba(255,255,255,0.8);
+    .exp-zone.completed {
+      border-style: solid; border-color: #a78bfa;
+      box-shadow: 0 0 16px rgba(167,139,250,0.4), 0 0 32px rgba(167,139,250,0.15);
+      animation: expGlow 2s ease-in-out infinite;
     }
-    .sheet-body .sheet-explanation b {
-      color: #4cd964;
+    @keyframes expGlow {
+      0%, 100% { box-shadow: 0 0 16px rgba(167,139,250,0.4), 0 0 32px rgba(167,139,250,0.15); }
+      50%      { box-shadow: 0 0 24px rgba(167,139,250,0.6), 0 0 44px rgba(167,139,250,0.25); }
+    }
+
+    .exp-slot {
+      font-size: 0.58rem; line-height: 1.4;
+      padding: 4px 6px; margin: 3px 0;
+      border-radius: 6px; border: 1.5px dashed rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.25); min-height: 22px;
+      display: flex; align-items: center;
+      transition: all 0.3s ease;
+    }
+    .exp-slot.filled {
+      border-style: solid; border-color: rgba(167,139,250,0.35);
+      background: rgba(167,139,250,0.08); color: rgba(255,255,255,0.75);
+      animation: slotFill 0.4s ease;
+    }
+    @keyframes slotFill {
+      from { transform: scale(0.95); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
     }
 
     @keyframes fadeIn {
@@ -290,172 +150,54 @@
 
     /* ===== Divider ===== */
     .divider {
-      text-align: center;
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.35);
-      margin: 10px 0;
+      text-align: center; font-size: 0.72rem;
+      color: rgba(255,255,255,0.3); margin: 10px 0;
       position: relative;
     }
     .divider::before, .divider::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      width: 30%;
-      height: 1px;
-      background: rgba(255,255,255,0.12);
+      content: ''; position: absolute; top: 50%;
+      width: 25%; height: 1px; background: rgba(255,255,255,0.1);
     }
     .divider::before { left: 0; }
     .divider::after  { right: 0; }
 
     /* ===== Answer Pool ===== */
-    .answer-pool {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      padding: 8px 0 40px;
+    .chip-pool {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: center; padding: 8px 0;
     }
 
     .answer-chip {
       background: rgba(255,255,255,0.12);
       border: 1.5px solid rgba(255,255,255,0.2);
-      border-radius: 12px;
-      padding: 10px 14px;
-      font-size: 0.82rem;
-      font-weight: 500;
-      color: #fff;
-      cursor: grab;
-      touch-action: none;
+      border-radius: 12px; padding: 10px 14px;
+      font-size: 0.82rem; font-weight: 500; color: #fff;
+      cursor: grab; touch-action: none;
       transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
       white-space: nowrap;
     }
+    .answer-chip:active { cursor: grabbing; }
+    .answer-chip.dragging-source { opacity: 0.3; transform: scale(0.95); }
+    .answer-chip.placed { display: none; }
 
-    .answer-chip:active {
-      cursor: grabbing;
+    /* ===== Explanation Chips (purple tint) ===== */
+    .exp-chip {
+      background: rgba(147,130,255,0.12);
+      border: 1.5px solid rgba(147,130,255,0.25);
+      border-radius: 10px; padding: 8px 12px;
+      font-size: 0.72rem; font-weight: 500; color: rgba(255,255,255,0.85);
+      cursor: grab; touch-action: none;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+      max-width: 100%; line-height: 1.4;
     }
+    .exp-chip:active { cursor: grabbing; }
+    .exp-chip.dragging-source { opacity: 0.3; transform: scale(0.95); }
+    .exp-chip.placed { display: none; }
 
-    .answer-chip.dragging-source {
-      opacity: 0.3;
-      transform: scale(0.95);
-    }
-
-    .answer-chip.placed {
-      display: none;
-    }
-
-    /* Ghost (拖動時跟隨手指的複製品) */
-    .drag-ghost {
-      position: fixed;
-      z-index: 9999;
-      pointer-events: none;
-      background: rgba(249, 212, 35, 0.2);
-      border: 2px solid #f9d423;
-      border-radius: 12px;
-      padding: 10px 14px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #fff;
-      white-space: nowrap;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-      transform: translate(-50%, -50%) scale(1.1);
-      transition: none;
-    }
-
-    /* ===== Completion ===== */
-    .completion-banner {
-      text-align: center;
-      margin-top: 20px;
-      animation: fadeIn 0.6s ease;
-    }
-    .completion-banner .emoji { font-size: 3rem; }
-    .completion-banner h2 {
-      font-size: 1.3rem;
-      margin: 8px 0;
-      background: linear-gradient(90deg, #f9d423, #ff4e50);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .restart-btn {
-      margin-top: 16px;
-      padding: 12px 32px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #1a1a2e;
-      background: linear-gradient(135deg, #f9d423, #ff4e50);
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
-    }
-
-    /* ===== Chaos Monkey ===== */
-    .chaos-monkey {
-      cursor: pointer;
-      font-size: 0.6rem;
-      opacity: 0.55;
-      display: inline;
-      transition: all 0.3s ease;
-      vertical-align: middle;
-    }
-    .chaos-monkey:hover {
-      opacity: 1;
-      transform: scale(1.4);
-    }
-
-    .monkey-found-banner {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: fadeIn 0.3s ease;
-    }
-    .monkey-found-card {
-      background: rgba(255,255,255,0.1);
-      border: 2px solid #f9d423;
-      border-radius: 20px;
-      padding: 30px 24px;
-      text-align: center;
-      max-width: 300px;
-      animation: monkeyPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    }
-    @keyframes monkeyPop {
-      from { transform: scale(0.3) rotate(-10deg); opacity: 0; }
-      to   { transform: scale(1) rotate(0deg); opacity: 1; }
-    }
-    .monkey-found-card .big-monkey { font-size: 4rem; }
-    .monkey-found-card h3 {
-      font-size: 1.2rem;
-      margin: 12px 0 6px;
-      background: linear-gradient(90deg, #f9d423, #ff4e50);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .monkey-found-card p {
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 16px;
-    }
-    .monkey-dismiss-btn {
-      padding: 10px 28px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #1a1a2e;
-      background: linear-gradient(135deg, #f9d423, #ff4e50);
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-    }
-
-    /* ===== Reverse Lookup Highlight ===== */
+    /* ===== Highlight (reverse lookup) ===== */
     .question-card.highlighted {
       border-color: #f9d423;
-      box-shadow: 0 0 18px rgba(249, 212, 35, 0.5), 0 0 36px rgba(249, 212, 35, 0.2);
+      box-shadow: 0 0 18px rgba(249,212,35,0.5), 0 0 36px rgba(249,212,35,0.2);
       animation: highlightPulse 1.5s ease-in-out infinite;
     }
     @keyframes highlightPulse {
@@ -463,37 +205,86 @@
       50%      { box-shadow: 0 0 26px rgba(249,212,35,0.7), 0 0 50px rgba(249,212,35,0.3); }
     }
     .answer-chip.selected {
-      background: rgba(249, 212, 35, 0.25);
-      border-color: #f9d423;
+      background: rgba(249,212,35,0.25); border-color: #f9d423;
       box-shadow: 0 0 10px rgba(249,212,35,0.3);
     }
     .reverse-lookup-tip {
-      text-align: center;
-      font-size: 0.72rem;
-      color: #f9d423;
-      opacity: 0;
-      max-height: 0;
-      overflow: hidden;
-      transition: all 0.3s ease;
+      text-align: center; font-size: 0.72rem; color: #f9d423;
+      opacity: 0; max-height: 0; overflow: hidden; transition: all 0.3s ease;
     }
-    .reverse-lookup-tip.show {
-      opacity: 0.7;
-      max-height: 30px;
-      margin-bottom: 4px;
+    .reverse-lookup-tip.show { opacity: 0.7; max-height: 30px; margin-bottom: 4px; }
+
+    /* ===== Ghost (drag clone) ===== */
+    .drag-ghost {
+      position: fixed; z-index: 9999; pointer-events: none;
+      border-radius: 12px; padding: 10px 14px;
+      font-size: 0.82rem; font-weight: 600; color: #fff;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      transform: translate(-50%, -50%) scale(1.1);
+      transition: none; white-space: nowrap; max-width: 60vw;
+    }
+    .drag-ghost.ghost-answer {
+      background: rgba(249,212,35,0.2); border: 2px solid #f9d423;
+    }
+    .drag-ghost.ghost-exp {
+      background: rgba(147,130,255,0.25); border: 2px solid #a78bfa;
+      font-size: 0.7rem; white-space: normal; line-height: 1.3;
     }
 
+    /* ===== Chaos Monkey ===== */
+    .chaos-monkey {
+      cursor: pointer; font-size: 0.55rem; opacity: 0.45;
+      display: inline; transition: all 0.3s ease; vertical-align: middle;
+    }
+    .chaos-monkey:hover { opacity: 1; transform: scale(1.4); }
+    .monkey-found-banner {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      z-index: 10000; display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .monkey-found-card {
+      background: rgba(255,255,255,0.1); border: 2px solid #f9d423;
+      border-radius: 20px; padding: 30px 24px; text-align: center; max-width: 300px;
+      animation: monkeyPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes monkeyPop {
+      from { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .monkey-found-card .big-monkey { font-size: 4rem; }
+    .monkey-found-card h3 {
+      font-size: 1.2rem; margin: 12px 0 6px;
+      background: linear-gradient(90deg, #f9d423, #ff4e50);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .monkey-found-card p { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 16px; }
+    .monkey-dismiss-btn {
+      padding: 10px 28px; font-size: 0.9rem; font-weight: 600; color: #1a1a2e;
+      background: linear-gradient(135deg, #f9d423, #ff4e50); border: none; border-radius: 12px; cursor: pointer;
+    }
     .monkey-hint-bar {
-      text-align: center;
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.3);
-      margin-top: 4px;
-      margin-bottom: 2px;
-      transition: opacity 0.3s;
+      text-align: center; font-size: 0.72rem; color: rgba(255,255,255,0.25);
+      margin: 4px 0; transition: opacity 0.3s;
     }
-    .monkey-hint-bar.found {
-      color: #f9d423;
-      opacity: 0.7;
+    .monkey-hint-bar.found { color: #f9d423; opacity: 0.7; }
+
+    /* ===== Completion ===== */
+    .completion-banner { text-align: center; margin-top: 20px; animation: fadeIn 0.6s ease; }
+    .completion-banner .emoji { font-size: 3rem; }
+    .completion-banner h2 {
+      font-size: 1.3rem; margin: 8px 0;
+      background: linear-gradient(90deg, #f9d423, #ff4e50);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
+    .restart-btn {
+      margin-top: 16px; padding: 12px 32px; font-size: 0.95rem; font-weight: 600;
+      color: #1a1a2e; background: linear-gradient(135deg, #f9d423, #ff4e50);
+      border: none; border-radius: 14px; cursor: pointer;
+    }
+
+    .section-hidden { display: none; }
+    .pool-bottom-spacer { height: 60px; }
   </style>
 </head>
 <body>
@@ -505,28 +296,17 @@
 
   <div class="questions-grid" id="questionsGrid"></div>
 
-  <div class="monkey-hint-bar" id="monkeyHint">🐒 有一隻 Chaos Monkey 藏在某個詳解裡，找到牠！</div>
-
+  <div class="monkey-hint-bar" id="monkeyHint">🐒 Chaos Monkey 藏在某個詳解裡，找到牠！</div>
   <div class="reverse-lookup-tip" id="reverseTip">💡 點擊的答案是這些題目的正確答案</div>
 
-  <div class="divider">⬇ 拖動答案到上方題目 ⬇  ·  點擊答案可反向查詢</div>
+  <div class="divider" id="answerDivider">⬇ 拖動答案到題目 · 點擊可反向查詢 ⬇</div>
+  <div class="chip-pool" id="answerPool"></div>
 
-  <div class="answer-pool" id="answerPool"></div>
+  <div class="divider section-hidden" id="expDivider">⬇ 拖動詳解到已答對的題目 ⬇</div>
+  <div class="chip-pool section-hidden" id="expPool"></div>
 
+  <div class="pool-bottom-spacer"></div>
   <div id="completionArea"></div>
-
-  <!-- Bottom Sheet -->
-  <div class="sheet-overlay" id="sheetOverlay"></div>
-  <div class="bottom-sheet" id="bottomSheet">
-    <div class="sheet-handle-area" id="sheetHandleArea">
-      <div class="sheet-handle"></div>
-    </div>
-    <div class="sheet-header">
-      <span class="sheet-title" id="sheetTitle">📖 詳解</span>
-      <button class="sheet-close" id="sheetCloseBtn">✕</button>
-    </div>
-    <div class="sheet-body" id="sheetBody"></div>
-  </div>
 
   <script>
     // ==================== 題庫 ====================
@@ -538,20 +318,13 @@
         options: ['haben', 'hat', 'geht', 'gibt'],
         labels: ['A', 'B', 'C', 'D'],
         correctIndex: 3,
-        explanation: '這是德語最經典的<b>存在句型「Es gibt + 賓語（Accusativ）」</b>，意思是「有……存在於某處」。<br><br>' +
-          '• 「Es」是形式主語（無實義），「gibt」是 geben 的第三人稱單數現在式。<br>' +
-          '• 後面永遠接<b>第四格（Accusativ）</b>：viele alte Gemälde（許多古畫）。<br>' +
-          '• 類似英文的 "There is/are..."，但德語只能用 "Es gibt" 表達「存在」。<br><br>' +
-          '<b>🎤 導遊實務應用：</b><br>' +
-          '帶外國團到故宮時，您可以說：<br>' +
-          '「Im Nationalen Palastmuseum in Taipeh gibt es mehr als 700.000 Kunstwerke aus China. Es gibt auch viele alte Gemälde der Song-Dynastie.」<br>' +
-          '這樣介紹展品既自然又專業。<br><br>' +
-          '<b>❌ 為什麼其他錯？</b><br>' +
-          '• (A) haben：haben 是「擁有」，主語若是複數或 wir/ihr/sie 才用 haben；Es 單數要用 hat，但「Es haben」文法不通。<br>' +
-          '• (B) hat：單數第三人稱，但「Es hat viele alte Gemälde」聽起來像「它擁有畫」，不符合存在句。<br>' +
-          '• (C) geht：Es geht 是「進行、情況如何」（Es geht um... = 關於……），或天氣（Es geht ein starker Wind），不能表存在。<br><br>' +
-          '<b>💡 記憶口訣：</b>看到「Es ______ viele... im/in/am...」→ 99% 是 gibt！<br>' +
-          '<b>✏️ 練習：</b>Es gibt viele Tempel in Taipeh.（台北有很多廟。）'
+        expParts: [
+          '這是存在句型「Es gibt + Akkusativ」，意思是「有……存在於某處」。',
+          '「Es」是形式主語，「gibt」是 geben 第三人稱。後面永遠接第四格。',
+          '🎤 導遊應用：「Im Palastmuseum gibt es mehr als 700.000 Kunstwerke.」',
+          '❌ haben/hat 是「擁有」不符存在句；geht 是「進行」不能表存在。',
+          '💡 口訣：Es _ viele... im/in/am... → 99% 是 gibt！'
+        ]
       },
       {
         id: 2,
@@ -560,18 +333,13 @@
         options: ['mich', 'sich', 'ihn', 'uns'],
         labels: ['A', 'B', 'C', 'D'],
         correctIndex: 0,
-        explanation: '動詞 <b>sich unterhalten</b> 是<b>反身動詞</b>（reflexives Verb），意思是「聊天、交談」。第一人稱單數的反身代詞必須用 <b>mich</b>。<br>' +
-          '完整句：Ich unterhalte <b>mich</b> gern mit Ausländern.<br>' +
-          '反身動詞在德語中非常多（如 sich freuen、sich erinnern），記住：主語與受詞是同一人時，一定要加反身代詞。<br><br>' +
-          '<b>🎤 導遊實務應用：</b><br>' +
-          '「Ich unterhalte mich gern mit Touristen über die Geschichte Taiwans.」<br>' +
-          '（我很喜歡跟遊客聊台灣歷史。）——自我介紹時超好用！<br><br>' +
-          '<b>❌ 為什麼其他錯？</b><br>' +
-          '• (B) sich：第三人稱單/複數才用 sich（er unterhält sich / sie unterhalten sich）。<br>' +
-          '• (C) ihn：第四格陽性「他」，但這裡沒有「他」這個對象。<br>' +
-          '• (D) uns：第一人稱複數「我們」。<br><br>' +
-          '<b>💡 學習延伸：</b>常見反身動詞表：sich waschen（洗澡）、sich beeilen（趕快）、sich setzen（坐下）。<br>' +
-          '口訣：「我自己用 mich，你自己用 dich，他自己用 sich，我們自己用 uns。」'
+        expParts: [
+          'sich unterhalten 是反身動詞，意思是「聊天、交談」。',
+          '第一人稱反身代詞用 mich。主語與受詞同一人 → 加反身代詞。',
+          '🎤「Ich unterhalte mich gern mit Touristen über die Geschichte Taiwans.」',
+          '❌ sich 用於第三人稱；ihn 是「他」的第四格；uns 是「我們」。',
+          '💡 口訣：我 mich、你 dich、他 sich、我們 uns。'
+        ]
       },
       {
         id: 3,
@@ -580,15 +348,12 @@
         options: ['geklungen', 'geklingelt', 'gelungen', 'klingen'],
         labels: ['A', 'B', 'C', 'D'],
         correctIndex: 1,
-        explanation: '這是完成式（Perfekt）：es hat + Partizip II。<br>' +
-          '動詞 <b>klingeln</b>（鈴響、門鈴響）→ Partizip II 是 <b>ge-klingelt</b>（規則動詞，加 ge-，-t 結尾）。<br>' +
-          '常見情境：電話響（Das Telefon hat geklingelt.）或門鈴。<br><br>' +
-          '<b>❌ 為什麼其他錯？</b><br>' +
-          '• (A) geklungen：klingen（聽起來、發出聲音）的 Partizip II，但「es hat geklungen」較少用於門鈴。<br>' +
-          '• (C) gelungen：gelingen（成功）的 Partizip II，意思完全不同（Es ist mir gelungen = 我成功了）。<br>' +
-          '• (D) klingen：原形，不能放在 hat 後面。<br><br>' +
-          '<b>🎤 導遊應用：</b>客人問「Was war das für ein Geräusch？」您可答：<br>' +
-          '「Ich glaube, es hat geklingelt. Vielleicht ist der Bus schon da.」'
+        expParts: [
+          '完成式（Perfekt）結構：es hat + Partizip II。',
+          'klingeln（鈴響）→ 過去分詞 geklingelt（規則動詞，加 ge-，-t）。',
+          '❌ geklungen 是 klingen；gelungen 是 gelingen；klingen 是原形。',
+          '🎤「Es hat geklingelt. Vielleicht ist der Bus schon da.」'
+        ]
       },
       {
         id: 4,
@@ -597,23 +362,22 @@
         options: ['flog', 'fliegte', 'fliegt', 'flug'],
         labels: ['A', 'B', 'C', 'D'],
         correctIndex: 0,
-        explanation: '<b>fliegen</b> 是強變化不規則動詞（starkes Verb）。過去式（Präteritum）是 <b>flog</b>（不是加 -te）。<br>' +
-          '昨天的事用過去式最自然。<br><br>' +
-          '<b>📝 變化表：</b>fliegen – flog – ist geflogen<br><br>' +
-          '<b>❌ 為什麼其他錯？</b><br>' +
-          '• (B) fliegte：弱變化動詞才加 -te，fliegen 是強變化，不能這樣變。<br>' +
-          '• (C) fliegt：現在式，不符合「gestern」。<br>' +
-          '• (D) flug：根本不存在。<br><br>' +
-          '<b>💡 學習延伸：</b>常考強變化動詞：fliegen-flog、gehen-ging、sehen-sah、kommen-kam。背熟這些，文法分數直接 +20 分。'
+        expParts: [
+          'fliegen 是強變化不規則動詞，過去式（Präteritum）是 flog。',
+          '變化表：fliegen – flog – ist geflogen。gestern → 用過去式。',
+          '❌ fliegte 是錯誤弱變化；fliegt 是現在式；flug 不存在。',
+          '💡 常考：fliegen-flog、gehen-ging、sehen-sah、kommen-kam。'
+        ]
       }
     ];
 
-    // ==================== 產生答案卡片資料 ====================
+    // ==================== 產生答案卡片 ====================
     let answerChips = [];
     questions.forEach(q => {
       q.options.forEach((opt, i) => {
         answerChips.push({
-          chipId: `q${q.id}-${i}`,
+          chipId: `ans-q${q.id}-${i}`,
+          type: 'answer',
           questionId: q.id,
           label: q.labels[i],
           text: opt,
@@ -621,6 +385,24 @@
         });
       });
     });
+
+    // ==================== 產生詳解卡片 ====================
+    let expChips = [];
+    function buildExpChips() {
+      expChips = [];
+      questions.forEach(q => {
+        q.expParts.forEach((part, i) => {
+          expChips.push({
+            chipId: `exp-q${q.id}-${i}`,
+            type: 'explanation',
+            questionId: q.id,
+            partIndex: i,
+            text: part
+          });
+        });
+      });
+      shuffle(expChips);
+    }
 
     // 洗牌
     function shuffle(arr) {
@@ -631,33 +413,35 @@
       return arr;
     }
     shuffle(answerChips);
+    buildExpChips();
 
     // ==================== 狀態 ====================
-    let solvedSet = new Set(); // 已答對的題目 ID
-    let monkeyQuestionId = null; // 🐒 藏在哪一題
-    let monkeyCharIndex = null;  // 🐒 插在詳解文字的哪個位置
+    let solvedSet = new Set();           // 已答對的題目 ID
+    let expPlacedMap = new Map();        // qid → Set<chipId> 已放入的詳解 chip
+    let expCompletedSet = new Set();     // 詳解全部填滿的題目 ID
+
+    function getExpPlaced(qid) {
+      if (!expPlacedMap.has(qid)) expPlacedMap.set(qid, new Set());
+      return expPlacedMap.get(qid);
+    }
+
+    // ==================== Chaos Monkey ====================
+    let monkeyQuestionId = null;
+    let monkeyPartIndex = null;
     let monkeyFound = false;
 
-    // ==================== Chaos Monkey 初始化 ====================
     function initChaosMonkey() {
-      // 隨機選一題藏猴子
-      monkeyQuestionId = questions[Math.floor(Math.random() * questions.length)].id;
-      // 隨機選詳解中的插入位置（避開開頭和結尾 3 字元）
-      const exp = questions.find(q => q.id === monkeyQuestionId).explanation;
-      const minPos = 3;
-      const maxPos = exp.length - 3;
-      monkeyCharIndex = Math.floor(Math.random() * (maxPos - minPos)) + minPos;
+      const q = questions[Math.floor(Math.random() * questions.length)];
+      monkeyQuestionId = q.id;
+      monkeyPartIndex = Math.floor(Math.random() * q.expParts.length);
       monkeyFound = false;
       updateMonkeyHint();
     }
 
-    function getExplanationWithMonkey(q) {
-      let text = q.explanation;
-      if (q.id === monkeyQuestionId && !monkeyFound) {
-        // 在 monkeyCharIndex 位置插入猴子
-        const before = text.slice(0, monkeyCharIndex);
-        const after = text.slice(monkeyCharIndex);
-        text = `${before}<span class="chaos-monkey" onclick="foundMonkey(event)">🐒</span>${after}`;
+    function getExpText(qid, partIndex, text) {
+      if (qid === monkeyQuestionId && partIndex === monkeyPartIndex && !monkeyFound) {
+        const pos = Math.floor(text.length / 2);
+        return text.slice(0, pos) + '<span class="chaos-monkey" onclick="foundMonkey(event)">🐒</span>' + text.slice(pos);
       }
       return text;
     }
@@ -667,8 +451,6 @@
       if (monkeyFound) return;
       monkeyFound = true;
       updateMonkeyHint();
-
-      // 彈出慶祝
       const banner = document.createElement('div');
       banner.className = 'monkey-found-banner';
       banner.id = 'monkeyBanner';
@@ -678,68 +460,107 @@
           <h3>你找到 Chaos Monkey 了！</h3>
           <p>牠藏在第 ${monkeyQuestionId} 題的詳解裡</p>
           <button class="monkey-dismiss-btn" onclick="dismissMonkey()">知道了 👍</button>
-        </div>
-      `;
+        </div>`;
       document.body.appendChild(banner);
-
-      // 更新詳解：把猴子標亮
-      renderQuestions();
     }
-
     function dismissMonkey() {
-      const banner = document.getElementById('monkeyBanner');
-      if (banner) banner.remove();
+      const b = document.getElementById('monkeyBanner');
+      if (b) b.remove();
     }
-
     function updateMonkeyHint() {
-      const hint = document.getElementById('monkeyHint');
-      if (!hint) return;
-      if (monkeyFound) {
-        hint.textContent = '🐒 Chaos Monkey 已被你抓到了！';
-        hint.classList.add('found');
-      } else {
-        hint.textContent = '🐒 有一隻 Chaos Monkey 藏在某個詳解裡，找到牠！';
-        hint.classList.remove('found');
-      }
+      const h = document.getElementById('monkeyHint');
+      if (!h) return;
+      if (monkeyFound) { h.textContent = '🐒 Chaos Monkey 已被你抓到了！'; h.classList.add('found'); }
+      else { h.textContent = '🐒 Chaos Monkey 藏在某個詳解裡，找到牠！'; h.classList.remove('found'); }
     }
 
-    // ==================== 渲染題目卡片 ====================
+    // ==================== 渲染：題目卡片 ====================
     function renderQuestions() {
       const grid = document.getElementById('questionsGrid');
-      grid.innerHTML = questions.map(q => `
-        <div class="question-card ${solvedSet.has(q.id) ? 'solved' : ''}" data-qid="${q.id}">
-          <span class="q-number">第 ${q.id} 題</span>
-          <div class="q-text">${q.question}</div>
-          <div class="q-chinese-toggle" onclick="toggleCh(this, ${q.id})">
-            <span class="arrow">▶</span> 中文翻譯
-          </div>
-          <div class="q-chinese" id="ch-${q.id}">${q.chinese}</div>
-          <div class="q-drop-zone" id="dz-${q.id}">
-            ${solvedSet.has(q.id) ? getCorrectLabel(q) : '將答案拖到這裡'}
-          </div>
-          ${solvedSet.has(q.id) ? `<div class="q-explain-btn" onclick="openSheet(${q.id})">📖 詳解</div>` : ''}
-        </div>
-      `).join('');
+      grid.innerHTML = questions.map(q => {
+        const isSolved = solvedSet.has(q.id);
+        const placed = getExpPlaced(q.id);
+        const expDone = expCompletedSet.has(q.id);
+        const totalParts = q.expParts.length;
+        const filledCount = placed.size;
+
+        let expZoneHtml = '';
+        if (isSolved) {
+          const slotsHtml = q.expParts.map((part, idx) => {
+            // 找到已放入且 partIndex === idx 的 chip
+            const isFilled = [...placed].some(chipId => {
+              const chip = expChips.find(c => c.chipId === chipId);
+              return chip && chip.partIndex === idx;
+            });
+            const displayText = isFilled ? getExpText(q.id, idx, part) : `<span style="opacity:0.35">⬜ ${idx + 1}</span>`;
+            return `<div class="exp-slot ${isFilled ? 'filled' : ''}">${displayText}</div>`;
+          }).join('');
+
+          expZoneHtml = `
+            <div class="exp-zone ${expDone ? 'completed' : ''}" data-qid="${q.id}">
+              <div class="exp-zone-label">📖 詳解 (${filledCount}/${totalParts})</div>
+              ${slotsHtml}
+            </div>`;
+        }
+
+        return `
+          <div class="question-card ${isSolved ? 'solved' : ''}" data-qid="${q.id}">
+            <span class="q-number">第 ${q.id} 題</span>
+            <div class="q-text">${q.question}</div>
+            <div class="q-chinese-toggle" onclick="toggleCh(this, ${q.id})">
+              <span class="arrow">▶</span> 中文翻譯
+            </div>
+            <div class="q-chinese" id="ch-${q.id}">${q.chinese}</div>
+            <div class="q-drop-zone" id="dz-${q.id}">
+              ${isSolved ? `(${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}` : '將答案拖到這裡'}
+            </div>
+            ${expZoneHtml}
+          </div>`;
+      }).join('');
     }
 
-    function getCorrectLabel(q) {
-      return `(${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}`;
-    }
-
-    // ==================== 渲染答案池 ====================
-    function renderPool() {
+    // ==================== 渲染：答案池 ====================
+    function renderAnswerPool() {
       const pool = document.getElementById('answerPool');
-      pool.innerHTML = answerChips.map(chip => `
-        <div class="answer-chip ${solvedSet.has(chip.questionId) && chip.isCorrect ? 'placed' : ''}"
-             data-chip-id="${chip.chipId}"
-             data-qid="${chip.questionId}"
-             data-correct="${chip.isCorrect}">
-          (${chip.label}) ${chip.text}
-        </div>
-      `).join('');
+      pool.innerHTML = answerChips.map(chip => {
+        const isPlaced = solvedSet.has(chip.questionId) && chip.isCorrect;
+        return `<div class="answer-chip ${isPlaced ? 'placed' : ''}"
+                     data-chip-id="${chip.chipId}" data-drag-type="answer">
+                  (${chip.label}) ${chip.text}
+                </div>`;
+      }).join('');
 
-      // 綁定拖動事件
       pool.querySelectorAll('.answer-chip:not(.placed)').forEach(el => {
+        el.addEventListener('pointerdown', onDragStart);
+      });
+    }
+
+    // ==================== 渲染：詳解池 ====================
+    function renderExpPool() {
+      const divider = document.getElementById('expDivider');
+      const pool = document.getElementById('expPool');
+
+      // 只顯示已答對題目的詳解 chip
+      const visibleChips = expChips.filter(c => solvedSet.has(c.questionId));
+      if (visibleChips.length === 0) {
+        divider.classList.add('section-hidden');
+        pool.classList.add('section-hidden');
+        return;
+      }
+
+      divider.classList.remove('section-hidden');
+      pool.classList.remove('section-hidden');
+
+      pool.innerHTML = visibleChips.map(chip => {
+        const placed = getExpPlaced(chip.questionId);
+        const isPlaced = placed.has(chip.chipId);
+        return `<div class="exp-chip ${isPlaced ? 'placed' : ''}"
+                     data-chip-id="${chip.chipId}" data-drag-type="explanation">
+                  ${chip.text}
+                </div>`;
+      }).join('');
+
+      pool.querySelectorAll('.exp-chip:not(.placed)').forEach(el => {
         el.addEventListener('pointerdown', onDragStart);
       });
     }
@@ -750,30 +571,34 @@
       document.getElementById(`ch-${qid}`).classList.toggle('show');
     }
 
-    // ==================== 拖放系統 ====================
-    let dragState = null; // { chipEl, ghost, chipData, startX, startY }
+    // ==================== 統一拖放系統 ====================
+    let dragState = null;
 
     function onDragStart(e) {
       e.preventDefault();
       const el = e.currentTarget;
       const chipId = el.dataset.chipId;
-      const chipData = answerChips.find(c => c.chipId === chipId);
+      const dragType = el.dataset.dragType; // 'answer' or 'explanation'
+
+      let chipData;
+      if (dragType === 'answer') {
+        chipData = answerChips.find(c => c.chipId === chipId);
+      } else {
+        chipData = expChips.find(c => c.chipId === chipId);
+      }
       if (!chipData) return;
 
-      // 建立 ghost
       const ghost = document.createElement('div');
-      ghost.className = 'drag-ghost';
-      ghost.textContent = `(${chipData.label}) ${chipData.text}`;
+      ghost.className = `drag-ghost ${dragType === 'answer' ? 'ghost-answer' : 'ghost-exp'}`;
+      ghost.textContent = dragType === 'answer' ? `(${chipData.label}) ${chipData.text}` : chipData.text;
       document.body.appendChild(ghost);
 
-      const x = e.clientX;
-      const y = e.clientY;
+      const x = e.clientX, y = e.clientY;
       ghost.style.left = x + 'px';
       ghost.style.top = y + 'px';
-
       el.classList.add('dragging-source');
 
-      dragState = { chipEl: el, ghost, chipData, startX: x, startY: y };
+      dragState = { chipEl: el, ghost, chipData, dragType, startX: x, startY: y };
 
       document.addEventListener('pointermove', onDragMove);
       document.addEventListener('pointerup', onDragEnd);
@@ -783,73 +608,86 @@
     function onDragMove(e) {
       if (!dragState) return;
       e.preventDefault();
-
-      const x = e.clientX;
-      const y = e.clientY;
+      const x = e.clientX, y = e.clientY;
       dragState.ghost.style.left = x + 'px';
       dragState.ghost.style.top = y + 'px';
 
-      // 檢查是否 hover 在某張卡片上
+      const hoverClass = dragState.dragType === 'answer' ? 'drag-over-answer' : 'drag-over-exp';
       document.querySelectorAll('.question-card').forEach(card => {
-        const rect = card.getBoundingClientRect();
-        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-          if (!card.classList.contains('solved')) {
-            card.classList.add('drag-over');
+        const r = card.getBoundingClientRect();
+        const isOver = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+        if (isOver) {
+          const qid = parseInt(card.dataset.qid);
+          if (dragState.dragType === 'answer' && !solvedSet.has(qid)) {
+            card.classList.add(hoverClass);
+          } else if (dragState.dragType === 'explanation' && solvedSet.has(qid) && !expCompletedSet.has(qid)) {
+            card.classList.add(hoverClass);
           }
         } else {
-          card.classList.remove('drag-over');
+          card.classList.remove('drag-over-answer', 'drag-over-exp');
         }
       });
     }
 
     function onDragEnd(e) {
       if (!dragState) return;
+      const x = e.clientX, y = e.clientY;
+      const { chipEl, ghost, chipData, dragType, startX, startY } = dragState;
 
-      const x = e.clientX;
-      const y = e.clientY;
-      const { chipEl, ghost, chipData, startX, startY } = dragState;
-
-      // 移除 ghost
       ghost.remove();
       chipEl.classList.remove('dragging-source');
+      document.querySelectorAll('.question-card').forEach(c => c.classList.remove('drag-over-answer', 'drag-over-exp'));
 
-      // 清除所有 drag-over
-      document.querySelectorAll('.question-card').forEach(card => {
-        card.classList.remove('drag-over');
-      });
-
-      // 計算移動距離
       const dist = Math.sqrt((x - startX) ** 2 + (y - startY) ** 2);
 
-      if (dist < 10) {
-        // ===== 短按 → 反向查詢 =====
+      if (dist < 10 && dragType === 'answer') {
+        // 短按 → 反向查詢（只對答案 chip）
         reverseLookup(chipData, chipEl);
-      } else {
-        // ===== 拖動 → 嘗試作答 =====
+      } else if (dist >= 10) {
+        // 拖動 → 嘗試放置
         let targetCard = null;
-        document.querySelectorAll('.question-card:not(.solved)').forEach(card => {
-          const rect = card.getBoundingClientRect();
-          if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        document.querySelectorAll('.question-card').forEach(card => {
+          const r = card.getBoundingClientRect();
+          if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
             targetCard = card;
           }
         });
 
         if (targetCard) {
           const targetQid = parseInt(targetCard.dataset.qid);
-          const targetQ = questions.find(q => q.id === targetQid);
-          const correctText = targetQ.options[targetQ.correctIndex];
-          if (chipData.text === correctText) {
-            solvedSet.add(targetQid);
-            chipEl.classList.add('placed');
-            clearReverseLookup();
-            renderQuestions();
-            renderPool();
-            checkCompletion();
+
+          if (dragType === 'answer') {
+            // 答案拖放
+            if (!solvedSet.has(targetQid)) {
+              const tq = questions.find(q => q.id === targetQid);
+              if (chipData.text === tq.options[tq.correctIndex]) {
+                solvedSet.add(targetQid);
+                clearReverseLookup();
+                renderAll();
+                checkCompletion();
+              }
+            }
+          } else {
+            // 詳解拖放
+            if (solvedSet.has(targetQid) && !expCompletedSet.has(targetQid)) {
+              if (chipData.questionId === targetQid) {
+                const placed = getExpPlaced(targetQid);
+                if (!placed.has(chipData.chipId)) {
+                  placed.add(chipData.chipId);
+                  // 檢查是否全部填滿
+                  const tq = questions.find(q => q.id === targetQid);
+                  if (placed.size === tq.expParts.length) {
+                    expCompletedSet.add(targetQid);
+                  }
+                  renderAll();
+                  checkCompletion();
+                }
+              }
+            }
           }
         }
       }
 
-      // 清除
       document.removeEventListener('pointermove', onDragMove);
       document.removeEventListener('pointerup', onDragEnd);
       document.removeEventListener('pointercancel', onDragEnd);
@@ -858,152 +696,64 @@
 
     // ==================== 反向查詢 ====================
     function reverseLookup(chipData, chipEl) {
-      // 先清除之前的高亮
       clearReverseLookup();
-
-      // 找出所有正確答案文字 === chipData.text 的未解題目
       const matchingQids = questions
         .filter(q => !solvedSet.has(q.id) && q.options[q.correctIndex] === chipData.text)
         .map(q => q.id);
-
       if (matchingQids.length > 0) {
-        // 高亮匹配的題目卡片
         matchingQids.forEach(qid => {
           const card = document.querySelector(`.question-card[data-qid="${qid}"]`);
           if (card) card.classList.add('highlighted');
         });
-
-        // 高亮被點擊的 chip
         chipEl.classList.add('selected');
-
-        // 顯示提示
         document.getElementById('reverseTip').classList.add('show');
       }
     }
-
     function clearReverseLookup() {
       document.querySelectorAll('.question-card.highlighted').forEach(c => c.classList.remove('highlighted'));
       document.querySelectorAll('.answer-chip.selected').forEach(c => c.classList.remove('selected'));
       document.getElementById('reverseTip').classList.remove('show');
     }
-
-    // 點擊空白處清除高亮
     document.addEventListener('pointerdown', (e) => {
-      if (!e.target.closest('.answer-chip')) {
-        clearReverseLookup();
-      }
+      if (!e.target.closest('.answer-chip')) clearReverseLookup();
     });
 
-    // ==================== Bottom Sheet 詳解面板 ====================
-    const sheetOverlay = document.getElementById('sheetOverlay');
-    const bottomSheet = document.getElementById('bottomSheet');
-    const sheetBody = document.getElementById('sheetBody');
-    const sheetTitle = document.getElementById('sheetTitle');
-    const sheetCloseBtn = document.getElementById('sheetCloseBtn');
-    const sheetHandleArea = document.getElementById('sheetHandleArea');
-
-    let sheetDragState = null;
-
-    function openSheet(qid) {
-      const q = questions.find(q => q.id === qid);
-      if (!q) return;
-
-      sheetTitle.textContent = `📖 第 ${q.id} 題 詳解`;
-      sheetBody.innerHTML = `
-        <div class="sheet-question">${q.question}</div>
-        <div class="sheet-answer-line">✅ 正確答案：(${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}</div>
-        <div class="sheet-explanation">${getExplanationWithMonkey(q)}</div>
-      `;
-
-      sheetOverlay.classList.add('open');
-      bottomSheet.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeSheet() {
-      bottomSheet.classList.remove('open');
-      bottomSheet.style.transform = '';
-      sheetOverlay.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-
-    sheetOverlay.addEventListener('click', closeSheet);
-    sheetCloseBtn.addEventListener('click', closeSheet);
-
-    // --- 拖拉關閉 Bottom Sheet ---
-    sheetHandleArea.addEventListener('pointerdown', onSheetDragStart);
-
-    function onSheetDragStart(e) {
-      e.preventDefault();
-      bottomSheet.classList.add('dragging');
-      sheetDragState = { startY: e.clientY, currentOffset: 0 };
-      document.addEventListener('pointermove', onSheetDragMove);
-      document.addEventListener('pointerup', onSheetDragEnd);
-      document.addEventListener('pointercancel', onSheetDragEnd);
-    }
-
-    function onSheetDragMove(e) {
-      if (!sheetDragState) return;
-      e.preventDefault();
-      const dy = e.clientY - sheetDragState.startY;
-      // 只允許往下拖
-      const offset = Math.max(0, dy);
-      sheetDragState.currentOffset = offset;
-      bottomSheet.style.transform = `translateY(${offset}px)`;
-
-      // 背景透明度跟隨
-      const maxDrag = 300;
-      const progress = Math.min(offset / maxDrag, 1);
-      sheetOverlay.style.opacity = 1 - progress * 0.7;
-    }
-
-    function onSheetDragEnd(e) {
-      if (!sheetDragState) return;
-      bottomSheet.classList.remove('dragging');
-
-      const offset = sheetDragState.currentOffset;
-      if (offset > 120) {
-        // 拖超過 120px → 關閉
-        closeSheet();
-      } else {
-        // 彈回
-        bottomSheet.style.transform = '';
-        sheetOverlay.style.opacity = '';
-      }
-
-      document.removeEventListener('pointermove', onSheetDragMove);
-      document.removeEventListener('pointerup', onSheetDragEnd);
-      document.removeEventListener('pointercancel', onSheetDragEnd);
-      sheetDragState = null;
+    // ==================== 渲染全部 ====================
+    function renderAll() {
+      renderQuestions();
+      renderAnswerPool();
+      renderExpPool();
     }
 
     // ==================== 完成判斷 ====================
     function checkCompletion() {
-      if (solvedSet.size === questions.length) {
+      const allAnswered = solvedSet.size === questions.length;
+      const allExplained = expCompletedSet.size === questions.length;
+      if (allAnswered && allExplained) {
         document.getElementById('completionArea').innerHTML = `
           <div class="completion-banner">
             <div class="emoji">🎉</div>
-            <h2>全部答對了！太棒了！</h2>
+            <h2>全部完成！答案 + 詳解都對了！</h2>
             <button class="restart-btn" onclick="restart()">再玩一次 🔄</button>
-          </div>
-        `;
+          </div>`;
       }
     }
 
     function restart() {
       solvedSet.clear();
+      expPlacedMap.clear();
+      expCompletedSet.clear();
       shuffle(answerChips);
+      buildExpChips();
       document.getElementById('completionArea').innerHTML = '';
       dismissMonkey();
       initChaosMonkey();
-      renderQuestions();
-      renderPool();
+      renderAll();
     }
 
     // ==================== 啟動 ====================
     initChaosMonkey();
-    renderQuestions();
-    renderPool();
+    renderAll();
   </script>
 </body>
 </html>
