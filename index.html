@@ -693,6 +693,145 @@
       border-bottom-color: #ea580c;
     }
 
+    /* ===== Traces ===== */
+    .trace-summary {
+      padding: 6px 10px; font-size: 0.78rem; color: #888; line-height: 1.7;
+    }
+    .trace-summary .ts-row { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+    .trace-summary .ts-icon { width: 16px; text-align: center; flex-shrink: 0; }
+    .trace-summary .ts-val { font-weight: 600; color: #555; }
+
+    .trace-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px; margin: 6px 10px; border-radius: 10px;
+      background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+      color: #fff; font-size: 0.82rem; font-weight: 600;
+      border: none; cursor: pointer; transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(14,165,233,0.2);
+    }
+    .trace-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.3); }
+    .trace-btn .tb-icon { font-size: 0.9rem; }
+
+    .trace-recent-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 10px; border-radius: 8px; cursor: pointer;
+      font-size: 0.72rem; color: #888; transition: all 0.15s;
+      margin-bottom: 1px;
+    }
+    .trace-recent-item:hover { background: #f0f9ff; }
+    .trace-recent-item .tr-icon { font-size: 0.7rem; flex-shrink: 0; }
+    .trace-recent-item .tr-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .trace-recent-item .tr-time { font-size: 0.6rem; color: #bbb; flex-shrink: 0; font-family: monospace; }
+
+    /* Trace Panel (main content) */
+    .trace-panel {
+      background: #fff; border: 2px solid #0ea5e9; border-radius: 16px;
+      padding: 18px 20px; margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(14,165,233,0.08);
+      animation: fadeIn 0.3s ease;
+    }
+    .trace-panel-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+    }
+    .trace-panel-title {
+      font-size: 1rem; font-weight: 700; color: #0ea5e9;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .trace-panel-close {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: #f0f9ff; border: none; cursor: pointer;
+      font-size: 0.85rem; color: #0ea5e9; display: flex;
+      align-items: center; justify-content: center; transition: background 0.15s;
+    }
+    .trace-panel-close:hover { background: #e0f2fe; }
+    .trace-panel-tabs {
+      display: flex; gap: 3px; background: #f0f9ff; border-radius: 10px; padding: 3px; margin-bottom: 14px;
+    }
+    .trace-tab {
+      flex: 1; padding: 7px 10px; border-radius: 8px; border: none;
+      background: transparent; font-size: 0.78rem; font-weight: 600;
+      color: #94a3b8; cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .trace-tab.active { background: #fff; color: #0ea5e9; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+
+    /* Waterfall timeline */
+    .trace-waterfall { position: relative; }
+    .trace-span {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 8px; margin-bottom: 4px;
+      cursor: pointer; transition: all 0.15s; position: relative;
+    }
+    .trace-span:hover { background: #f8fafc; }
+    .trace-span.depth-0 { padding-left: 8px; }
+    .trace-span.depth-1 { padding-left: 28px; }
+    .trace-span.depth-2 { padding-left: 48px; }
+    .trace-span .ts-connector {
+      position: absolute; left: 18px; top: 0; bottom: 0;
+      width: 1px; background: #e2e8f0;
+    }
+    .trace-span.depth-2 .ts-connector { left: 38px; }
+    .trace-span .ts-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid #fff; box-shadow: 0 0 0 1.5px currentColor;
+    }
+    .trace-span .ts-label {
+      flex: 1; font-size: 0.78rem; font-weight: 500; color: #475569;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .trace-span .ts-duration {
+      font-size: 0.65rem; color: #94a3b8; font-family: monospace; flex-shrink: 0;
+    }
+    .trace-span .ts-bar-wrap {
+      width: 80px; height: 6px; background: #f1f5f9; border-radius: 3px;
+      flex-shrink: 0; overflow: hidden;
+    }
+    .trace-span .ts-bar {
+      height: 100%; border-radius: 3px; min-width: 2px; transition: width 0.3s ease;
+    }
+    /* Span type colors */
+    .span-session .ts-dot { color: #6366f1; } .span-session .ts-bar { background: #6366f1; }
+    .span-pageview .ts-dot { color: #8b5cf6; } .span-pageview .ts-bar { background: #8b5cf6; }
+    .span-answer-correct .ts-dot { color: #22c55e; } .span-answer-correct .ts-bar { background: #22c55e; }
+    .span-answer-wrong .ts-dot { color: #ef4444; } .span-answer-wrong .ts-bar { background: #ef4444; }
+    .span-exp-place .ts-dot { color: #a78bfa; } .span-exp-place .ts-bar { background: #a78bfa; }
+    .span-exp-complete .ts-dot { color: #6c5ce7; } .span-exp-complete .ts-bar { background: #6c5ce7; }
+    .span-word-lookup .ts-dot { color: #ea580c; } .span-word-lookup .ts-bar { background: #ea580c; }
+    .span-monkey .ts-dot { color: #f59e0b; } .span-monkey .ts-bar { background: #f59e0b; }
+    .span-reorder .ts-dot { color: #14b8a6; } .span-reorder .ts-bar { background: #14b8a6; }
+
+    /* Span detail card */
+    .trace-detail {
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+      padding: 14px 16px; margin: 8px 0; animation: fadeIn 0.2s ease;
+    }
+    .trace-detail-row {
+      display: flex; gap: 10px; font-size: 0.78rem; margin-bottom: 5px; line-height: 1.5;
+    }
+    .trace-detail-row .td-key {
+      font-weight: 600; color: #64748b; min-width: 70px; flex-shrink: 0;
+    }
+    .trace-detail-row .td-val { color: #334155; word-break: break-word; }
+    .trace-detail-row .td-val a { color: #0ea5e9; text-decoration: underline; cursor: pointer; }
+
+    /* Per-question trace view */
+    .trace-q-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #f0f9ff; border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .trace-q-header .tqh-num {
+      font-size: 0.72rem; font-weight: 700; color: #fff;
+      background: #0ea5e9; padding: 2px 8px; border-radius: 8px;
+    }
+    .trace-q-header .tqh-text { font-size: 0.82rem; color: #475569; flex: 1; }
+    .trace-q-header .tqh-status {
+      font-size: 0.7rem; font-weight: 600; padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .trace-q-header .tqh-status.done { background: #dcfce7; color: #16a34a; }
+    .trace-q-header .tqh-status.partial { background: #fef9c3; color: #ca8a04; }
+    .trace-q-header .tqh-status.pending { background: #f1f5f9; color: #94a3b8; }
+
     /* Backlink panel in main content */
     .backlink-panel {
       background: #fff; border: 2px solid #f59e0b;
@@ -806,6 +945,24 @@
     </div>
 
     <div class="sidebar-section">
+      <div class="sidebar-section-title">🔭 Traces</div>
+      <button class="trace-btn" onclick="toggleTracePanel()">
+        <span class="tb-icon">📊</span> 開啟 Trace 面板
+      </button>
+      <div class="trace-summary" id="traceSummary">
+        <!-- JS 渲染 -->
+      </div>
+      <div class="folder-item" onclick="toggleFolder(this)">
+        <span class="folder-icon">⏱️</span>
+        <span class="folder-name">最近活動</span>
+        <span class="folder-arrow">▶</span>
+      </div>
+      <div class="folder-children" id="traceRecentFolder">
+        <!-- JS 渲染 -->
+      </div>
+    </div>
+
+    <div class="sidebar-section">
       <div class="sidebar-section-title">統計</div>
       <div id="sidebarStats" style="padding: 4px 10px; font-size: 0.82rem; color: #888; line-height: 1.8;"></div>
     </div>
@@ -829,6 +986,7 @@
       <button class="nav-btn" id="nextBtn" onclick="goPage(1)">▶</button>
     </div>
 
+    <div id="traceArea"></div>
     <div id="backlinkArea"></div>
 
     <div id="cardArea"></div>
@@ -1212,6 +1370,9 @@
     function goToPage(idx) {
       currentPage = idx;
       activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null; // 切換頁面時清除反向連結
+      if (questions[idx]) {
+        emitSpan('page_view', { questionId: questions[idx].id, question: questions[idx].question, via: '側邊欄' });
+      }
       renderAll();
       if (window.innerWidth <= 768) toggleSidebar();
     }
@@ -1405,6 +1566,10 @@
 
     function goToPageFromBacklink(idx) {
       currentPage = idx;
+      if (questions[idx]) {
+        const q = questions[idx];
+        emitSpan('page_view', { questionId: q.id, question: q.question, via: '反向連結跳轉' });
+      }
       renderAll();
     }
 
@@ -1613,6 +1778,8 @@
       } else {
         activeWordKey = key;
         activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
+        const q = questions[currentPage];
+        emitSpan('word_lookup', { word: word, questionId: q ? q.id : null });
       }
       renderAll();
     }
@@ -1620,6 +1787,10 @@
     // ==================== 分頁導航 ====================
     function goPage(delta) {
       currentPage = Math.max(0, Math.min(questions.length - 1, currentPage + delta));
+      if (questions.length > 0) {
+        const q = questions[currentPage];
+        emitSpan('page_view', { questionId: q.id, question: q.question });
+      }
       renderAll();
     }
 
@@ -1660,6 +1831,7 @@
       e.stopPropagation();
       if (monkeyFound) return;
       monkeyFound = true;
+      emitSpan('monkey_found', { questionId: monkeyQuestionId, info: `在第${monkeyQuestionId}題的詳解中找到` });
       updateMonkeyHint(); renderSidebar();
       const b = document.createElement('div');
       b.className = 'monkey-found-banner'; b.id = 'monkeyBanner';
@@ -1883,9 +2055,12 @@
               const tq = questions.find(q => q.id === targetQid);
               if (chipData.text === tq.options[tq.correctIndex]) {
                 solvedSet.add(targetQid);
+                emitSpan('answer_correct', { questionId: targetQid, question: tq.question, answer: chipData.text });
                 clearReverseLookup();
                 renderAll();
                 checkCompletion();
+              } else {
+                emitSpan('answer_wrong', { questionId: targetQid, question: tq.question, answer: chipData.text, expected: tq.options[tq.correctIndex] });
               }
             }
           } else {
@@ -1895,7 +2070,11 @@
                 if (!placedArr.includes(chipData.chipId)) {
                   placedArr.push(chipData.chipId);
                   const tq = questions.find(q => q.id === targetQid);
-                  if (placedArr.length === tq.expParts.length) expCompletedSet.add(targetQid);
+                  emitSpan('exp_place', { questionId: targetQid, info: chipData.text.slice(0, 40), partIndex: chipData.partIndex, placed: placedArr.length, total: tq.expParts.length });
+                  if (placedArr.length === tq.expParts.length) {
+                    expCompletedSet.add(targetQid);
+                    emitSpan('exp_complete', { questionId: targetQid, question: tq.question });
+                  }
                   renderAll();
                   checkCompletion();
                 }
@@ -1990,6 +2169,7 @@
             const [removed] = placedArr.splice(sourceIdx, 1);
             const newIdx = targetIdx > sourceIdx ? targetIdx - 1 : targetIdx;
             placedArr.splice(newIdx, 0, removed);
+            emitSpan('reorder', { questionId: qid, info: `從位置 ${sourceIdx + 1} 移到位置 ${newIdx + 1}` });
             renderAll();
           }
         }
@@ -2019,6 +2199,234 @@
       if (!e.target.closest('.answer-chip')) clearReverseLookup();
     });
 
+    // ==================== Traces 系統 ====================
+    const traceSpans = [];   // 所有 spans
+    let traceIdCounter = 0;
+    const sessionStartTime = Date.now();
+    let showTracePanel = false;
+    let traceTab = 'timeline';  // 'timeline' | 'question'
+    let selectedSpanId = null;
+
+    // Span 型別定義
+    const SPAN_TYPES = {
+      session:        { icon: '🎯', label: '學習會話', cls: 'span-session' },
+      page_view:      { icon: '👁️', label: '查看題目', cls: 'span-pageview' },
+      answer_correct: { icon: '✅', label: '答對', cls: 'span-answer-correct' },
+      answer_wrong:   { icon: '❌', label: '答錯嘗試', cls: 'span-answer-wrong' },
+      exp_place:      { icon: '📖', label: '放入詳解', cls: 'span-exp-place' },
+      exp_complete:   { icon: '🏆', label: '詳解完成', cls: 'span-exp-complete' },
+      word_lookup:    { icon: '🔤', label: '單字查詢', cls: 'span-word-lookup' },
+      monkey_found:   { icon: '🐒', label: '找到猴子', cls: 'span-monkey' },
+      reorder:        { icon: '↕️', label: '重排詳解', cls: 'span-reorder' },
+    };
+
+    function emitSpan(type, attrs = {}) {
+      const span = {
+        id: ++traceIdCounter,
+        type,
+        timestamp: Date.now(),
+        relativeMs: Date.now() - sessionStartTime,
+        attrs: { ...attrs },
+      };
+      traceSpans.push(span);
+      // 更新側邊欄即時顯示
+      renderTraceSummary();
+      renderTraceRecent();
+      if (showTracePanel) renderTracePanel();
+      return span;
+    }
+
+    // 會話開始 span
+    emitSpan('session', { info: '開始學習會話', totalQuestions: questions.length });
+
+    function fmtTime(ms) {
+      const s = Math.floor(ms / 1000);
+      if (s < 60) return s + 's';
+      const m = Math.floor(s / 60);
+      return m + 'm' + (s % 60) + 's';
+    }
+    function fmtClock(ts) {
+      const d = new Date(ts);
+      return d.getHours().toString().padStart(2, '0') + ':' +
+             d.getMinutes().toString().padStart(2, '0') + ':' +
+             d.getSeconds().toString().padStart(2, '0');
+    }
+
+    function renderTraceSummary() {
+      const el = document.getElementById('traceSummary');
+      if (!el) return;
+      const elapsed = Date.now() - sessionStartTime;
+      const correctCount = traceSpans.filter(s => s.type === 'answer_correct').length;
+      const wrongCount = traceSpans.filter(s => s.type === 'answer_wrong').length;
+      const expCount = traceSpans.filter(s => s.type === 'exp_place').length;
+      const lookups = traceSpans.filter(s => s.type === 'word_lookup').length;
+      el.innerHTML = `
+        <div class="ts-row"><span class="ts-icon">⏱️</span>會話時長：<span class="ts-val">${fmtTime(elapsed)}</span></div>
+        <div class="ts-row"><span class="ts-icon">📝</span>總 Spans：<span class="ts-val">${traceSpans.length}</span></div>
+        <div class="ts-row"><span class="ts-icon">✅</span>答對：<span class="ts-val">${correctCount}</span>　❌ 答錯：<span class="ts-val">${wrongCount}</span></div>
+        <div class="ts-row"><span class="ts-icon">📖</span>詳解拖放：<span class="ts-val">${expCount}</span></div>
+        <div class="ts-row"><span class="ts-icon">🔤</span>單字查詢：<span class="ts-val">${lookups}</span></div>
+      `;
+    }
+
+    function renderTraceRecent() {
+      const folder = document.getElementById('traceRecentFolder');
+      if (!folder) return;
+      const recent = traceSpans.slice(-15).reverse();
+      folder.innerHTML = recent.map(s => {
+        const info = SPAN_TYPES[s.type] || { icon: '·', label: s.type, cls: '' };
+        const detail = s.attrs.question ? `Q${s.attrs.questionId}` : (s.attrs.word || s.attrs.info || '');
+        return `<div class="trace-recent-item" onclick="showSpanDetail(${s.id})">
+          <span class="tr-icon">${info.icon}</span>
+          <span class="tr-text">${info.label}${detail ? ' · ' + detail : ''}</span>
+          <span class="tr-time">${fmtClock(s.timestamp)}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function toggleTracePanel() {
+      showTracePanel = !showTracePanel;
+      selectedSpanId = null;
+      renderTracePanel();
+    }
+
+    function closeTracePanel() {
+      showTracePanel = false;
+      selectedSpanId = null;
+      document.getElementById('traceArea').innerHTML = '';
+    }
+
+    function switchTraceTab(tab) {
+      traceTab = tab;
+      selectedSpanId = null;
+      renderTracePanel();
+    }
+
+    function showSpanDetail(spanId) {
+      selectedSpanId = selectedSpanId === spanId ? null : spanId;
+      showTracePanel = true;
+      traceTab = 'timeline';
+      renderTracePanel();
+    }
+
+    function renderTracePanel() {
+      const area = document.getElementById('traceArea');
+      if (!area) return;
+      if (!showTracePanel) { area.innerHTML = ''; return; }
+
+      const tabsHtml = `
+        <div class="trace-panel-tabs">
+          <button class="trace-tab ${traceTab === 'timeline' ? 'active' : ''}" onclick="switchTraceTab('timeline')">⏱️ 時間軸</button>
+          <button class="trace-tab ${traceTab === 'question' ? 'active' : ''}" onclick="switchTraceTab('question')">📋 依題目</button>
+        </div>`;
+
+      let bodyHtml = '';
+      if (traceTab === 'timeline') {
+        bodyHtml = renderTimelineView();
+      } else {
+        bodyHtml = renderQuestionTraceView();
+      }
+
+      area.innerHTML = `
+        <div class="trace-panel">
+          <div class="trace-panel-header">
+            <div class="trace-panel-title">🔭 Traces — 學習軌跡追蹤</div>
+            <button class="trace-panel-close" onclick="closeTracePanel()">✕</button>
+          </div>
+          ${tabsHtml}
+          ${bodyHtml}
+        </div>`;
+    }
+
+    function renderTimelineView() {
+      if (traceSpans.length === 0) return '<div style="text-align:center;color:#bbb;padding:20px;">尚無活動記錄</div>';
+      const totalMs = Math.max(Date.now() - sessionStartTime, 1);
+      let html = '<div class="trace-waterfall">';
+      traceSpans.forEach(s => {
+        const info = SPAN_TYPES[s.type] || { icon: '·', label: s.type, cls: '' };
+        const depth = s.type === 'session' ? 0 : (s.type === 'exp_place' || s.type === 'reorder' ? 2 : 1);
+        const barPct = Math.min(100, Math.max(2, (s.relativeMs / totalMs) * 100));
+        const isSelected = selectedSpanId === s.id;
+        const detail = s.attrs.question
+          ? `Q${s.attrs.questionId}: ${(s.attrs.question || '').slice(0, 25)}`
+          : (s.attrs.word || s.attrs.answer || s.attrs.info || '');
+
+        html += `<div class="trace-span depth-${depth} ${info.cls}" onclick="showSpanDetail(${s.id})" style="${isSelected ? 'background:#f0f9ff;' : ''}">
+          ${depth > 0 ? '<span class="ts-connector"></span>' : ''}
+          <span class="ts-dot"></span>
+          <span class="ts-label">${info.icon} ${info.label}${detail ? ' — ' + detail : ''}</span>
+          <span class="ts-duration">${fmtTime(s.relativeMs)}</span>
+          <span class="ts-bar-wrap"><span class="ts-bar" style="width:${barPct}%"></span></span>
+        </div>`;
+
+        if (isSelected) {
+          html += renderSpanDetail(s);
+        }
+      });
+      html += '</div>';
+      return html;
+    }
+
+    function renderSpanDetail(s) {
+      const info = SPAN_TYPES[s.type] || { icon: '·', label: s.type, cls: '' };
+      let rows = `
+        <div class="trace-detail-row"><span class="td-key">Span ID</span><span class="td-val">#${s.id}</span></div>
+        <div class="trace-detail-row"><span class="td-key">類型</span><span class="td-val">${info.icon} ${info.label}</span></div>
+        <div class="trace-detail-row"><span class="td-key">時間戳</span><span class="td-val">${fmtClock(s.timestamp)} (${fmtTime(s.relativeMs)})</span></div>
+      `;
+      // 顯示所有 attrs
+      Object.entries(s.attrs).forEach(([k, v]) => {
+        if (k === 'questionId' && v != null) {
+          const idx = questions.findIndex(q => q.id === v);
+          rows += `<div class="trace-detail-row"><span class="td-key">${k}</span><span class="td-val"><a onclick="closeTracePanel();goToPageFromBacklink(${idx})">#${v} (點擊跳轉)</a></span></div>`;
+        } else {
+          rows += `<div class="trace-detail-row"><span class="td-key">${k}</span><span class="td-val">${v}</span></div>`;
+        }
+      });
+      return `<div class="trace-detail">${rows}</div>`;
+    }
+
+    function renderQuestionTraceView() {
+      if (questions.length === 0) return '<div style="text-align:center;color:#bbb;padding:20px;">無題目</div>';
+      let html = '';
+      questions.forEach((q, idx) => {
+        const qSpans = traceSpans.filter(s => s.attrs.questionId === q.id);
+        const isSolved = solvedSet.has(q.id);
+        const expDone = expCompletedSet.has(q.id);
+        const statusCls = expDone ? 'done' : (isSolved ? 'partial' : 'pending');
+        const statusText = expDone ? '全部完成' : (isSolved ? '已答對' : '未作答');
+        const preview = q.question.length > 30 ? q.question.slice(0, 30) + '…' : q.question;
+
+        html += `<div class="trace-q-header">
+          <span class="tqh-num">Q${q.id}</span>
+          <span class="tqh-text">${preview}</span>
+          <span class="tqh-status ${statusCls}">${statusText}</span>
+        </div>`;
+
+        if (qSpans.length === 0) {
+          html += '<div style="padding:4px 14px 12px;font-size:0.75rem;color:#ccc;">— 尚無互動記錄 —</div>';
+        } else {
+          html += '<div class="trace-waterfall" style="margin-bottom:12px;">';
+          qSpans.forEach(s => {
+            const info = SPAN_TYPES[s.type] || { icon: '·', label: s.type, cls: '' };
+            const detail = s.attrs.answer || s.attrs.word || s.attrs.info || '';
+            const isSelected = selectedSpanId === s.id;
+            html += `<div class="trace-span depth-1 ${info.cls}" onclick="showSpanDetail(${s.id})" style="${isSelected ? 'background:#f0f9ff;' : ''}">
+              <span class="ts-dot"></span>
+              <span class="ts-label">${info.icon} ${info.label}${detail ? ' — ' + detail : ''}</span>
+              <span class="ts-duration">${fmtTime(s.relativeMs)}</span>
+            </div>`;
+            if (isSelected) html += renderSpanDetail(s);
+          });
+          html += '</div>';
+        }
+      });
+      return html;
+    }
+
+    // 每 30 秒自動更新 trace summary（顯示會話時長）
+    setInterval(() => { renderTraceSummary(); }, 30000);
+
     // ==================== 渲染全部 ====================
     function renderAll() {
       updateNav();
@@ -2032,6 +2440,9 @@
       renderOptionIndex();
       renderExpIndex();
       renderWordIndex();
+      renderTraceSummary();
+      renderTraceRecent();
+      if (showTracePanel) renderTracePanel();
     }
 
     // ==================== 完成 ====================
@@ -2324,6 +2735,9 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
 
     // ==================== 啟動 ====================
     initChaosMonkey();
+    if (questions.length > 0) {
+      emitSpan('page_view', { questionId: questions[0].id, question: questions[0].question, via: '初始載入' });
+    }
     renderAll();
   </script>
 </body>
