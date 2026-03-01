@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Flashcard v1.0</title>
+  <title>Flashcard v2.0</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -679,133 +679,228 @@
       padding: 0 3px; border-radius: 3px;
     }
 
-    /* ===== Word Trace Waterfall ===== */
-    .word-trace-panel {
-      background: #fff; border: 2px solid #ea580c; border-radius: 16px;
-      padding: 18px 20px; margin-bottom: 14px;
-      box-shadow: 0 2px 12px rgba(234,88,12,0.08);
-      animation: fadeIn 0.3s ease;
+    /* ===== Jaeger-style Word Trace ===== */
+    .jaeger-trace {
+      background: #fff; border-radius: 4px; margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      animation: fadeIn 0.3s ease; overflow: hidden;
+      border: 1px solid #e2e8f0;
     }
-    .word-trace-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+    /* ── Header bar ── */
+    .jt-header {
+      background: #2d3748; color: #fff; padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .word-trace-title {
-      font-size: 1rem; font-weight: 700; color: #ea580c;
+    .jt-header-left { display: flex; align-items: center; gap: 12px; }
+    .jt-header-word {
+      font-size: 1.15rem; font-weight: 700; font-family: Georgia, 'Times New Roman', serif;
+      letter-spacing: 0.5px;
+    }
+    .jt-header-badge {
+      font-size: 0.65rem; font-weight: 600; padding: 2px 8px; border-radius: 3px;
+      background: rgba(255,255,255,0.15);
+    }
+    .jt-header-close {
+      width: 28px; height: 28px; border-radius: 4px; background: transparent;
+      border: 1px solid rgba(255,255,255,0.25); cursor: pointer; color: #fff;
+      font-size: 0.85rem; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .jt-header-close:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── Stats bar ── */
+    .jt-stats {
+      background: #f7fafc; border-bottom: 1px solid #e2e8f0;
+      padding: 8px 16px; display: flex; gap: 24px; flex-wrap: wrap;
+    }
+    .jt-stat {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.75rem; color: #718096;
+    }
+    .jt-stat-val { font-weight: 700; color: #2d3748; }
+
+    /* ── Service legend ── */
+    .jt-legend {
+      padding: 8px 16px; border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    .jt-legend-item {
+      display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: #718096;
+    }
+    .jt-legend-dot {
+      width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+    }
+
+    /* ── Minimap ── */
+    .jt-minimap {
+      height: 24px; background: #f7fafc; border-bottom: 1px solid #e2e8f0;
+      position: relative; overflow: hidden;
+    }
+    .jt-minimap-bar {
+      position: absolute; height: 8px; top: 8px; border-radius: 1px; opacity: 0.7;
+    }
+
+    /* ── Timeline header ── */
+    .jt-timeline-header {
+      display: flex; border-bottom: 1px solid #e2e8f0;
+      background: #f7fafc; font-size: 0.7rem; color: #a0aec0;
+    }
+    .jt-th-service {
+      width: 220px; min-width: 220px; padding: 6px 12px;
+      font-weight: 600; border-right: 1px solid #e2e8f0;
+    }
+    .jt-th-timeline {
+      flex: 1; position: relative; padding: 6px 0;
+    }
+    .jt-th-tick {
+      position: absolute; top: 6px; transform: translateX(-50%);
+      font-size: 0.6rem; color: #cbd5e0; font-family: monospace;
+    }
+    .jt-th-tick::after {
+      content: ''; position: absolute; left: 50%; bottom: -6px;
+      width: 1px; height: 4px; background: #e2e8f0;
+    }
+
+    /* ── Span rows ── */
+    .jt-span-row {
+      display: flex; min-height: 28px; border-bottom: 1px solid #edf2f7;
+      transition: background 0.1s; cursor: pointer;
+    }
+    .jt-span-row:hover { background: #f7fafc; }
+    .jt-span-row.jt-expanded { background: #ebf8ff; }
+    .jt-span-row.jt-depth-1 .jt-span-service { padding-left: 28px; }
+    .jt-span-row.jt-depth-2 .jt-span-service { padding-left: 48px; }
+
+    .jt-span-service {
+      width: 220px; min-width: 220px; display: flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-right: 1px solid #edf2f7;
+      font-size: 0.78rem; color: #4a5568; overflow: hidden;
+    }
+    .jt-span-toggle {
+      width: 14px; height: 14px; font-size: 0.6rem; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #a0aec0; transition: transform 0.2s;
+    }
+    .jt-span-toggle.open { transform: rotate(90deg); }
+    .jt-span-svc-dot {
+      width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0;
+    }
+    .jt-span-svc-name {
+      font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 0.75rem;
+    }
+    .jt-span-op-name {
+      color: #a0aec0; font-size: 0.7rem; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; flex: 1;
+    }
+
+    .jt-span-timeline {
+      flex: 1; position: relative; display: flex; align-items: center;
+      padding: 0 4px;
+    }
+    .jt-span-bar {
+      position: absolute; height: 16px; border-radius: 3px;
+      display: flex; align-items: center; padding: 0 6px;
+      min-width: 6px; transition: all 0.15s;
+    }
+    .jt-span-bar:hover { filter: brightness(1.08); height: 20px; margin-top: -2px; }
+    .jt-span-bar-label {
+      font-size: 0.6rem; font-weight: 600; color: #fff;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* ── Span Detail (Jaeger-style collapsible) ── */
+    .jt-detail {
+      border-bottom: 2px solid #bee3f8; animation: fadeIn 0.2s ease;
+    }
+    .jt-detail-inner {
+      padding: 0; display: flex;
+    }
+    .jt-detail-sidebar {
+      width: 220px; min-width: 220px; background: #f0fff4;
+      border-right: 1px solid #e2e8f0; padding: 10px 12px;
+    }
+    .jt-detail-main {
+      flex: 1; padding: 10px 14px; background: #fffff0;
+    }
+    .jt-detail-tabs {
+      display: flex; gap: 0; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0;
+    }
+    .jt-detail-tab {
+      padding: 6px 14px; font-size: 0.75rem; font-weight: 600;
+      color: #a0aec0; cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -2px; transition: all 0.15s; background: none; border-top: none;
+      border-left: none; border-right: none;
+    }
+    .jt-detail-tab.active { color: #2b6cb0; border-bottom-color: #2b6cb0; }
+    .jt-detail-tab:hover { color: #4a5568; }
+
+    .jt-tag-table {
+      width: 100%; font-size: 0.75rem; border-collapse: collapse;
+    }
+    .jt-tag-table tr { border-bottom: 1px solid #edf2f7; }
+    .jt-tag-table tr:last-child { border-bottom: none; }
+    .jt-tag-table td { padding: 5px 8px; vertical-align: top; }
+    .jt-tag-table .jt-tag-key {
+      font-weight: 600; color: #2b6cb0; white-space: nowrap; width: 100px;
+    }
+    .jt-tag-table .jt-tag-val {
+      color: #4a5568; word-break: break-word;
+    }
+    .jt-tag-table .jt-tag-val a {
+      color: #3182ce; text-decoration: underline; cursor: pointer;
+    }
+    .jt-tag-val .word-highlight {
+      background: #fed7aa; color: #c05621; font-weight: 700;
+      padding: 1px 4px; border-radius: 3px;
+    }
+    .jt-context-block {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: 10px 12px; margin-top: 6px; font-size: 0.82rem;
+      line-height: 1.7; color: #4a5568;
+    }
+    .jt-context-block .word-highlight {
+      background: #fefcbf; color: #975a16; font-weight: 700;
+      padding: 1px 4px; border-radius: 3px;
+    }
+
+    /* ── Co-occurring words (Jaeger Critical Path style) ── */
+    .jt-cowords-section {
+      border-top: 1px solid #e2e8f0; padding: 12px 16px;
+    }
+    .jt-cowords-header {
+      font-size: 0.8rem; font-weight: 700; color: #2d3748; margin-bottom: 10px;
       display: flex; align-items: center; gap: 8px;
     }
-    .word-trace-subtitle {
-      font-size: 0.78rem; color: #94a3b8; margin-bottom: 14px;
+    .jt-cowords-header span { font-size: 0.7rem; color: #a0aec0; font-weight: 400; }
+    .jt-cw-row {
+      display: flex; align-items: center; min-height: 24px; margin-bottom: 2px;
     }
-    .word-trace-close {
-      width: 28px; height: 28px; border-radius: 8px;
-      background: #fff7ed; border: none; cursor: pointer;
-      font-size: 0.85rem; color: #ea580c; display: flex;
-      align-items: center; justify-content: center; transition: background 0.15s;
-    }
-    .word-trace-close:hover { background: #ffedd5; }
-
-    /* Timeline ruler */
-    .wt-ruler {
-      display: flex; align-items: center; gap: 0;
-      margin-bottom: 8px; padding: 0 4px; position: relative; height: 18px;
-    }
-    .wt-ruler-label {
-      font-size: 0.6rem; color: #cbd5e1; position: absolute;
-      transform: translateX(-50%); top: 0;
-    }
-    .wt-ruler-line {
-      position: absolute; top: 14px; left: 0; right: 0; height: 1px;
-      background: #e2e8f0;
-    }
-
-    /* Question span row */
-    .wt-span-row {
-      display: flex; align-items: stretch; gap: 0; margin-bottom: 6px;
-      min-height: 36px; position: relative;
-    }
-    .wt-span-label {
-      width: 100px; flex-shrink: 0; display: flex; align-items: center; gap: 6px;
-      padding-right: 8px; cursor: pointer; transition: all 0.15s;
-    }
-    .wt-span-label:hover { opacity: 0.8; }
-    .wt-span-label .wt-qnum {
-      font-size: 0.65rem; font-weight: 700; color: #fff;
-      background: #ea580c; padding: 2px 6px; border-radius: 5px; flex-shrink: 0;
-    }
-    .wt-span-label .wt-cat {
-      font-size: 0.55rem; color: #bbb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .wt-span-track {
-      flex: 1; position: relative; min-height: 36px;
-    }
-    .wt-span-bar {
-      position: absolute; height: 22px; top: 7px;
-      border-radius: 4px; display: flex; align-items: center;
-      padding: 0 8px; cursor: pointer; transition: all 0.2s;
-      overflow: hidden; white-space: nowrap;
-    }
-    .wt-span-bar:hover { filter: brightness(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.12); transform: scaleY(1.15); }
-    .wt-span-bar .wt-bar-text {
-      font-size: 0.68rem; font-weight: 600; color: #fff;
-      overflow: hidden; text-overflow: ellipsis;
-    }
-
-    /* Source type bars */
-    .wt-bar-question { background: linear-gradient(90deg, #ea580c, #f97316); }
-    .wt-bar-option { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
-    .wt-bar-exp { background: linear-gradient(90deg, #0ea5e9, #38bdf8); }
-
-    /* Co-word chips */
-    .wt-cowords {
-      margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;
-    }
-    .wt-cowords-title {
-      font-size: 0.78rem; font-weight: 600; color: #64748b; margin-bottom: 8px;
-    }
-    .wt-coword-row {
-      display: flex; align-items: center; gap: 0; margin-bottom: 4px; min-height: 26px;
-    }
-    .wt-coword-label {
-      width: 100px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;
+    .jt-cw-label {
+      width: 120px; min-width: 120px; display: flex; align-items: center; gap: 6px;
       padding-right: 8px;
     }
-    .wt-coword-label .wt-cw-text {
-      font-size: 0.72rem; font-weight: 600; color: #475569;
+    .jt-cw-name {
+      font-size: 0.75rem; font-weight: 600; color: #4a5568;
       font-family: Georgia, serif; font-style: italic;
       cursor: pointer; transition: color 0.15s;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .wt-coword-label .wt-cw-text:hover { color: #ea580c; }
-    .wt-coword-label .wt-cw-cnt {
-      font-size: 0.55rem; color: #94a3b8; flex-shrink: 0;
+    .jt-cw-name:hover { color: #c05621; }
+    .jt-cw-cnt {
+      font-size: 0.6rem; color: #a0aec0; background: #edf2f7;
+      padding: 1px 5px; border-radius: 3px; flex-shrink: 0;
     }
-    .wt-coword-track {
-      flex: 1; position: relative; height: 26px;
+    .jt-cw-track {
+      flex: 1; position: relative; height: 24px;
     }
-    .wt-coword-dot {
-      position: absolute; width: 10px; height: 10px; border-radius: 50%;
-      top: 8px; transform: translateX(-50%);
-      cursor: pointer; transition: all 0.15s;
+    .jt-cw-span {
+      position: absolute; height: 10px; top: 7px; border-radius: 2px;
+      cursor: pointer; transition: all 0.15s; opacity: 0.7;
     }
-    .wt-coword-dot:hover { transform: translateX(-50%) scale(1.5); box-shadow: 0 0 0 3px rgba(234,88,12,0.15); }
-    .wt-coword-line {
-      position: absolute; height: 2px; top: 12px;
-      border-radius: 1px; opacity: 0.4;
-    }
-
-    /* Span detail popup */
-    .wt-detail {
-      background: #fffbf7; border: 1px solid #fed7aa; border-radius: 10px;
-      padding: 12px 14px; margin: 6px 0 10px; animation: fadeIn 0.2s ease;
-      font-size: 0.8rem; line-height: 1.6; color: #555;
-    }
-    .wt-detail-sentence {
-      padding: 8px 10px; background: #fff; border: 1px solid #f1f5f9;
-      border-radius: 8px; margin-top: 6px; font-size: 0.82rem;
-    }
-    .wt-detail-sentence .word-highlight {
-      background: #fed7aa; color: #ea580c; font-weight: 700;
-      padding: 0 3px; border-radius: 3px;
+    .jt-cw-span:hover { opacity: 1; height: 14px; top: 5px; }
+    .jt-cw-connector {
+      position: absolute; height: 2px; top: 11px; opacity: 0.25;
     }
 
     /* Clickable words in question text */
@@ -872,7 +967,7 @@
     <div class="sidebar-header">
       <div class="sidebar-logo">
         <div class="logo-icon">F</div>
-        Flashcard v1.0
+        Flashcard v2.0
       </div>
       <div class="sidebar-search">
         <span class="search-icon">🔍</span>
@@ -1341,7 +1436,7 @@
 
     function goToPage(idx) {
       currentPage = idx;
-      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null; wordTraceDetail = null; // 切換頁面時清除反向連結
+      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null; jtExpandedSpan = null; // 切換頁面時清除反向連結
       renderAll();
       if (window.innerWidth <= 768) toggleSidebar();
     }
@@ -1505,19 +1600,29 @@
       activeOptionKey = null;
       activeExpKey = null;
       activeWordKey = null;
-      wordTraceDetail = null;
+      jtExpandedSpan = null;
       renderAll();
     }
 
-    // ==================== 單字 Trace 瀑布圖 ====================
-    let wordTraceDetail = null; // {qid, source} 被展開的 span detail
+    // ==================== Jaeger-style Word Trace ====================
+    let jtExpandedSpan = null; // "qid-source" 展開的 span key
+    let jtDetailTab = 'tags'; // 'tags' | 'context'
 
-    function toggleWordTraceDetail(qid, source) {
-      if (wordTraceDetail && wordTraceDetail.qid === qid && wordTraceDetail.source === source) {
-        wordTraceDetail = null;
-      } else {
-        wordTraceDetail = { qid, source };
-      }
+    // 色盤 — 每個題目(service)分配不同顏色，類似 Jaeger
+    const JT_COLORS = [
+      '#4299e1','#ed8936','#48bb78','#ed64a6','#9f7aea',
+      '#38b2ac','#e53e3e','#ecc94b','#667eea','#f56565',
+      '#4fd1c5','#fc8181'
+    ];
+    function jtColor(idx) { return JT_COLORS[idx % JT_COLORS.length]; }
+
+    function toggleJtSpan(key) {
+      jtExpandedSpan = (jtExpandedSpan === key) ? null : key;
+      jtDetailTab = 'tags';
+      renderAll();
+    }
+    function switchJtTab(tab) {
+      jtDetailTab = tab;
       renderAll();
     }
 
@@ -1526,38 +1631,208 @@
       const entry = wordIndex.get(wordKey);
       if (!entry || entry.sources.length === 0) return '';
 
-      // 1. 按題目分組，收集來源
+      // ── 1. 收集所有 spans ──
       const qMap = new Map();
       entry.sources.forEach(s => {
         if (!qMap.has(s.question.id)) qMap.set(s.question.id, { question: s.question, contexts: [] });
         qMap.get(s.question.id).contexts.push(s);
       });
-      const qEntries = [...qMap.values()];
+      // 也搜尋詳解
+      questions.forEach(q => {
+        q.expParts.forEach((part) => {
+          if (part.toLowerCase().includes(wordKey)) {
+            if (!qMap.has(q.id)) qMap.set(q.id, { question: q, contexts: [] });
+            qMap.get(q.id).contexts.push({
+              question: q,
+              context: part.length > 80 ? part.slice(0, 80) + '…' : part,
+              source: '詳解'
+            });
+          }
+        });
+      });
+      const qEntries = [...qMap.values()].sort((a, b) => a.question.id - b.question.id);
       const totalQ = questions.length;
 
-      // 高亮函數
+      // 高亮
       const hlWord = (text) => {
         const re = new RegExp(`(${wordKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
         return text.replace(re, '<span class="word-highlight">$1</span>');
       };
 
-      // 2. 也搜尋詳解中是否出現
-      const expSources = [];
-      questions.forEach(q => {
-        q.expParts.forEach((part, pi) => {
-          if (part.toLowerCase().includes(wordKey)) {
-            if (!qMap.has(q.id)) {
-              qMap.set(q.id, { question: q, contexts: [] });
-              qEntries.push(qMap.get(q.id));
-            }
-            qMap.get(q.id).contexts.push({ question: q, context: part.length > 60 ? part.slice(0, 60) + '…' : part, source: '詳解' });
-          }
+      // 統計
+      const totalSpans = qEntries.reduce((sum, e) => sum + e.contexts.length, 0);
+      const srcCounts = { '題目': 0, '選項': 0, '詳解': 0 };
+      qEntries.forEach(e => e.contexts.forEach(c => { srcCounts[c.source] = (srcCounts[c.source] || 0) + 1; }));
+
+      // 每題分配色彩索引
+      const qColorMap = new Map();
+      qEntries.forEach((e, i) => qColorMap.set(e.question.id, i));
+
+      // ── 2. Header ──
+      const headerHtml = `
+        <div class="jt-header">
+          <div class="jt-header-left">
+            <span class="jt-header-word">${entry.original}</span>
+            <span class="jt-header-badge">${qEntries.length} Questions · ${totalSpans} Spans</span>
+          </div>
+          <button class="jt-header-close" onclick="clearBacklink()">✕</button>
+        </div>`;
+
+      // ── 3. Stats ──
+      const statsHtml = `
+        <div class="jt-stats">
+          <div class="jt-stat">Services: <span class="jt-stat-val">${qEntries.length}</span></div>
+          <div class="jt-stat">Depth: <span class="jt-stat-val">3</span></div>
+          <div class="jt-stat">Total Spans: <span class="jt-stat-val">${totalSpans}</span></div>
+          <div class="jt-stat">題目: <span class="jt-stat-val">${srcCounts['題目']}</span></div>
+          <div class="jt-stat">選項: <span class="jt-stat-val">${srcCounts['選項']}</span></div>
+          <div class="jt-stat">詳解: <span class="jt-stat-val">${srcCounts['詳解']}</span></div>
+        </div>`;
+
+      // ── 4. Legend ──
+      const srcColors = { '題目': '#4299e1', '選項': '#9f7aea', '詳解': '#48bb78' };
+      const legendHtml = `
+        <div class="jt-legend">
+          ${qEntries.map((e, i) => `
+            <div class="jt-legend-item">
+              <div class="jt-legend-dot" style="background:${jtColor(i)}"></div>
+              Q${e.question.id}
+            </div>`).join('')}
+          <div style="flex:1"></div>
+          <div class="jt-legend-item"><div class="jt-legend-dot" style="background:${srcColors['題目']}"></div>題目</div>
+          <div class="jt-legend-item"><div class="jt-legend-dot" style="background:${srcColors['選項']}"></div>選項</div>
+          <div class="jt-legend-item"><div class="jt-legend-dot" style="background:${srcColors['詳解']}"></div>詳解</div>
+        </div>`;
+
+      // ── 5. Minimap ──
+      let minimapHtml = '<div class="jt-minimap">';
+      qEntries.forEach((e, i) => {
+        const qIdx = questions.findIndex(qq => qq.id === e.question.id);
+        const left = (qIdx / totalQ * 100);
+        const width = Math.max(3, (e.contexts.length / Math.max(totalSpans, 1)) * 30);
+        minimapHtml += `<div class="jt-minimap-bar" style="left:${left}%;width:${width}%;background:${jtColor(i)};"></div>`;
+      });
+      minimapHtml += '</div>';
+
+      // ── 6. Timeline Header (ticks) ──
+      const ticks = [0, 25, 50, 75, 100];
+      let timelineHeaderHtml = `
+        <div class="jt-timeline-header">
+          <div class="jt-th-service">Service · Operation</div>
+          <div class="jt-th-timeline">
+            ${ticks.map(pct => {
+              const qIdx = Math.floor(pct / 100 * (totalQ - 1));
+              const q = questions[qIdx];
+              return `<div class="jt-th-tick" style="left:${pct}%">Q${q ? q.id : ''}</div>`;
+            }).join('')}
+          </div>
+        </div>`;
+
+      // ── 7. Span Rows (nested: depth-0=question, depth-1=source type, depth-2=individual context) ──
+      let spanRowsHtml = '';
+      qEntries.forEach((qEntry, qi) => {
+        const q = qEntry.question;
+        const idx = questions.indexOf(q);
+        const color = jtColor(qi);
+        const cat = q.category || '';
+
+        // 按 source 分類
+        const sourceGroups = {};
+        qEntry.contexts.forEach(c => {
+          if (!sourceGroups[c.source]) sourceGroups[c.source] = [];
+          sourceGroups[c.source].push(c);
         });
+
+        const qIdx = questions.findIndex(qq => qq.id === q.id);
+
+        // Depth-0: Question row (parent span)
+        const parentKey = `${q.id}-all`;
+        const isParentExpanded = jtExpandedSpan && jtExpandedSpan.startsWith(`${q.id}-`);
+        const parentBarLeft = (qIdx / totalQ) * 100;
+        const parentBarWidth = Math.max(8, (qEntry.contexts.length / Math.max(totalSpans, 1)) * 60 + 5);
+        const preview = q.question.length > 25 ? q.question.slice(0, 25) + '…' : q.question;
+
+        spanRowsHtml += `
+          <div class="jt-span-row jt-depth-0 ${isParentExpanded ? 'jt-expanded' : ''}" onclick="toggleJtSpan('${parentKey}')">
+            <div class="jt-span-service">
+              <span class="jt-span-toggle ${isParentExpanded ? 'open' : ''}">▶</span>
+              <span class="jt-span-svc-dot" style="background:${color}"></span>
+              <span class="jt-span-svc-name">Q${q.id} ${cat}</span>
+              <span class="jt-span-op-name">${qEntry.contexts.length} spans</span>
+            </div>
+            <div class="jt-span-timeline">
+              <div class="jt-span-bar" style="left:${parentBarLeft}%;width:${parentBarWidth}%;background:${color};">
+                <span class="jt-span-bar-label">${preview}</span>
+              </div>
+            </div>
+          </div>`;
+
+        // Detail for parent
+        if (jtExpandedSpan === parentKey) {
+          spanRowsHtml += renderJtDetail(q, idx, qEntry.contexts, wordKey, hlWord, color, cat);
+        }
+
+        // Depth-1: Source type rows (child spans)
+        if (isParentExpanded) {
+          Object.entries(sourceGroups).forEach(([src, ctxs]) => {
+            const childKey = `${q.id}-${src}`;
+            const isChildExpanded = jtExpandedSpan === childKey;
+            const srcColor = srcColors[src] || color;
+            const childBarLeft = parentBarLeft;
+            const childBarWidth = Math.max(4, (ctxs.length / Math.max(totalSpans, 1)) * 40 + 3);
+
+            spanRowsHtml += `
+              <div class="jt-span-row jt-depth-1 ${isChildExpanded ? 'jt-expanded' : ''}" onclick="event.stopPropagation();toggleJtSpan('${childKey}')">
+                <div class="jt-span-service">
+                  <span class="jt-span-toggle ${isChildExpanded ? 'open' : ''}">▶</span>
+                  <span class="jt-span-svc-dot" style="background:${srcColor}"></span>
+                  <span class="jt-span-svc-name">${src}</span>
+                  <span class="jt-span-op-name">×${ctxs.length}</span>
+                </div>
+                <div class="jt-span-timeline">
+                  <div class="jt-span-bar" style="left:${childBarLeft + 1}%;width:${childBarWidth}%;background:${srcColor};opacity:0.75;">
+                    <span class="jt-span-bar-label">${src} (${ctxs.length})</span>
+                  </div>
+                </div>
+              </div>`;
+
+            // Detail for child
+            if (isChildExpanded) {
+              spanRowsHtml += renderJtDetail(q, idx, ctxs, wordKey, hlWord, srcColor, src);
+            }
+
+            // Depth-2: Individual context rows
+            if (isChildExpanded) {
+              ctxs.forEach((c, ci) => {
+                const leafKey = `${q.id}-${src}-${ci}`;
+                const isLeafExpanded = jtExpandedSpan === leafKey;
+                const leafBarLeft = childBarLeft + 2;
+                const leafBarWidth = Math.max(3, Math.min(30, c.context.length / 3));
+                const ctxPreview = c.context.length > 30 ? c.context.slice(0, 30) + '…' : c.context;
+
+                spanRowsHtml += `
+                  <div class="jt-span-row jt-depth-2 ${isLeafExpanded ? 'jt-expanded' : ''}" onclick="event.stopPropagation();toggleJtSpan('${leafKey}')">
+                    <div class="jt-span-service">
+                      <span class="jt-span-svc-dot" style="background:${srcColor};opacity:0.6"></span>
+                      <span class="jt-span-op-name" style="color:#718096;">${ctxPreview}</span>
+                    </div>
+                    <div class="jt-span-timeline">
+                      <div class="jt-span-bar" style="left:${leafBarLeft}%;width:${leafBarWidth}%;background:${srcColor};opacity:0.5;">
+                      </div>
+                    </div>
+                  </div>`;
+
+                if (isLeafExpanded) {
+                  spanRowsHtml += renderJtLeafDetail(q, idx, c, wordKey, hlWord, srcColor);
+                }
+              });
+            }
+          });
+        }
       });
 
-      // 3. 計算 co-occurring words（與 activeWordKey 同時出現在 2+ 題的其他單字）
-      const coWordMap = new Map(); // otherWord → Set of qids
-      const matchedQids = new Set(qEntries.map(e => e.question.id));
+      // ── 8. Co-occurring Words ──
+      const coWordMap = new Map();
       qEntries.forEach(({ question: q }) => {
         const allWords = new Set();
         extractGermanWords(q.question).forEach(w => allWords.add(w.toLowerCase()));
@@ -1568,137 +1843,134 @@
           coWordMap.get(w).add(q.id);
         });
       });
-      // 只保留出現 >= 2 題的共現詞
       const coWords = [...coWordMap.entries()]
         .filter(([, qids]) => qids.size >= 2)
         .sort((a, b) => b[1].size - a[1].size)
-        .slice(0, 12); // 限制最多顯示 12 個
+        .slice(0, 15);
 
-      // 4. 渲染瀑布圖
-      // 題目按 ID 排序
-      qEntries.sort((a, b) => a.question.id - b.question.id);
-
-      // 刻度尺 — 題號作為 X 軸
-      const rulerHtml = (() => {
-        let h = '<div class="wt-ruler" style="padding-left:100px;position:relative;height:20px;">';
-        h += '<div class="wt-ruler-line"></div>';
-        questions.forEach((q, i) => {
-          const pct = ((i + 0.5) / totalQ * 100);
-          h += `<div class="wt-ruler-label" style="left:${pct}%">Q${q.id}</div>`;
-        });
-        h += '</div>';
-        return h;
-      })();
-
-      // Span rows
-      const spanRowsHtml = qEntries.map(({ question: q, contexts }) => {
-        const idx = questions.indexOf(q);
-        const qIdx = questions.findIndex(qq => qq.id === q.id);
-        const cat = q.category || '';
-
-        // 按 source 分類生成不同 bar
-        const sourceTypes = {};
-        contexts.forEach(c => {
-          if (!sourceTypes[c.source]) sourceTypes[c.source] = [];
-          sourceTypes[c.source].push(c);
-        });
-
-        // 每個 bar 的 X 位置 = 題目在 questions 中的索引
-        const leftPct = (qIdx / totalQ * 100);
-        const barWidth = Math.max(12, (1.5 / totalQ * 100));
-
-        let barsHtml = '';
-        const barClasses = { '題目': 'wt-bar-question', '選項': 'wt-bar-option', '詳解': 'wt-bar-exp' };
-        const srcEntries = Object.entries(sourceTypes);
-        srcEntries.forEach(([src, ctxs], si) => {
-          const cls = barClasses[src] || 'wt-bar-question';
-          const barTop = si * 26;
-          barsHtml += `<div class="wt-span-bar ${cls}" style="left:${leftPct}%;width:${barWidth}%;top:${barTop}px;" onclick="toggleWordTraceDetail(${q.id},'${src}')">
-            <span class="wt-bar-text">${src}(${ctxs.length})</span>
-          </div>`;
-        });
-
-        // Detail panel
-        let detailHtml = '';
-        if (wordTraceDetail && wordTraceDetail.qid === q.id) {
-          const dtSrc = wordTraceDetail.source;
-          const dtContexts = sourceTypes[dtSrc] || contexts;
-          const contextCards = dtContexts.map(c =>
-            `<div class="wt-detail-sentence">${hlWord(c.context)}</div>`
-          ).join('');
-          detailHtml = `<div class="wt-detail">
-            <div style="font-size:0.75rem;font-weight:600;color:#ea580c;margin-bottom:6px;">📍 第${q.id}題 · ${dtSrc}</div>
-            ${contextCards}
-            <div style="margin-top:8px;"><a style="font-size:0.75rem;color:#0ea5e9;cursor:pointer;text-decoration:underline;" onclick="goToPageFromBacklink(${idx})">→ 跳到第${q.id}題</a></div>
-          </div>`;
-        }
-
-        const rowHeight = Math.max(36, srcEntries.length * 26 + 10);
-        return `<div>
-          <div class="wt-span-row" style="min-height:${rowHeight}px;">
-            <div class="wt-span-label" onclick="goToPageFromBacklink(${idx})">
-              <span class="wt-qnum">Q${q.id}</span>
-              <span class="wt-cat">${cat}</span>
-            </div>
-            <div class="wt-span-track" style="min-height:${rowHeight}px;">${barsHtml}</div>
-          </div>
-          ${detailHtml}
-        </div>`;
-      }).join('');
-
-      // 5. Co-word traces
       let coWordsHtml = '';
       if (coWords.length > 0) {
-        // 色盤
-        const colors = ['#6366f1','#8b5cf6','#ec4899','#14b8a6','#f59e0b','#10b981','#3b82f6','#ef4444','#84cc16','#06b6d4','#e879f9','#22d3ee'];
+        const coColors = ['#6366f1','#8b5cf6','#ec4899','#14b8a6','#f59e0b','#10b981','#3b82f6','#ef4444','#84cc16','#06b6d4','#e879f9','#22d3ee','#fb923c','#a3e635','#2dd4bf'];
         const coWordRows = coWords.map(([cw, qids], ci) => {
-          const color = colors[ci % colors.length];
+          const cwColor = coColors[ci % coColors.length];
           const cwEntry = wordIndex.get(cw);
           const displayName = cwEntry ? cwEntry.original : cw;
           const sortedQids = [...qids].sort((a, b) => a - b);
 
-          // 畫點和連線
-          let dotsHtml = '';
-          sortedQids.forEach((qid, di) => {
-            const qIdx = questions.findIndex(q => q.id === qid);
-            const pct = ((qIdx + 0.5) / totalQ * 100);
-            dotsHtml += `<div class="wt-coword-dot" style="left:${pct}%;background:${color};" title="Q${qid}" onclick="clickWord('${displayName.replace(/'/g, "\\'")}')"></div>`;
-          });
-          // 連線
+          // 繪製 span bars 和連線
+          let trackHtml = '';
           if (sortedQids.length >= 2) {
             const firstIdx = questions.findIndex(q => q.id === sortedQids[0]);
             const lastIdx = questions.findIndex(q => q.id === sortedQids[sortedQids.length - 1]);
-            const leftPct = ((firstIdx + 0.5) / totalQ * 100);
-            const rightPct = ((lastIdx + 0.5) / totalQ * 100);
-            dotsHtml += `<div class="wt-coword-line" style="left:${leftPct}%;width:${rightPct - leftPct}%;background:${color};"></div>`;
+            const l = ((firstIdx + 0.5) / totalQ * 100);
+            const r = ((lastIdx + 0.5) / totalQ * 100);
+            trackHtml += `<div class="jt-cw-connector" style="left:${l}%;width:${r - l}%;background:${cwColor};"></div>`;
           }
+          sortedQids.forEach(qid => {
+            const qIdx = questions.findIndex(q => q.id === qid);
+            const left = ((qIdx + 0.5) / totalQ * 100) - 1.5;
+            trackHtml += `<div class="jt-cw-span" style="left:${left}%;width:3%;background:${cwColor};"
+              title="Q${qid}" onclick="event.stopPropagation();clickWord('${displayName.replace(/'/g, "\\'")}')"></div>`;
+          });
 
-          return `<div class="wt-coword-row">
-            <div class="wt-coword-label">
-              <span class="wt-cw-text" onclick="clickWord('${displayName.replace(/'/g, "\\'")}')">${displayName}</span>
-              <span class="wt-cw-cnt">(${qids.size})</span>
+          return `<div class="jt-cw-row">
+            <div class="jt-cw-label">
+              <span class="jt-cw-name" onclick="clickWord('${displayName.replace(/'/g, "\\'")}')">${displayName}</span>
+              <span class="jt-cw-cnt">${qids.size}</span>
             </div>
-            <div class="wt-coword-track">${dotsHtml}</div>
+            <div class="jt-cw-track">${trackHtml}</div>
           </div>`;
         }).join('');
 
-        coWordsHtml = `<div class="wt-cowords">
-          <div class="wt-cowords-title">🔗 共現單字（同時出現在含有「${entry.original}」的題目中）</div>
-          ${coWordRows}
-        </div>`;
+        coWordsHtml = `
+          <div class="jt-cowords-section">
+            <div class="jt-cowords-header">🔗 Co-occurring Words <span>同時出現在含有「${entry.original}」的題目中的其他單字</span></div>
+            ${coWordRows}
+          </div>`;
       }
 
       return `
-        <div class="word-trace-panel">
-          <div class="word-trace-header">
-            <div class="word-trace-title">🔤 Word Trace：「${entry.original}」</div>
-            <button class="word-trace-close" onclick="clearBacklink()">✕</button>
-          </div>
-          <div class="word-trace-subtitle">追蹤「${entry.original}」在 ${qEntries.length} 題中的出現位置 · 點擊 span 查看上下文</div>
-          ${rulerHtml}
+        <div class="jaeger-trace">
+          ${headerHtml}
+          ${statsHtml}
+          ${legendHtml}
+          ${minimapHtml}
+          ${timelineHeaderHtml}
           ${spanRowsHtml}
           ${coWordsHtml}
         </div>`;
+    }
+
+    // ── Jaeger Span Detail Panel (parent/source level) ──
+    function renderJtDetail(q, idx, contexts, wordKey, hlWord, color, label) {
+      const tagsActive = jtDetailTab === 'tags' ? 'active' : '';
+      const ctxActive = jtDetailTab === 'context' ? 'active' : '';
+
+      let bodyHtml = '';
+      if (jtDetailTab === 'tags') {
+        bodyHtml = `<table class="jt-tag-table">
+          <tr><td class="jt-tag-key">question.id</td><td class="jt-tag-val"><a onclick="goToPageFromBacklink(${idx})">Q${q.id} (點擊跳轉)</a></td></tr>
+          <tr><td class="jt-tag-key">category</td><td class="jt-tag-val">${q.category || '—'}</td></tr>
+          <tr><td class="jt-tag-key">word</td><td class="jt-tag-val" style="font-weight:700;color:#c05621;">${wordKey}</td></tr>
+          <tr><td class="jt-tag-key">spans</td><td class="jt-tag-val">${contexts.length}</td></tr>
+          <tr><td class="jt-tag-key">sources</td><td class="jt-tag-val">${[...new Set(contexts.map(c => c.source))].join(', ')}</td></tr>
+          <tr><td class="jt-tag-key">correct_answer</td><td class="jt-tag-val">${q.options[q.correctIndex]}</td></tr>
+          <tr><td class="jt-tag-key">question</td><td class="jt-tag-val">${hlWord(q.question)}</td></tr>
+        </table>`;
+      } else {
+        bodyHtml = contexts.map(c => `
+          <div class="jt-context-block">
+            <div style="font-size:0.65rem;color:#a0aec0;margin-bottom:4px;">source: ${c.source}</div>
+            ${hlWord(c.context)}
+          </div>
+        `).join('');
+      }
+
+      return `<div class="jt-detail" onclick="event.stopPropagation()">
+        <div class="jt-detail-inner">
+          <div class="jt-detail-sidebar">
+            <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:6px;">Process</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+              <div style="width:10px;height:10px;border-radius:2px;background:${color};"></div>
+              <span style="font-size:0.78rem;font-weight:600;color:#2d3748;">Q${q.id}</span>
+            </div>
+            <div style="font-size:0.68rem;color:#718096;line-height:1.5;">
+              ${q.category ? q.category + '<br>' : ''}
+              ${q.options.length} options<br>
+              ${q.expParts.length} explanation parts
+            </div>
+          </div>
+          <div class="jt-detail-main">
+            <div class="jt-detail-tabs">
+              <button class="jt-detail-tab ${tagsActive}" onclick="event.stopPropagation();switchJtTab('tags')">Tags</button>
+              <button class="jt-detail-tab ${ctxActive}" onclick="event.stopPropagation();switchJtTab('context')">Context</button>
+            </div>
+            ${bodyHtml}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    // ── Jaeger Leaf Span Detail (individual context) ──
+    function renderJtLeafDetail(q, idx, ctx, wordKey, hlWord, color) {
+      return `<div class="jt-detail" onclick="event.stopPropagation()">
+        <div class="jt-detail-inner">
+          <div class="jt-detail-sidebar">
+            <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:4px;">Span Info</div>
+            <div style="font-size:0.68rem;color:#718096;line-height:1.5;">
+              Q${q.id} · ${ctx.source}<br>
+              <a style="color:#3182ce;cursor:pointer;text-decoration:underline;" onclick="goToPageFromBacklink(${idx})">跳到此題 →</a>
+            </div>
+          </div>
+          <div class="jt-detail-main">
+            <table class="jt-tag-table">
+              <tr><td class="jt-tag-key">source</td><td class="jt-tag-val">${ctx.source}</td></tr>
+              <tr><td class="jt-tag-key">word</td><td class="jt-tag-val" style="font-weight:700;color:#c05621;">${wordKey}</td></tr>
+              <tr><td class="jt-tag-key">context</td><td class="jt-tag-val">${hlWord(ctx.context)}</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>`;
     }
 
     // ==================== 選項索引（全選項反向連結）====================
