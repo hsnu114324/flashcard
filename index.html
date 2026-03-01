@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>德語 Flashcard — 拖放版</title>
+  <title> Flashcard </title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -267,6 +267,83 @@
       border-radius: 14px;
       cursor: pointer;
     }
+
+    /* ===== Chaos Monkey ===== */
+    .chaos-monkey {
+      cursor: pointer;
+      font-size: 0.6rem;
+      opacity: 0.55;
+      display: inline;
+      transition: all 0.3s ease;
+      vertical-align: middle;
+    }
+    .chaos-monkey:hover {
+      opacity: 1;
+      transform: scale(1.4);
+    }
+
+    .monkey-found-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .monkey-found-card {
+      background: rgba(255,255,255,0.1);
+      border: 2px solid #f9d423;
+      border-radius: 20px;
+      padding: 30px 24px;
+      text-align: center;
+      max-width: 300px;
+      animation: monkeyPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes monkeyPop {
+      from { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .monkey-found-card .big-monkey { font-size: 4rem; }
+    .monkey-found-card h3 {
+      font-size: 1.2rem;
+      margin: 12px 0 6px;
+      background: linear-gradient(90deg, #f9d423, #ff4e50);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .monkey-found-card p {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 16px;
+    }
+    .monkey-dismiss-btn {
+      padding: 10px 28px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1a1a2e;
+      background: linear-gradient(135deg, #f9d423, #ff4e50);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .monkey-hint-bar {
+      text-align: center;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.3);
+      margin-top: 4px;
+      margin-bottom: 2px;
+      transition: opacity 0.3s;
+    }
+    .monkey-hint-bar.found {
+      color: #f9d423;
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
@@ -277,6 +354,8 @@
   </div>
 
   <div class="questions-grid" id="questionsGrid"></div>
+
+  <div class="monkey-hint-bar" id="monkeyHint">🐒 有一隻 Chaos Monkey 藏在某個詳解裡，找到牠！</div>
 
   <div class="divider">⬇ 拖動答案到上方題目 ⬇</div>
 
@@ -478,15 +557,19 @@
 
       if (targetCard) {
         const targetQid = parseInt(targetCard.dataset.qid);
-        // 檢查是否正確：這個 chip 必須屬於這個題目且是正確答案
-        if (chipData.questionId === targetQid && chipData.isCorrect) {
+        const targetQ = questions.find(q => q.id === targetQid);
+        // 檢查：這張小卡片的文字是否是這題的正確答案
+        const correctText = targetQ.options[targetQ.correctIndex];
+        if (chipData.text === correctText) {
           // ✅ 正確！
           solvedSet.add(targetQid);
+          // 把這張 chip 從池中標記為已使用
+          chipEl.classList.add('placed');
           renderQuestions();
           renderPool();
           checkCompletion();
         }
-        // 錯誤 → 什麼都不做，chip 已經在原位
+        // 錯誤 → 什麼都不做，chip 留在原位
       }
 
       // 清除
