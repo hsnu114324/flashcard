@@ -156,11 +156,20 @@
     }
 
     .q-explanation {
-      margin-top: 6px;
+      margin-top: 8px;
       font-size: 0.68rem;
-      line-height: 1.5;
-      color: rgba(76,217,100,0.85);
+      line-height: 1.6;
+      color: rgba(255,255,255,0.8);
+      background: rgba(76,217,100,0.06);
+      border: 1px solid rgba(76,217,100,0.15);
+      border-radius: 10px;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
       animation: fadeIn 0.4s ease;
+    }
+    .q-explanation b {
+      color: #4cd964;
     }
 
     @keyframes fadeIn {
@@ -405,7 +414,20 @@
         options: ['haben', 'hat', 'geht', 'gibt'],
         labels: ['A', 'B', 'C', 'D'],
         correctIndex: 3,
-        explanation: '這是德語最經典的存在句型「Es gibt + 賓語（Akkusativ）」，意思是「有……存在於某處」。'
+        explanation: '這是德語最經典的<b>存在句型「Es gibt + 賓語（Accusativ）」</b>，意思是「有……存在於某處」。<br><br>' +
+          '• 「Es」是形式主語（無實義），「gibt」是 geben 的第三人稱單數現在式。<br>' +
+          '• 後面永遠接<b>第四格（Accusativ）</b>：viele alte Gemälde（許多古畫）。<br>' +
+          '• 類似英文的 "There is/are..."，但德語只能用 "Es gibt" 表達「存在」。<br><br>' +
+          '<b>🎤 導遊實務應用：</b><br>' +
+          '帶外國團到故宮時，您可以說：<br>' +
+          '「Im Nationalen Palastmuseum in Taipeh gibt es mehr als 700.000 Kunstwerke aus China. Es gibt auch viele alte Gemälde der Song-Dynastie.」<br>' +
+          '這樣介紹展品既自然又專業。<br><br>' +
+          '<b>❌ 為什麼其他錯？</b><br>' +
+          '• (A) haben：haben 是「擁有」，主語若是複數或 wir/ihr/sie 才用 haben；Es 單數要用 hat，但「Es haben」文法不通。<br>' +
+          '• (B) hat：單數第三人稱，但「Es hat viele alte Gemälde」聽起來像「它擁有畫」，不符合存在句。<br>' +
+          '• (C) geht：Es geht 是「進行、情況如何」（Es geht um... = 關於……），或天氣（Es geht ein starker Wind），不能表存在。<br><br>' +
+          '<b>💡 記憶口訣：</b>看到「Es ______ viele... im/in/am...」→ 99% 是 gibt！<br>' +
+          '<b>✏️ 練習：</b>Es gibt viele Tempel in Taipeh.（台北有很多廟。）'
       },
       {
         id: 2,
@@ -414,7 +436,18 @@
         options: ['mich', 'sich', 'ihn', 'uns'],
         labels: ['A', 'B', 'C', 'D'],
         correctIndex: 0,
-        explanation: '動詞 sich unterhalten 是反身動詞（reflexives Verb），意思是「聊天、交談」。第一人稱單數的反身代詞必須用 mich。'
+        explanation: '動詞 <b>sich unterhalten</b> 是<b>反身動詞</b>（reflexives Verb），意思是「聊天、交談」。第一人稱單數的反身代詞必須用 <b>mich</b>。<br>' +
+          '完整句：Ich unterhalte <b>mich</b> gern mit Ausländern.<br>' +
+          '反身動詞在德語中非常多（如 sich freuen、sich erinnern），記住：主語與受詞是同一人時，一定要加反身代詞。<br><br>' +
+          '<b>🎤 導遊實務應用：</b><br>' +
+          '「Ich unterhalte mich gern mit Touristen über die Geschichte Taiwans.」<br>' +
+          '（我很喜歡跟遊客聊台灣歷史。）——自我介紹時超好用！<br><br>' +
+          '<b>❌ 為什麼其他錯？</b><br>' +
+          '• (B) sich：第三人稱單/複數才用 sich（er unterhält sich / sie unterhalten sich）。<br>' +
+          '• (C) ihn：第四格陽性「他」，但這裡沒有「他」這個對象。<br>' +
+          '• (D) uns：第一人稱複數「我們」。<br><br>' +
+          '<b>💡 學習延伸：</b>常見反身動詞表：sich waschen（洗澡）、sich beeilen（趕快）、sich setzen（坐下）。<br>' +
+          '口訣：「我自己用 mich，你自己用 dich，他自己用 sich，我們自己用 uns。」'
       },
       {
         id: 3,
@@ -423,7 +456,15 @@
         options: ['geklungen', 'geklingelt', 'gelungen', 'klingen'],
         labels: ['A', 'B', 'C', 'D'],
         correctIndex: 1,
-        explanation: '這是完成式（Perfekt）：es hat + Partizip II。klingeln（響鈴）的過去分詞是 geklingelt。'
+        explanation: '這是完成式（Perfekt）：es hat + Partizip II。<br>' +
+          '動詞 <b>klingeln</b>（鈴響、門鈴響）→ Partizip II 是 <b>ge-klingelt</b>（規則動詞，加 ge-，-t 結尾）。<br>' +
+          '常見情境：電話響（Das Telefon hat geklingelt.）或門鈴。<br><br>' +
+          '<b>❌ 為什麼其他錯？</b><br>' +
+          '• (A) geklungen：klingen（聽起來、發出聲音）的 Partizip II，但「es hat geklungen」較少用於門鈴。<br>' +
+          '• (C) gelungen：gelingen（成功）的 Partizip II，意思完全不同（Es ist mir gelungen = 我成功了）。<br>' +
+          '• (D) klingen：原形，不能放在 hat 後面。<br><br>' +
+          '<b>🎤 導遊應用：</b>客人問「Was war das für ein Geräusch？」您可答：<br>' +
+          '「Ich glaube, es hat geklingelt. Vielleicht ist der Bus schon da.」'
       },
       {
         id: 4,
@@ -432,7 +473,14 @@
         options: ['flog', 'fliegte', 'fliegt', 'flug'],
         labels: ['A', 'B', 'C', 'D'],
         correctIndex: 0,
-        explanation: 'fliegen 是強變化不規則動詞（starkes Verb）。過去式（Präteritum）是 flog（不是加 -te）。'
+        explanation: '<b>fliegen</b> 是強變化不規則動詞（starkes Verb）。過去式（Präteritum）是 <b>flog</b>（不是加 -te）。<br>' +
+          '昨天的事用過去式最自然。<br><br>' +
+          '<b>📝 變化表：</b>fliegen – flog – ist geflogen<br><br>' +
+          '<b>❌ 為什麼其他錯？</b><br>' +
+          '• (B) fliegte：弱變化動詞才加 -te，fliegen 是強變化，不能這樣變。<br>' +
+          '• (C) fliegt：現在式，不符合「gestern」。<br>' +
+          '• (D) flug：根本不存在。<br><br>' +
+          '<b>💡 學習延伸：</b>常考強變化動詞：fliegen-flog、gehen-ging、sehen-sah、kommen-kam。背熟這些，文法分數直接 +20 分。'
       }
     ];
 
