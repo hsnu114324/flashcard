@@ -332,6 +332,36 @@
       cursor: pointer;
     }
 
+    /* ===== Reverse Lookup Highlight ===== */
+    .question-card.highlighted {
+      border-color: #f9d423;
+      box-shadow: 0 0 18px rgba(249, 212, 35, 0.5), 0 0 36px rgba(249, 212, 35, 0.2);
+      animation: highlightPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes highlightPulse {
+      0%, 100% { box-shadow: 0 0 18px rgba(249,212,35,0.5), 0 0 36px rgba(249,212,35,0.2); }
+      50%      { box-shadow: 0 0 26px rgba(249,212,35,0.7), 0 0 50px rgba(249,212,35,0.3); }
+    }
+    .answer-chip.selected {
+      background: rgba(249, 212, 35, 0.25);
+      border-color: #f9d423;
+      box-shadow: 0 0 10px rgba(249,212,35,0.3);
+    }
+    .reverse-lookup-tip {
+      text-align: center;
+      font-size: 0.72rem;
+      color: #f9d423;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .reverse-lookup-tip.show {
+      opacity: 0.7;
+      max-height: 30px;
+      margin-bottom: 4px;
+    }
+
     .monkey-hint-bar {
       text-align: center;
       font-size: 0.75rem;
@@ -357,7 +387,9 @@
 
   <div class="monkey-hint-bar" id="monkeyHint">🐒 有一隻 Chaos Monkey 藏在某個詳解裡，找到牠！</div>
 
-  <div class="divider">⬇ 拖動答案到上方題目 ⬇</div>
+  <div class="reverse-lookup-tip" id="reverseTip">💡 點擊的答案是這些題目的正確答案</div>
+
+  <div class="divider">⬇ 拖動答案到上方題目 ⬇  ·  點擊答案可反向查詢</div>
 
   <div class="answer-pool" id="answerPool"></div>
 
@@ -603,7 +635,7 @@
 
       const x = e.clientX;
       const y = e.clientY;
-      const { chipEl, ghost, chipData } = dragState;
+      const { chipEl, ghost, chipData, startX, startY } = dragState;
 
       // 移除 ghost
       ghost.remove();
@@ -614,30 +646,35 @@
         card.classList.remove('drag-over');
       });
 
-      // 找到放下的卡片
-      let targetCard = null;
-      document.querySelectorAll('.question-card:not(.solved)').forEach(card => {
-        const rect = card.getBoundingClientRect();
-        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-          targetCard = card;
-        }
-      });
+      // 計算移動距離
+      const dist = Math.sqrt((x - startX) ** 2 + (y - startY) ** 2);
 
-      if (targetCard) {
-        const targetQid = parseInt(targetCard.dataset.qid);
-        const targetQ = questions.find(q => q.id === targetQid);
-        // 檢查：這張小卡片的文字是否是這題的正確答案
-        const correctText = targetQ.options[targetQ.correctIndex];
-        if (chipData.text === correctText) {
-          // ✅ 正確！
-          solvedSet.add(targetQid);
-          // 把這張 chip 從池中標記為已使用
-          chipEl.classList.add('placed');
-          renderQuestions();
-          renderPool();
-          checkCompletion();
+      if (dist < 10) {
+        // ===== 短按 → 反向查詢 =====
+        reverseLookup(chipData, chipEl);
+      } else {
+        // ===== 拖動 → 嘗試作答 =====
+        let targetCard = null;
+        document.querySelectorAll('.question-card:not(.solved)').forEach(card => {
+          const rect = card.getBoundingClientRect();
+          if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+            targetCard = card;
+          }
+        });
+
+        if (targetCard) {
+          const targetQid = parseInt(targetCard.dataset.qid);
+          const targetQ = questions.find(q => q.id === targetQid);
+          const correctText = targetQ.options[targetQ.correctIndex];
+          if (chipData.text === correctText) {
+            solvedSet.add(targetQid);
+            chipEl.classList.add('placed');
+            clearReverseLookup();
+            renderQuestions();
+            renderPool();
+            checkCompletion();
+          }
         }
-        // 錯誤 → 什麼都不做，chip 留在原位
       }
 
       // 清除
@@ -646,6 +683,44 @@
       document.removeEventListener('pointercancel', onDragEnd);
       dragState = null;
     }
+
+    // ==================== 反向查詢 ====================
+    function reverseLookup(chipData, chipEl) {
+      // 先清除之前的高亮
+      clearReverseLookup();
+
+      // 找出所有正確答案文字 === chipData.text 的未解題目
+      const matchingQids = questions
+        .filter(q => !solvedSet.has(q.id) && q.options[q.correctIndex] === chipData.text)
+        .map(q => q.id);
+
+      if (matchingQids.length > 0) {
+        // 高亮匹配的題目卡片
+        matchingQids.forEach(qid => {
+          const card = document.querySelector(`.question-card[data-qid="${qid}"]`);
+          if (card) card.classList.add('highlighted');
+        });
+
+        // 高亮被點擊的 chip
+        chipEl.classList.add('selected');
+
+        // 顯示提示
+        document.getElementById('reverseTip').classList.add('show');
+      }
+    }
+
+    function clearReverseLookup() {
+      document.querySelectorAll('.question-card.highlighted').forEach(c => c.classList.remove('highlighted'));
+      document.querySelectorAll('.answer-chip.selected').forEach(c => c.classList.remove('selected'));
+      document.getElementById('reverseTip').classList.remove('show');
+    }
+
+    // 點擊空白處清除高亮
+    document.addEventListener('pointerdown', (e) => {
+      if (!e.target.closest('.answer-chip')) {
+        clearReverseLookup();
+      }
+    });
 
     // ==================== 完成判斷 ====================
     function checkCompletion() {
