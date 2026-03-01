@@ -2,322 +2,270 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>德語 Flashcard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>德語 Flashcard — 拖放版</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
       min-height: 100vh;
       color: #fff;
-      padding: 16px;
-      padding-bottom: 100px;
+      padding: 12px;
+      overflow-x: hidden;
+      touch-action: pan-y;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
+    /* ===== Header ===== */
     .header {
       text-align: center;
-      padding: 20px 0 10px;
+      padding: 12px 0 8px;
     }
-
     .header h1 {
-      font-size: 1.6rem;
+      font-size: 1.4rem;
       font-weight: 700;
       background: linear-gradient(90deg, #f9d423, #ff4e50);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-
-    .progress-bar-container {
-      width: 100%;
-      height: 6px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 3px;
-      margin: 16px 0;
-      overflow: hidden;
+    .header .subtitle {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.45);
+      margin-top: 4px;
     }
 
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #f9d423, #ff4e50);
-      border-radius: 3px;
-      transition: width 0.4s ease;
+    /* ===== Questions Grid (2×2) ===== */
+    .questions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 0;
     }
 
-    .progress-text {
-      text-align: center;
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 16px;
+    .question-card {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 14px 12px;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
 
-    .card {
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 20px;
-      padding: 24px 20px;
-      margin-bottom: 20px;
-      transition: transform 0.3s ease, opacity 0.3s ease;
+    .question-card.drag-over {
+      border-color: rgba(255,255,255,0.5);
+      box-shadow: 0 0 15px rgba(255,255,255,0.15);
     }
 
-    .card.slide-in {
-      animation: slideIn 0.4s ease forwards;
+    .question-card.solved {
+      border-color: #4cd964;
+      box-shadow: 0 0 20px rgba(76, 217, 100, 0.4), 0 0 40px rgba(76, 217, 100, 0.15);
+      animation: glowPulse 2s ease-in-out infinite;
     }
 
-    @keyframes slideIn {
-      from { transform: translateX(60px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(76,217,100,0.4), 0 0 40px rgba(76,217,100,0.15); }
+      50%      { box-shadow: 0 0 28px rgba(76,217,100,0.6), 0 0 56px rgba(76,217,100,0.25); }
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .question-number {
+    .q-number {
       display: inline-block;
       background: linear-gradient(135deg, #f9d423, #ff4e50);
       color: #1a1a2e;
       font-weight: 700;
-      font-size: 0.8rem;
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-bottom: 14px;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      align-self: flex-start;
     }
 
-    .question-text {
-      font-size: 1.15rem;
-      line-height: 1.7;
+    .q-text {
+      font-size: 0.82rem;
+      line-height: 1.55;
       font-weight: 500;
-      margin-bottom: 12px;
+      flex: 1;
       word-break: break-word;
     }
 
-    .chinese-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: rgba(255,255,255,0.7);
-      font-size: 0.85rem;
-      padding: 8px 16px;
-      border-radius: 12px;
+    .q-chinese-toggle {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.45);
       cursor: pointer;
-      transition: all 0.25s ease;
-      margin-bottom: 6px;
-      user-select: none;
-      -webkit-user-select: none;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
-
-    .chinese-toggle:hover {
-      background: rgba(255,255,255,0.18);
+    .q-chinese-toggle .arrow {
+      transition: transform 0.3s;
+      display: inline-block;
     }
-
-    .chinese-toggle .icon {
-      font-size: 1rem;
-      transition: transform 0.3s ease;
-    }
-
-    .chinese-toggle.open .icon {
+    .q-chinese-toggle.open .arrow {
       transform: rotate(90deg);
     }
 
-    .chinese-text {
-      font-size: 0.95rem;
-      color: rgba(255,255,255,0.65);
-      line-height: 1.6;
+    .q-chinese {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.5;
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.35s ease, padding 0.35s ease, opacity 0.35s ease;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
       opacity: 0;
-      padding: 0;
     }
-
-    .chinese-text.show {
-      max-height: 100px;
+    .q-chinese.show {
+      max-height: 60px;
       opacity: 1;
-      padding: 10px 0 4px;
+      margin-top: 4px;
     }
 
-    .options-container {
+    .q-drop-zone {
+      margin-top: 8px;
+      min-height: 36px;
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 10px;
       display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 18px;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.3);
+      transition: border-color 0.2s, background 0.2s;
     }
 
-    .option-btn {
-      width: 100%;
-      text-align: left;
-      padding: 14px 18px;
-      font-size: 1rem;
-      font-weight: 500;
-      background: rgba(255,255,255,0.07);
-      border: 1.5px solid rgba(255,255,255,0.18);
-      border-radius: 14px;
-      color: #fff;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      position: relative;
-      overflow: hidden;
-      user-select: none;
-      -webkit-user-select: none;
+    .question-card.drag-over .q-drop-zone {
+      border-color: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.05);
     }
 
-    .option-btn:active {
-      transform: scale(0.97);
-    }
-
-    .option-btn:hover {
-      background: rgba(255,255,255,0.13);
-      border-color: rgba(255,255,255,0.3);
-    }
-
-    .option-btn.correct {
-      background: rgba(76, 217, 100, 0.2);
+    .question-card.solved .q-drop-zone {
+      border-style: solid;
       border-color: #4cd964;
+      background: rgba(76,217,100,0.1);
       color: #4cd964;
-      animation: correctPulse 0.5s ease;
-    }
-
-    @keyframes correctPulse {
-      0% { transform: scale(1); }
-      30% { transform: scale(1.03); }
-      100% { transform: scale(1); }
-    }
-
-    .option-btn.wrong {
-      animation: shakeOut 0.4s ease forwards;
-    }
-
-    @keyframes shakeOut {
-      0% { transform: translateX(0); opacity: 1; }
-      20% { transform: translateX(-8px); }
-      40% { transform: translateX(8px); }
-      60% { transform: translateX(-4px); opacity: 0.5; }
-      100% { transform: translateX(0); opacity: 0; max-height: 0; padding: 0; margin: 0; border: 0; overflow: hidden; }
-    }
-
-    .option-btn.wrong {
-      pointer-events: none;
-    }
-
-    .option-btn.disabled {
-      pointer-events: none;
-      opacity: 0.5;
-    }
-
-    .explanation-box {
-      margin-top: 18px;
-      background: rgba(76, 217, 100, 0.08);
-      border: 1px solid rgba(76, 217, 100, 0.25);
-      border-radius: 14px;
-      padding: 18px;
-      animation: fadeIn 0.4s ease forwards;
-    }
-
-    .explanation-box .label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #4cd964;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-    }
-
-    .explanation-box .text {
-      font-size: 0.95rem;
-      line-height: 1.7;
-      color: rgba(255,255,255,0.85);
-    }
-
-    .next-btn {
-      display: block;
-      width: 100%;
-      margin-top: 20px;
-      padding: 16px;
-      font-size: 1.05rem;
       font-weight: 600;
-      color: #1a1a2e;
-      background: linear-gradient(135deg, #f9d423, #ff4e50);
-      border: none;
-      border-radius: 14px;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      animation: fadeIn 0.4s ease forwards;
-      user-select: none;
-      -webkit-user-select: none;
+      font-size: 0.78rem;
     }
 
-    .next-btn:active {
-      transform: scale(0.97);
+    .q-explanation {
+      margin-top: 6px;
+      font-size: 0.68rem;
+      line-height: 1.5;
+      color: rgba(76,217,100,0.85);
+      animation: fadeIn 0.4s ease;
     }
 
-    .next-btn:hover {
-      box-shadow: 0 6px 25px rgba(249, 212, 35, 0.3);
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .score-card {
+    /* ===== Divider ===== */
+    .divider {
       text-align: center;
-      padding: 40px 20px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.35);
+      margin: 10px 0;
+      position: relative;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 30%;
+      height: 1px;
+      background: rgba(255,255,255,0.12);
+    }
+    .divider::before { left: 0; }
+    .divider::after  { right: 0; }
+
+    /* ===== Answer Pool ===== */
+    .answer-pool {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      padding: 8px 0 40px;
     }
 
-    .score-card .emoji {
-      font-size: 4rem;
-      margin-bottom: 16px;
+    .answer-chip {
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #fff;
+      cursor: grab;
+      touch-action: none;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+      white-space: nowrap;
     }
 
-    .score-card h2 {
-      font-size: 1.5rem;
-      margin-bottom: 8px;
+    .answer-chip:active {
+      cursor: grabbing;
     }
 
-    .score-card .score {
-      font-size: 3rem;
-      font-weight: 800;
+    .answer-chip.dragging-source {
+      opacity: 0.3;
+      transform: scale(0.95);
+    }
+
+    .answer-chip.placed {
+      display: none;
+    }
+
+    /* Ghost (拖動時跟隨手指的複製品) */
+    .drag-ghost {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      background: rgba(249, 212, 35, 0.2);
+      border: 2px solid #f9d423;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      transform: translate(-50%, -50%) scale(1.1);
+      transition: none;
+    }
+
+    /* ===== Completion ===== */
+    .completion-banner {
+      text-align: center;
+      margin-top: 20px;
+      animation: fadeIn 0.6s ease;
+    }
+    .completion-banner .emoji { font-size: 3rem; }
+    .completion-banner h2 {
+      font-size: 1.3rem;
+      margin: 8px 0;
       background: linear-gradient(90deg, #f9d423, #ff4e50);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin: 16px 0;
     }
-
-    .score-card .detail {
-      font-size: 0.95rem;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 24px;
-    }
-
     .restart-btn {
-      display: inline-block;
-      padding: 14px 40px;
-      font-size: 1rem;
+      margin-top: 16px;
+      padding: 12px 32px;
+      font-size: 0.95rem;
       font-weight: 600;
       color: #1a1a2e;
       background: linear-gradient(135deg, #f9d423, #ff4e50);
       border: none;
       border-radius: 14px;
       cursor: pointer;
-      transition: transform 0.2s ease;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    .restart-btn:active {
-      transform: scale(0.97);
-    }
-
-    .hidden {
-      display: none !important;
     }
   </style>
 </head>
@@ -325,14 +273,16 @@
 
   <div class="header">
     <h1>🇩🇪 德語 Flashcard</h1>
+    <div class="subtitle">把答案拖進正確的題目卡片中</div>
   </div>
 
-  <div class="progress-bar-container">
-    <div class="progress-bar" id="progressBar"></div>
-  </div>
-  <div class="progress-text" id="progressText"></div>
+  <div class="questions-grid" id="questionsGrid"></div>
 
-  <div id="cardArea"></div>
+  <div class="divider">⬇ 拖動答案到上方題目 ⬇</div>
+
+  <div class="answer-pool" id="answerPool"></div>
+
+  <div id="completionArea"></div>
 
   <script>
     // ==================== 題庫 ====================
@@ -354,151 +304,222 @@
         labels: ['A', 'B', 'C', 'D'],
         correctIndex: 0,
         explanation: '動詞 sich unterhalten 是反身動詞（reflexives Verb），意思是「聊天、交談」。第一人稱單數的反身代詞必須用 mich。'
+      },
+      {
+        id: 3,
+        question: 'Ich glaube, es hat ______.',
+        chinese: '我覺得門鈴響了／電話響了。',
+        options: ['geklungen', 'geklingelt', 'gelungen', 'klingen'],
+        labels: ['A', 'B', 'C', 'D'],
+        correctIndex: 1,
+        explanation: '這是完成式（Perfekt）：es hat + Partizip II。klingeln（響鈴）的過去分詞是 geklingelt。'
+      },
+      {
+        id: 4,
+        question: 'Herr Meier ______ gestern von Frankfurt nach Hongkong.',
+        chinese: '梅爾先生昨天從法蘭克福飛到香港。',
+        options: ['flog', 'fliegte', 'fliegt', 'flug'],
+        labels: ['A', 'B', 'C', 'D'],
+        correctIndex: 0,
+        explanation: 'fliegen 是強變化不規則動詞（starkes Verb）。過去式（Präteritum）是 flog（不是加 -te）。'
       }
     ];
 
+    // ==================== 產生答案卡片資料 ====================
+    let answerChips = [];
+    questions.forEach(q => {
+      q.options.forEach((opt, i) => {
+        answerChips.push({
+          chipId: `q${q.id}-${i}`,
+          questionId: q.id,
+          label: q.labels[i],
+          text: opt,
+          isCorrect: i === q.correctIndex
+        });
+      });
+    });
+
+    // 洗牌
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    shuffle(answerChips);
+
     // ==================== 狀態 ====================
-    let currentIndex = 0;
-    let correctOnFirst = 0; // 一次就答對的題數
+    let solvedSet = new Set(); // 已答對的題目 ID
 
-    // ==================== 渲染 ====================
-    function render() {
-      const area = document.getElementById('cardArea');
-
-      if (currentIndex >= questions.length) {
-        renderScore();
-        return;
-      }
-
-      const q = questions[currentIndex];
-      updateProgress();
-
-      area.innerHTML = `
-        <div class="card slide-in">
-          <div class="question-number">第 ${q.id} 題</div>
-          <div class="question-text">${q.question}</div>
-
-          <div class="chinese-toggle" id="chToggle" onclick="toggleChinese()">
-            <span class="icon">▶</span> 顯示中文翻譯
+    // ==================== 渲染題目卡片 ====================
+    function renderQuestions() {
+      const grid = document.getElementById('questionsGrid');
+      grid.innerHTML = questions.map(q => `
+        <div class="question-card ${solvedSet.has(q.id) ? 'solved' : ''}" data-qid="${q.id}">
+          <span class="q-number">第 ${q.id} 題</span>
+          <div class="q-text">${q.question}</div>
+          <div class="q-chinese-toggle" onclick="toggleCh(this, ${q.id})">
+            <span class="arrow">▶</span> 中文翻譯
           </div>
-          <div class="chinese-text" id="chText">${q.chinese}</div>
-
-          <div class="options-container" id="optionsContainer">
-            ${q.options.map((opt, i) => `
-              <button class="option-btn" data-index="${i}" onclick="selectOption(${i})">
-                (${q.labels[i]}) ${opt}
-              </button>
-            `).join('')}
+          <div class="q-chinese" id="ch-${q.id}">${q.chinese}</div>
+          <div class="q-drop-zone" id="dz-${q.id}">
+            ${solvedSet.has(q.id) ? getCorrectLabel(q) : '將答案拖到這裡'}
           </div>
-
-          <div id="explanationArea"></div>
-          <div id="nextArea"></div>
+          ${solvedSet.has(q.id) ? `<div class="q-explanation">✅ ${q.explanation}</div>` : ''}
         </div>
-      `;
-
-      // 標記是否已經答錯過
-      area._hadWrong = false;
+      `).join('');
     }
 
-    function updateProgress() {
-      const pct = (currentIndex / questions.length) * 100;
-      document.getElementById('progressBar').style.width = pct + '%';
-      document.getElementById('progressText').textContent = `${currentIndex} / ${questions.length}`;
+    function getCorrectLabel(q) {
+      return `(${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}`;
     }
 
-    // ==================== 互動 ====================
-    function toggleChinese() {
-      const toggle = document.getElementById('chToggle');
-      const text = document.getElementById('chText');
-      toggle.classList.toggle('open');
-      text.classList.toggle('show');
-      if (text.classList.contains('show')) {
-        toggle.innerHTML = '<span class="icon">▶</span> 隱藏中文翻譯';
-      } else {
-        toggle.innerHTML = '<span class="icon">▶</span> 顯示中文翻譯';
-      }
+    // ==================== 渲染答案池 ====================
+    function renderPool() {
+      const pool = document.getElementById('answerPool');
+      pool.innerHTML = answerChips.map(chip => `
+        <div class="answer-chip ${solvedSet.has(chip.questionId) && chip.isCorrect ? 'placed' : ''}"
+             data-chip-id="${chip.chipId}"
+             data-qid="${chip.questionId}"
+             data-correct="${chip.isCorrect}">
+          (${chip.label}) ${chip.text}
+        </div>
+      `).join('');
+
+      // 綁定拖動事件
+      pool.querySelectorAll('.answer-chip:not(.placed)').forEach(el => {
+        el.addEventListener('pointerdown', onDragStart);
+      });
     }
 
-    function selectOption(idx) {
-      const q = questions[currentIndex];
-      const area = document.getElementById('cardArea');
-      const btn = document.querySelector(`.option-btn[data-index="${idx}"]`);
+    // ==================== 中文翻譯 ====================
+    function toggleCh(btn, qid) {
+      btn.classList.toggle('open');
+      document.getElementById(`ch-${qid}`).classList.toggle('show');
+    }
 
-      if (idx === q.correctIndex) {
-        // 正確
-        btn.classList.add('correct');
+    // ==================== 拖放系統 ====================
+    let dragState = null; // { chipEl, ghost, chipData, startX, startY }
 
-        // 停用所有按鈕
-        document.querySelectorAll('.option-btn').forEach(b => b.classList.add('disabled'));
+    function onDragStart(e) {
+      e.preventDefault();
+      const el = e.currentTarget;
+      const chipId = el.dataset.chipId;
+      const chipData = answerChips.find(c => c.chipId === chipId);
+      if (!chipData) return;
 
-        if (!area._hadWrong) {
-          correctOnFirst++;
+      // 建立 ghost
+      const ghost = document.createElement('div');
+      ghost.className = 'drag-ghost';
+      ghost.textContent = `(${chipData.label}) ${chipData.text}`;
+      document.body.appendChild(ghost);
+
+      const x = e.clientX;
+      const y = e.clientY;
+      ghost.style.left = x + 'px';
+      ghost.style.top = y + 'px';
+
+      el.classList.add('dragging-source');
+
+      dragState = { chipEl: el, ghost, chipData, startX: x, startY: y };
+
+      document.addEventListener('pointermove', onDragMove);
+      document.addEventListener('pointerup', onDragEnd);
+      document.addEventListener('pointercancel', onDragEnd);
+    }
+
+    function onDragMove(e) {
+      if (!dragState) return;
+      e.preventDefault();
+
+      const x = e.clientX;
+      const y = e.clientY;
+      dragState.ghost.style.left = x + 'px';
+      dragState.ghost.style.top = y + 'px';
+
+      // 檢查是否 hover 在某張卡片上
+      document.querySelectorAll('.question-card').forEach(card => {
+        const rect = card.getBoundingClientRect();
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          if (!card.classList.contains('solved')) {
+            card.classList.add('drag-over');
+          }
+        } else {
+          card.classList.remove('drag-over');
         }
+      });
+    }
 
-        // 顯示詳解
-        document.getElementById('explanationArea').innerHTML = `
-          <div class="explanation-box">
-            <div class="label">✅ 詳細解釋</div>
-            <div class="text">${q.explanation}</div>
+    function onDragEnd(e) {
+      if (!dragState) return;
+
+      const x = e.clientX;
+      const y = e.clientY;
+      const { chipEl, ghost, chipData } = dragState;
+
+      // 移除 ghost
+      ghost.remove();
+      chipEl.classList.remove('dragging-source');
+
+      // 清除所有 drag-over
+      document.querySelectorAll('.question-card').forEach(card => {
+        card.classList.remove('drag-over');
+      });
+
+      // 找到放下的卡片
+      let targetCard = null;
+      document.querySelectorAll('.question-card:not(.solved)').forEach(card => {
+        const rect = card.getBoundingClientRect();
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          targetCard = card;
+        }
+      });
+
+      if (targetCard) {
+        const targetQid = parseInt(targetCard.dataset.qid);
+        // 檢查是否正確：這個 chip 必須屬於這個題目且是正確答案
+        if (chipData.questionId === targetQid && chipData.isCorrect) {
+          // ✅ 正確！
+          solvedSet.add(targetQid);
+          renderQuestions();
+          renderPool();
+          checkCompletion();
+        }
+        // 錯誤 → 什麼都不做，chip 已經在原位
+      }
+
+      // 清除
+      document.removeEventListener('pointermove', onDragMove);
+      document.removeEventListener('pointerup', onDragEnd);
+      document.removeEventListener('pointercancel', onDragEnd);
+      dragState = null;
+    }
+
+    // ==================== 完成判斷 ====================
+    function checkCompletion() {
+      if (solvedSet.size === questions.length) {
+        document.getElementById('completionArea').innerHTML = `
+          <div class="completion-banner">
+            <div class="emoji">🎉</div>
+            <h2>全部答對了！太棒了！</h2>
+            <button class="restart-btn" onclick="restart()">再玩一次 🔄</button>
           </div>
         `;
-
-        // 下一題按鈕
-        const isLast = currentIndex >= questions.length - 1;
-        document.getElementById('nextArea').innerHTML = `
-          <button class="next-btn" onclick="nextQuestion()">
-            ${isLast ? '查看成績 🎉' : '下一題 →'}
-          </button>
-        `;
-      } else {
-        // 錯誤
-        area._hadWrong = true;
-        btn.classList.add('wrong');
-        // 動畫結束後隱藏
-        setTimeout(() => {
-          btn.style.display = 'none';
-        }, 420);
       }
-    }
-
-    function nextQuestion() {
-      currentIndex++;
-      render();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // ==================== 成績 ====================
-    function renderScore() {
-      const total = questions.length;
-      const pct = Math.round((correctOnFirst / total) * 100);
-      let emoji = '🎉';
-      if (pct < 50) emoji = '💪';
-      else if (pct < 80) emoji = '👍';
-
-      document.getElementById('progressBar').style.width = '100%';
-      document.getElementById('progressText').textContent = `${total} / ${total}`;
-
-      document.getElementById('cardArea').innerHTML = `
-        <div class="card slide-in score-card">
-          <div class="emoji">${emoji}</div>
-          <h2>測驗完成！</h2>
-          <div class="score">${pct}%</div>
-          <div class="detail">共 ${total} 題，一次答對 ${correctOnFirst} 題</div>
-          <button class="restart-btn" onclick="restart()">再做一次 🔄</button>
-        </div>
-      `;
     }
 
     function restart() {
-      currentIndex = 0;
-      correctOnFirst = 0;
-      render();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      solvedSet.clear();
+      shuffle(answerChips);
+      document.getElementById('completionArea').innerHTML = '';
+      renderQuestions();
+      renderPool();
     }
 
     // ==================== 啟動 ====================
-    render();
+    renderQuestions();
+    renderPool();
   </script>
 </body>
 </html>
-
