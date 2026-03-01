@@ -1436,7 +1436,7 @@
 
     function goToPage(idx) {
       currentPage = idx;
-      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null; jtExpandedSpan = null; // 切換頁面時清除反向連結
+      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null; jtExpandedSpans.clear(); jtDetailKey = null; // 切換頁面時清除反向連結
       renderAll();
       if (window.innerWidth <= 768) toggleSidebar();
     }
@@ -1600,12 +1600,14 @@
       activeOptionKey = null;
       activeExpKey = null;
       activeWordKey = null;
-      jtExpandedSpan = null;
+      jtExpandedSpans.clear();
+      jtDetailKey = null;
       renderAll();
     }
 
     // ==================== Jaeger-style Word Trace ====================
-    let jtExpandedSpan = null; // "qid-source" 展開的 span key
+    let jtExpandedSpans = new Set(); // 同時展開多個 span key
+    let jtDetailKey = null; // 當前顯示 detail 的 span key
     let jtDetailTab = 'tags'; // 'tags' | 'context'
 
     // 色盤 — 每個題目(service)分配不同顏色，類似 Jaeger
@@ -1617,7 +1619,39 @@
     function jtColor(idx) { return JT_COLORS[idx % JT_COLORS.length]; }
 
     function toggleJtSpan(key) {
-      jtExpandedSpan = (jtExpandedSpan === key) ? null : key;
+      if (jtExpandedSpans.has(key)) {
+        // 收合：移除自己和所有子 key
+        // Depth-0 key 格式: "qid-all"，子 key 格式: "qid-xxx", "qid-xxx-n"
+        // 所以收合 Depth-0 時要用 qid 前綴來清除所有子層
+        const qidPrefix = key.split('-')[0] + '-';
+        const isDepth0 = key.endsWith('-all');
+        [...jtExpandedSpans].forEach(k => {
+          if (isDepth0) {
+            // Depth-0 收合：清除該題目所有層級
+            if (k.startsWith(qidPrefix)) jtExpandedSpans.delete(k);
+          } else {
+            // Depth-1/2 收合：清除自己和直接子 key
+            if (k === key || k.startsWith(key + '-')) jtExpandedSpans.delete(k);
+          }
+        });
+        // 同步清除 detail
+        if (jtDetailKey) {
+          if (isDepth0 && jtDetailKey.startsWith(qidPrefix)) {
+            jtDetailKey = null;
+          } else if (jtDetailKey === key || jtDetailKey.startsWith(key + '-')) {
+            jtDetailKey = null;
+          }
+        }
+      } else {
+        // 展開
+        jtExpandedSpans.add(key);
+        jtDetailKey = key;
+        jtDetailTab = 'tags';
+      }
+      renderAll();
+    }
+    function showJtDetail(key) {
+      jtDetailKey = (jtDetailKey === key) ? null : key;
       jtDetailTab = 'tags';
       renderAll();
     }
@@ -1774,7 +1808,7 @@
 
         // Depth-0: 父 span — 範圍 = 所有 contexts 的位置跨度
         const parentKey = `${q.id}-all`;
-        const isParentExpanded = jtExpandedSpan && jtExpandedSpan.startsWith(`${q.id}-`);
+        const isParentExpanded = jtExpandedSpans.has(parentKey);
         const parentRange = findSpanRange(qEntry.contexts, wordKey);
         const preview = q.question.length > 25 ? q.question.slice(0, 25) + '…' : q.question;
 
@@ -1793,7 +1827,7 @@
             </div>
           </div>`;
 
-        if (jtExpandedSpan === parentKey) {
+        if (jtDetailKey === parentKey) {
           spanRowsHtml += renderJtDetail(q, idx, qEntry.contexts, wordKey, hlWord, color, cat);
         }
 
@@ -1801,7 +1835,7 @@
         if (isParentExpanded) {
           Object.entries(sourceGroups).forEach(([src, ctxs]) => {
             const childKey = `${q.id}-${src}`;
-            const isChildExpanded = jtExpandedSpan === childKey;
+            const isChildExpanded = jtExpandedSpans.has(childKey);
             const srcColor = srcColors[src] || color;
             const childRange = findSpanRange(ctxs, wordKey);
 
@@ -1820,7 +1854,7 @@
                 </div>
               </div>`;
 
-            if (isChildExpanded) {
+            if (jtDetailKey === childKey) {
               spanRowsHtml += renderJtDetail(q, idx, ctxs, wordKey, hlWord, srcColor, src);
             }
 
@@ -1828,7 +1862,7 @@
             if (isChildExpanded) {
               ctxs.forEach((c, ci) => {
                 const leafKey = `${q.id}-${src}-${ci}`;
-                const isLeafExpanded = jtExpandedSpan === leafKey;
+                const isLeafExpanded = jtDetailKey === leafKey;
                 const leafPos = findWordPos(c.context, wordKey);
                 const ctxPreview = c.context.length > 30 ? c.context.slice(0, 30) + '…' : c.context;
 
