@@ -155,20 +155,131 @@
       font-size: 0.78rem;
     }
 
-    .q-explanation {
-      margin-top: 8px;
-      font-size: 0.68rem;
-      line-height: 1.6;
-      color: rgba(255,255,255,0.8);
-      background: rgba(76,217,100,0.06);
-      border: 1px solid rgba(76,217,100,0.15);
-      border-radius: 10px;
-      padding: 10px;
-      max-height: 200px;
-      overflow-y: auto;
+    .q-explain-btn {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(76,217,100,0.15);
+      border: 1px solid rgba(76,217,100,0.3);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #4cd964;
+      cursor: pointer;
+      transition: background 0.2s;
       animation: fadeIn 0.4s ease;
     }
-    .q-explanation b {
+    .q-explain-btn:active {
+      background: rgba(76,217,100,0.25);
+    }
+
+    /* ===== Bottom Sheet ===== */
+    .sheet-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 8000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .sheet-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .bottom-sheet {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 8001;
+      background: linear-gradient(180deg, #1e1b4b, #0f0c29);
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      max-height: 80vh;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+    }
+    .bottom-sheet.open {
+      transform: translateY(0);
+    }
+    .bottom-sheet.dragging {
+      transition: none;
+    }
+
+    .sheet-handle-area {
+      padding: 12px 0 4px;
+      display: flex;
+      justify-content: center;
+      cursor: grab;
+      flex-shrink: 0;
+      touch-action: none;
+    }
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.3);
+    }
+
+    .sheet-header {
+      padding: 4px 20px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sheet-header .sheet-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #4cd964;
+    }
+    .sheet-header .sheet-close {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: rgba(255,255,255,0.6);
+      font-size: 1.1rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sheet-body {
+      padding: 16px 20px 40px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1;
+    }
+    .sheet-body .sheet-question {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 4px;
+      line-height: 1.5;
+    }
+    .sheet-body .sheet-answer-line {
+      font-size: 0.8rem;
+      color: #4cd964;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .sheet-body .sheet-explanation {
+      font-size: 0.85rem;
+      line-height: 1.75;
+      color: rgba(255,255,255,0.8);
+    }
+    .sheet-body .sheet-explanation b {
       color: #4cd964;
     }
 
@@ -404,6 +515,19 @@
 
   <div id="completionArea"></div>
 
+  <!-- Bottom Sheet -->
+  <div class="sheet-overlay" id="sheetOverlay"></div>
+  <div class="bottom-sheet" id="bottomSheet">
+    <div class="sheet-handle-area" id="sheetHandleArea">
+      <div class="sheet-handle"></div>
+    </div>
+    <div class="sheet-header">
+      <span class="sheet-title" id="sheetTitle">📖 詳解</span>
+      <button class="sheet-close" id="sheetCloseBtn">✕</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+
   <script>
     // ==================== 題庫 ====================
     const questions = [
@@ -593,7 +717,7 @@
           <div class="q-drop-zone" id="dz-${q.id}">
             ${solvedSet.has(q.id) ? getCorrectLabel(q) : '將答案拖到這裡'}
           </div>
-          ${solvedSet.has(q.id) ? `<div class="q-explanation">✅ ${getExplanationWithMonkey(q)}</div>` : ''}
+          ${solvedSet.has(q.id) ? `<div class="q-explain-btn" onclick="openSheet(${q.id})">📖 詳解</div>` : ''}
         </div>
       `).join('');
     }
@@ -769,6 +893,89 @@
         clearReverseLookup();
       }
     });
+
+    // ==================== Bottom Sheet 詳解面板 ====================
+    const sheetOverlay = document.getElementById('sheetOverlay');
+    const bottomSheet = document.getElementById('bottomSheet');
+    const sheetBody = document.getElementById('sheetBody');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetCloseBtn = document.getElementById('sheetCloseBtn');
+    const sheetHandleArea = document.getElementById('sheetHandleArea');
+
+    let sheetDragState = null;
+
+    function openSheet(qid) {
+      const q = questions.find(q => q.id === qid);
+      if (!q) return;
+
+      sheetTitle.textContent = `📖 第 ${q.id} 題 詳解`;
+      sheetBody.innerHTML = `
+        <div class="sheet-question">${q.question}</div>
+        <div class="sheet-answer-line">✅ 正確答案：(${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}</div>
+        <div class="sheet-explanation">${getExplanationWithMonkey(q)}</div>
+      `;
+
+      sheetOverlay.classList.add('open');
+      bottomSheet.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSheet() {
+      bottomSheet.classList.remove('open');
+      bottomSheet.style.transform = '';
+      sheetOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    sheetOverlay.addEventListener('click', closeSheet);
+    sheetCloseBtn.addEventListener('click', closeSheet);
+
+    // --- 拖拉關閉 Bottom Sheet ---
+    sheetHandleArea.addEventListener('pointerdown', onSheetDragStart);
+
+    function onSheetDragStart(e) {
+      e.preventDefault();
+      bottomSheet.classList.add('dragging');
+      sheetDragState = { startY: e.clientY, currentOffset: 0 };
+      document.addEventListener('pointermove', onSheetDragMove);
+      document.addEventListener('pointerup', onSheetDragEnd);
+      document.addEventListener('pointercancel', onSheetDragEnd);
+    }
+
+    function onSheetDragMove(e) {
+      if (!sheetDragState) return;
+      e.preventDefault();
+      const dy = e.clientY - sheetDragState.startY;
+      // 只允許往下拖
+      const offset = Math.max(0, dy);
+      sheetDragState.currentOffset = offset;
+      bottomSheet.style.transform = `translateY(${offset}px)`;
+
+      // 背景透明度跟隨
+      const maxDrag = 300;
+      const progress = Math.min(offset / maxDrag, 1);
+      sheetOverlay.style.opacity = 1 - progress * 0.7;
+    }
+
+    function onSheetDragEnd(e) {
+      if (!sheetDragState) return;
+      bottomSheet.classList.remove('dragging');
+
+      const offset = sheetDragState.currentOffset;
+      if (offset > 120) {
+        // 拖超過 120px → 關閉
+        closeSheet();
+      } else {
+        // 彈回
+        bottomSheet.style.transform = '';
+        sheetOverlay.style.opacity = '';
+      }
+
+      document.removeEventListener('pointermove', onSheetDragMove);
+      document.removeEventListener('pointerup', onSheetDragEnd);
+      document.removeEventListener('pointercancel', onSheetDragEnd);
+      sheetDragState = null;
+    }
 
     // ==================== 完成判斷 ====================
     function checkCompletion() {
