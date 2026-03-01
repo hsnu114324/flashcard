@@ -555,6 +555,62 @@
       margin: 4px 0 0; transition: all 0.2s;
     }
     .sidebar-clear-btn:hover { background: #fff0f0; }
+
+    /* ===== Answer Index in Sidebar ===== */
+    .answer-index-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; color: #666; transition: all 0.15s;
+      margin-bottom: 1px;
+    }
+    .answer-index-item:hover { background: #f5f3ff; }
+    .answer-index-item.active-answer { background: #ede9fe; color: #6c5ce7; font-weight: 600; }
+    .answer-index-item .ai-icon { font-size: 0.85rem; flex-shrink: 0; width: 20px; text-align: center; }
+    .answer-index-item .ai-text { flex: 1; font-weight: 500; }
+    .answer-index-item .ai-badge {
+      font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
+      border-radius: 8px; background: #f0f0f5; color: #999;
+      min-width: 20px; text-align: center;
+    }
+    .answer-index-item.active-answer .ai-badge { background: #ede9fe; color: #6c5ce7; }
+
+    /* Backlink panel in main content */
+    .backlink-panel {
+      background: #fff; border: 2px solid #f59e0b;
+      border-radius: 16px; padding: 16px 18px; margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(245,158,11,0.08);
+      animation: fadeIn 0.3s ease;
+    }
+    .backlink-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .backlink-title {
+      font-size: 0.92rem; font-weight: 700; color: #f59e0b;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .backlink-close {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: #fff7ed; border: none; cursor: pointer;
+      font-size: 0.85rem; color: #f59e0b; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .backlink-close:hover { background: #ffedd5; }
+    .backlink-question {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px; cursor: pointer;
+      background: #fffbf0; border: 1px solid #fde68a;
+      margin-bottom: 6px; transition: all 0.15s;
+    }
+    .backlink-question:hover { background: #fef3c7; border-color: #f59e0b; }
+    .backlink-question .bq-num {
+      font-size: 0.72rem; font-weight: 700; color: #fff;
+      background: #f59e0b; padding: 2px 8px; border-radius: 8px; flex-shrink: 0;
+    }
+    .backlink-question .bq-text {
+      font-size: 0.85rem; color: #666; flex: 1;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -596,6 +652,18 @@
     </div>
 
     <div class="sidebar-section">
+      <div class="sidebar-section-title">答案索引</div>
+      <div class="folder-item" onclick="toggleFolder(this)">
+        <span class="folder-icon">🔗</span>
+        <span class="folder-name">反向連結</span>
+        <span class="folder-arrow">▶</span>
+      </div>
+      <div class="folder-children" id="answerIndexFolder">
+        <!-- JS 渲染 -->
+      </div>
+    </div>
+
+    <div class="sidebar-section">
       <div class="sidebar-section-title">統計</div>
       <div id="sidebarStats" style="padding: 4px 10px; font-size: 0.82rem; color: #888; line-height: 1.8;"></div>
     </div>
@@ -618,6 +686,8 @@
       <div class="nav-indicator" id="navIndicator">1 / 4</div>
       <button class="nav-btn" id="nextBtn" onclick="goPage(1)">▶</button>
     </div>
+
+    <div id="backlinkArea"></div>
 
     <div id="cardArea"></div>
 
@@ -894,9 +964,93 @@
 
     function goToPage(idx) {
       currentPage = idx;
+      activeAnswerKey = null; // 切換頁面時清除反向連結
       renderAll();
-      // mobile: close sidebar
       if (window.innerWidth <= 768) toggleSidebar();
+    }
+
+    // ==================== 答案索引（反向連結）====================
+    let activeAnswerKey = null; // 當前選中的答案文字
+
+    function buildAnswerIndex() {
+      // 收集所有正確答案 → 對應的題目
+      const map = new Map(); // answerText → [question objects]
+      questions.forEach(q => {
+        const correctText = q.options[q.correctIndex];
+        if (!map.has(correctText)) map.set(correctText, []);
+        map.get(correctText).push(q);
+      });
+      return map;
+    }
+
+    function renderAnswerIndex() {
+      const folder = document.getElementById('answerIndexFolder');
+      if (!folder) return;
+      const indexMap = buildAnswerIndex();
+      // 按答案字母排序
+      const entries = [...indexMap.entries()].sort((a, b) => a[0].localeCompare(b[0], 'de'));
+      folder.innerHTML = entries.map(([ansText, qs]) => {
+        const isActive = activeAnswerKey === ansText;
+        return `<div class="answer-index-item ${isActive ? 'active-answer' : ''}" onclick="selectAnswerIndex('${ansText.replace(/'/g, "\\'")}')">
+          <span class="ai-icon">💡</span>
+          <span class="ai-text">${ansText}</span>
+          <span class="ai-badge">${qs.length}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function selectAnswerIndex(ansText) {
+      if (activeAnswerKey === ansText) {
+        // 再按一次取消
+        activeAnswerKey = null;
+      } else {
+        activeAnswerKey = ansText;
+      }
+      renderAll();
+      if (window.innerWidth <= 768) toggleSidebar();
+    }
+
+    function renderBacklinkPanel() {
+      const area = document.getElementById('backlinkArea');
+      if (!area) return;
+      if (!activeAnswerKey) {
+        area.innerHTML = '';
+        return;
+      }
+      const indexMap = buildAnswerIndex();
+      const matchedQuestions = indexMap.get(activeAnswerKey) || [];
+      if (matchedQuestions.length === 0) {
+        area.innerHTML = '';
+        activeAnswerKey = null;
+        return;
+      }
+      const questionsHtml = matchedQuestions.map(q => {
+        const preview = q.question.length > 40 ? q.question.slice(0, 40) + '…' : q.question;
+        const idx = questions.indexOf(q);
+        return `<div class="backlink-question" onclick="goToPageFromBacklink(${idx})">
+          <span class="bq-num">第${q.id}題</span>
+          <span class="bq-text">${preview}</span>
+        </div>`;
+      }).join('');
+
+      area.innerHTML = `
+        <div class="backlink-panel">
+          <div class="backlink-header">
+            <div class="backlink-title">🔗 正確答案為「${activeAnswerKey}」的題目 (${matchedQuestions.length})</div>
+            <button class="backlink-close" onclick="clearBacklink()">✕</button>
+          </div>
+          ${questionsHtml}
+        </div>`;
+    }
+
+    function goToPageFromBacklink(idx) {
+      currentPage = idx;
+      renderAll();
+    }
+
+    function clearBacklink() {
+      activeAnswerKey = null;
+      renderAll();
     }
 
     // ==================== 分頁導航 ====================
@@ -1294,11 +1448,13 @@
     // ==================== 渲染全部 ====================
     function renderAll() {
       updateNav();
+      renderBacklinkPanel();
       renderCard();
       bindReorderEvents();
       renderAnswerPool();
       renderExpPool();
       renderSidebar();
+      renderAnswerIndex();
     }
 
     // ==================== 完成 ====================
