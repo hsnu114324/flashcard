@@ -417,11 +417,11 @@
 
     // ==================== 狀態 ====================
     let solvedSet = new Set();           // 已答對的題目 ID
-    let expPlacedMap = new Map();        // qid → Set<chipId> 已放入的詳解 chip
+    let expPlacedMap = new Map();        // qid → chipId[]（有序陣列，最新在前）
     let expCompletedSet = new Set();     // 詳解全部填滿的題目 ID
 
     function getExpPlaced(qid) {
-      if (!expPlacedMap.has(qid)) expPlacedMap.set(qid, new Set());
+      if (!expPlacedMap.has(qid)) expPlacedMap.set(qid, []);
       return expPlacedMap.get(qid);
     }
 
@@ -479,27 +479,32 @@
       const grid = document.getElementById('questionsGrid');
       grid.innerHTML = questions.map(q => {
         const isSolved = solvedSet.has(q.id);
-        const placed = getExpPlaced(q.id);
+        const placedArr = getExpPlaced(q.id);
         const expDone = expCompletedSet.has(q.id);
         const totalParts = q.expParts.length;
-        const filledCount = placed.size;
+        const filledCount = placedArr.length;
+        const emptyCount = totalParts - filledCount;
 
         let expZoneHtml = '';
         if (isSolved) {
-          const slotsHtml = q.expParts.map((part, idx) => {
-            // 找到已放入且 partIndex === idx 的 chip
-            const isFilled = [...placed].some(chipId => {
-              const chip = expChips.find(c => c.chipId === chipId);
-              return chip && chip.partIndex === idx;
-            });
-            const displayText = isFilled ? getExpText(q.id, idx, part) : `<span style="opacity:0.35">⬜ ${idx + 1}</span>`;
-            return `<div class="exp-slot ${isFilled ? 'filled' : ''}">${displayText}</div>`;
+          // 已放入的 chip：最新的在最上方（Kanban 堆疊）
+          const filledHtml = placedArr.map(chipId => {
+            const chip = expChips.find(c => c.chipId === chipId);
+            if (!chip) return '';
+            const displayText = getExpText(q.id, chip.partIndex, chip.text);
+            return `<div class="exp-slot filled">${displayText}</div>`;
           }).join('');
+
+          // 未填的空槽在下方
+          let emptyHtml = '';
+          for (let i = 0; i < emptyCount; i++) {
+            emptyHtml += `<div class="exp-slot"><span style="opacity:0.35">⬜</span></div>`;
+          }
 
           expZoneHtml = `
             <div class="exp-zone ${expDone ? 'completed' : ''}" data-qid="${q.id}">
               <div class="exp-zone-label">📖 詳解 (${filledCount}/${totalParts})</div>
-              ${slotsHtml}
+              ${filledHtml}${emptyHtml}
             </div>`;
         }
 
@@ -552,8 +557,8 @@
       pool.classList.remove('section-hidden');
 
       pool.innerHTML = visibleChips.map(chip => {
-        const placed = getExpPlaced(chip.questionId);
-        const isPlaced = placed.has(chip.chipId);
+        const placedArr = getExpPlaced(chip.questionId);
+        const isPlaced = placedArr.includes(chip.chipId);
         return `<div class="exp-chip ${isPlaced ? 'placed' : ''}"
                      data-chip-id="${chip.chipId}" data-drag-type="explanation">
                   ${chip.text}
@@ -671,12 +676,13 @@
             // 詳解拖放
             if (solvedSet.has(targetQid) && !expCompletedSet.has(targetQid)) {
               if (chipData.questionId === targetQid) {
-                const placed = getExpPlaced(targetQid);
-                if (!placed.has(chipData.chipId)) {
-                  placed.add(chipData.chipId);
+                const placedArr = getExpPlaced(targetQid);
+                if (!placedArr.includes(chipData.chipId)) {
+                  // Kanban 堆疊：最新的插入最前面（最上方）
+                  placedArr.unshift(chipData.chipId);
                   // 檢查是否全部填滿
                   const tq = questions.find(q => q.id === targetQid);
-                  if (placed.size === tq.expParts.length) {
+                  if (placedArr.length === tq.expParts.length) {
                     expCompletedSet.add(targetQid);
                   }
                   renderAll();
