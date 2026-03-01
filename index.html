@@ -636,6 +636,63 @@
       border: 1px solid #e9d5ff; margin-bottom: 8px;
     }
 
+    /* ===== Word Index in Sidebar ===== */
+    .word-index-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 10px; border-radius: 8px; cursor: pointer;
+      font-size: 0.8rem; color: #666; transition: all 0.15s;
+      margin-bottom: 1px;
+    }
+    .word-index-item:hover { background: #fff7ed; }
+    .word-index-item.active-word { background: #ffedd5; color: #ea580c; font-weight: 600; }
+    .word-index-item .wi-icon { font-size: 0.75rem; flex-shrink: 0; width: 16px; text-align: center; }
+    .word-index-item .wi-text { flex: 1; font-weight: 500; font-family: 'Georgia', serif; font-style: italic; }
+    .word-index-item .wi-badge {
+      font-size: 0.6rem; font-weight: 700; padding: 2px 6px;
+      border-radius: 6px; min-width: 18px; text-align: center;
+      background: #f0f0f5; color: #999; flex-shrink: 0;
+    }
+    .word-index-item.active-word .wi-badge { background: #fed7aa; color: #ea580c; }
+    .word-index-item .wi-src {
+      font-size: 0.55rem; color: #ccc; flex-shrink: 0;
+    }
+    .word-index-section-label {
+      font-size: 0.65rem; font-weight: 700; color: #bbb;
+      padding: 8px 10px 3px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    /* Backlink panel variant for words */
+    .backlink-panel.word-panel { border-color: #ea580c; }
+    .backlink-panel.word-panel .backlink-title { color: #ea580c; }
+    .backlink-panel.word-panel .backlink-close { background: #fff7ed; color: #ea580c; }
+    .backlink-panel.word-panel .backlink-close:hover { background: #ffedd5; }
+    .backlink-panel.word-panel .backlink-question { background: #fff7ed; border-color: #fed7aa; }
+    .backlink-panel.word-panel .backlink-question:hover { background: #ffedd5; border-color: #ea580c; }
+    .backlink-panel.word-panel .backlink-question .bq-num { background: #ea580c; }
+    .backlink-word-context {
+      font-size: 0.82rem; color: #666; line-height: 1.55; padding: 8px 12px;
+      background: #fff7ed; border-radius: 8px; border: 1px solid #fed7aa;
+      margin-bottom: 5px;
+    }
+    .backlink-word-context .word-highlight {
+      background: #fed7aa; color: #ea580c; font-weight: 700;
+      padding: 0 3px; border-radius: 3px;
+    }
+
+    /* Clickable words in question text */
+    .q-text .clickable-word {
+      cursor: pointer; border-bottom: 1.5px dashed transparent;
+      transition: all 0.15s; border-radius: 2px; padding: 0 1px;
+    }
+    .q-text .clickable-word:hover {
+      border-bottom-color: #ea580c; color: #ea580c;
+      background: #fff7ed;
+    }
+    .q-text .clickable-word.word-active {
+      background: #ffedd5; color: #ea580c; font-weight: 600;
+      border-bottom-color: #ea580c;
+    }
+
     /* Backlink panel in main content */
     .backlink-panel {
       background: #fff; border: 2px solid #f59e0b;
@@ -735,6 +792,15 @@
         <span class="folder-arrow">▶</span>
       </div>
       <div class="folder-children" id="expIndexFolder">
+        <!-- JS 渲染 -->
+      </div>
+
+      <div class="folder-item" onclick="toggleFolder(this)">
+        <span class="folder-icon">🔤</span>
+        <span class="folder-name">德文單字索引</span>
+        <span class="folder-arrow">▶</span>
+      </div>
+      <div class="folder-children" id="wordIndexFolder">
         <!-- JS 渲染 -->
       </div>
     </div>
@@ -1145,7 +1211,7 @@
 
     function goToPage(idx) {
       currentPage = idx;
-      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; // 切換頁面時清除反向連結
+      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null; // 切換頁面時清除反向連結
       renderAll();
       if (window.innerWidth <= 768) toggleSidebar();
     }
@@ -1185,7 +1251,7 @@
         activeAnswerKey = null;
       } else {
         activeAnswerKey = ansText;
-        activeOptionKey = null; activeExpKey = null;
+        activeOptionKey = null; activeExpKey = null; activeWordKey = null;
       }
       renderAll();
       if (window.innerWidth <= 768) toggleSidebar();
@@ -1290,6 +1356,50 @@
         return;
       }
 
+      // 德文單字索引模式
+      if (activeWordKey) {
+        const wordIndex = buildWordIndex();
+        const entry = wordIndex.get(activeWordKey);
+        if (!entry || entry.sources.length === 0) {
+          area.innerHTML = ''; activeWordKey = null; return;
+        }
+        // 按題目分組
+        const qMap = new Map();
+        entry.sources.forEach(s => {
+          if (!qMap.has(s.question.id)) qMap.set(s.question.id, { question: s.question, contexts: [] });
+          qMap.get(s.question.id).contexts.push(s);
+        });
+        const qEntries = [...qMap.values()];
+        // 高亮函數
+        const hlWord = (text) => {
+          const re = new RegExp(`(${activeWordKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+          return text.replace(re, '<span class="word-highlight">$1</span>');
+        };
+        const questionsHtml = qEntries.map(({ question: q, contexts }) => {
+          const idx = questions.indexOf(q);
+          const catTag = q.category ? `<span style="font-size:0.65rem;color:#999;background:#f5f3ff;padding:1px 5px;border-radius:4px;margin-left:4px;">${q.category}</span>` : '';
+          const contextHtml = contexts.map(c =>
+            `<div class="backlink-word-context"><span style="font-size:0.65rem;color:#bbb;margin-right:4px;">${c.source}</span>${hlWord(c.context)}</div>`
+          ).join('');
+          return `<div class="backlink-question" onclick="goToPageFromBacklink(${idx})" style="flex-direction:column;align-items:stretch;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="bq-num">第${q.id}題</span>
+              <span class="bq-text" style="flex:1;">${q.question.length > 35 ? q.question.slice(0, 35) + '…' : q.question}${catTag}</span>
+            </div>
+            ${contextHtml}
+          </div>`;
+        }).join('');
+        area.innerHTML = `
+          <div class="backlink-panel word-panel">
+            <div class="backlink-header">
+              <div class="backlink-title">🔤 包含「${entry.original}」的題目 (${qEntries.length})</div>
+              <button class="backlink-close" onclick="clearBacklink()">✕</button>
+            </div>
+            ${questionsHtml}
+          </div>`;
+        return;
+      }
+
       area.innerHTML = '';
     }
 
@@ -1302,6 +1412,7 @@
       activeAnswerKey = null;
       activeOptionKey = null;
       activeExpKey = null;
+      activeWordKey = null;
       renderAll();
     }
 
@@ -1340,7 +1451,7 @@
         activeOptionKey = null;
       } else {
         activeOptionKey = optText;
-        activeAnswerKey = null; activeExpKey = null;
+        activeAnswerKey = null; activeExpKey = null; activeWordKey = null;
       }
       renderAll();
       if (window.innerWidth <= 768) toggleSidebar();
@@ -1380,7 +1491,7 @@
         activeExpKey = null;
       } else {
         activeExpKey = key;
-        activeAnswerKey = null; activeOptionKey = null;
+        activeAnswerKey = null; activeOptionKey = null; activeWordKey = null;
         // 自動跳到對應題目
         const [qid] = key.split('-').map(Number);
         const idx = questions.findIndex(q => q.id === qid);
@@ -1388,6 +1499,124 @@
       }
       renderAll();
       if (window.innerWidth <= 768) toggleSidebar();
+    }
+
+    // ==================== 德文單字索引（反向連結）====================
+    let activeWordKey = null;
+
+    // 提取拉丁字母單字（含 ä ö ü ß），至少 2 字元
+    const GERMAN_WORD_RE = /[A-Za-zÀ-ÖØ-öø-ÿß]+/g;
+    // 常見停用詞：極基本功能詞（不會成為考點的）
+    const STOP_WORDS = new Set([
+      'in', 'im', 'am', 'an', 'um', 'zu', 'es', 'so', 'ob'
+    ]);
+
+    function extractGermanWords(text) {
+      const matches = text.match(GERMAN_WORD_RE) || [];
+      return matches.filter(w => w.length >= 2 && !STOP_WORDS.has(w.toLowerCase()));
+    }
+
+    function buildWordIndex() {
+      // word (小寫) → { original (最常見原形), sources: [{question, context, source}] }
+      const map = new Map();
+      questions.forEach(q => {
+        // 從題目取詞
+        const qWords = extractGermanWords(q.question);
+        const seenInQ = new Set();
+        qWords.forEach(w => {
+          const key = w.toLowerCase();
+          if (seenInQ.has(key)) return;
+          seenInQ.add(key);
+          if (!map.has(key)) map.set(key, { original: w, sources: [] });
+          const entry = map.get(key);
+          // 保留最長的原形（大寫版本優先）
+          if (w[0] === w[0].toUpperCase() && w.length >= entry.original.length) entry.original = w;
+          entry.sources.push({ question: q, context: q.question, source: '題目' });
+        });
+        // 從選項取詞
+        q.options.forEach((opt, oi) => {
+          const oWords = extractGermanWords(opt);
+          const seenInOpt = new Set();
+          oWords.forEach(w => {
+            const key = w.toLowerCase();
+            if (seenInOpt.has(key)) return;
+            seenInOpt.add(key);
+            if (!map.has(key)) map.set(key, { original: w, sources: [] });
+            const entry = map.get(key);
+            if (w.length > entry.original.length || (w[0] === w[0].toUpperCase() && w.length >= entry.original.length)) entry.original = w;
+            entry.sources.push({ question: q, context: `(${q.labels[oi]}) ${opt}`, source: '選項' });
+          });
+        });
+      });
+      return map;
+    }
+
+    function renderWordIndex() {
+      const folder = document.getElementById('wordIndexFolder');
+      if (!folder) return;
+      const indexMap = buildWordIndex();
+      // 按出現題數排序（多的在前），同數量則按字母排序
+      const entries = [...indexMap.entries()].sort((a, b) => {
+        // 先比較出現在多少不同題目
+        const aQids = new Set(a[1].sources.map(s => s.question.id));
+        const bQids = new Set(b[1].sources.map(s => s.question.id));
+        if (bQids.size !== aQids.size) return bQids.size - aQids.size;
+        return a[0].localeCompare(b[0], 'de');
+      });
+
+      // 分兩組：多題共用 vs 單題
+      const multi = entries.filter(([,v]) => new Set(v.sources.map(s => s.question.id)).size > 1);
+      const single = entries.filter(([,v]) => new Set(v.sources.map(s => s.question.id)).size === 1);
+
+      let html = '';
+      if (multi.length > 0) {
+        html += `<div class="word-index-section-label">🔥 跨題共用 (${multi.length})</div>`;
+        html += multi.map(([key, val]) => {
+          const qCount = new Set(val.sources.map(s => s.question.id)).size;
+          const isActive = activeWordKey === key;
+          return `<div class="word-index-item ${isActive ? 'active-word' : ''}" onclick="selectWordIndex('${key.replace(/'/g, "\\'")}')">
+            <span class="wi-icon">🔤</span>
+            <span class="wi-text">${val.original}</span>
+            <span class="wi-badge">${qCount}題</span>
+          </div>`;
+        }).join('');
+      }
+      if (single.length > 0) {
+        html += `<div class="word-index-section-label">📝 單題出現 (${single.length})</div>`;
+        html += single.map(([key, val]) => {
+          const isActive = activeWordKey === key;
+          return `<div class="word-index-item ${isActive ? 'active-word' : ''}" onclick="selectWordIndex('${key.replace(/'/g, "\\'")}')">
+            <span class="wi-icon" style="opacity:0.4">·</span>
+            <span class="wi-text">${val.original}</span>
+            <span class="wi-badge">1</span>
+          </div>`;
+        }).join('');
+      }
+      folder.innerHTML = html;
+    }
+
+    function selectWordIndex(key) {
+      if (activeWordKey === key) {
+        activeWordKey = null;
+      } else {
+        activeWordKey = key;
+        activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
+      }
+      renderAll();
+      if (window.innerWidth <= 768) toggleSidebar();
+    }
+
+    // 點擊卡片中的單字觸發反向連結
+    function clickWord(word) {
+      const key = word.toLowerCase();
+      if (STOP_WORDS.has(key) || key.length < 2) return;
+      if (activeWordKey === key) {
+        activeWordKey = null;
+      } else {
+        activeWordKey = key;
+        activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
+      }
+      renderAll();
     }
 
     // ==================== 分頁導航 ====================
@@ -1484,13 +1713,20 @@
           </div>`;
       }
 
+      // 將德文單字包成可點擊的 span
+      const clickableQuestion = q.question.replace(GERMAN_WORD_RE, (match) => {
+        if (match.length < 2 || STOP_WORDS.has(match.toLowerCase()) || match === '______') return match;
+        const isActive = activeWordKey === match.toLowerCase();
+        return `<span class="clickable-word${isActive ? ' word-active' : ''}" onclick="clickWord('${match.replace(/'/g, "\\'")}')">${match}</span>`;
+      });
+
       document.getElementById('cardArea').innerHTML = `
         <div class="question-card ${isSolved ? 'solved' : ''}" data-qid="${q.id}">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
             <span class="q-number">第 ${q.id} 題</span>
             ${q.category ? `<span style="font-size:0.7rem;color:#999;background:#f5f3ff;padding:2px 8px;border-radius:6px;">${q.category}</span>` : ''}
           </div>
-          <div class="q-text">${q.question}</div>
+          <div class="q-text">${clickableQuestion}</div>
           <div class="q-chinese-toggle" onclick="toggleCh(this, ${q.id})">
             <span class="arrow">▶</span> 中文翻譯
           </div>
@@ -1797,6 +2033,7 @@
       renderAnswerIndex();
       renderOptionIndex();
       renderExpIndex();
+      renderWordIndex();
     }
 
     // ==================== 完成 ====================
