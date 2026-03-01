@@ -1626,6 +1626,29 @@
       renderAll();
     }
 
+    // 計算單字在文本中的相對位置（百分比）
+    function findWordPos(text, wordKey) {
+      const lowerText = text.toLowerCase();
+      const idx = lowerText.indexOf(wordKey);
+      if (idx === -1) return { left: 0, width: 5 }; // fallback
+      const totalLen = Math.max(text.length, 1);
+      const left = (idx / totalLen) * 100;
+      const width = Math.max(3, (wordKey.length / totalLen) * 100);
+      return { left, width };
+    }
+
+    // 計算多個 contexts 的位置範圍（包含所有出現點的最小~最大）
+    function findSpanRange(contexts, wordKey) {
+      let minLeft = 100, maxRight = 0;
+      contexts.forEach(c => {
+        const p = findWordPos(c.context, wordKey);
+        minLeft = Math.min(minLeft, p.left);
+        maxRight = Math.max(maxRight, p.left + p.width);
+      });
+      if (minLeft >= maxRight) return { left: 0, width: 5 };
+      return { left: minLeft, width: Math.max(3, maxRight - minLeft) };
+    }
+
     function renderWordTrace(wordKey) {
       const wordIndex = buildWordIndex();
       const entry = wordIndex.get(wordKey);
@@ -1651,7 +1674,6 @@
         });
       });
       const qEntries = [...qMap.values()].sort((a, b) => a.question.id - b.question.id);
-      const totalQ = questions.length;
 
       // 高亮
       const hlWord = (text) => {
@@ -1667,6 +1689,13 @@
       // 每題分配色彩索引
       const qColorMap = new Map();
       qEntries.forEach((e, i) => qColorMap.set(e.question.id, i));
+
+      // 計算所有 contexts 的平均位置（用於排序顯示）
+      const avgPositions = new Map();
+      qEntries.forEach(e => {
+        const positions = e.contexts.map(c => findWordPos(c.context, wordKey).left);
+        avgPositions.set(e.question.id, positions.reduce((a, b) => a + b, 0) / positions.length);
+      });
 
       // ── 2. Header ──
       const headerHtml = `
@@ -1704,31 +1733,31 @@
           <div class="jt-legend-item"><div class="jt-legend-dot" style="background:${srcColors['詳解']}"></div>詳解</div>
         </div>`;
 
-      // ── 5. Minimap ──
+      // ── 5. Minimap (用句中相對位置) ──
       let minimapHtml = '<div class="jt-minimap">';
       qEntries.forEach((e, i) => {
-        const qIdx = questions.findIndex(qq => qq.id === e.question.id);
-        const left = (qIdx / totalQ * 100);
-        const width = Math.max(3, (e.contexts.length / Math.max(totalSpans, 1)) * 30);
-        minimapHtml += `<div class="jt-minimap-bar" style="left:${left}%;width:${width}%;background:${jtColor(i)};"></div>`;
+        const range = findSpanRange(e.contexts, wordKey);
+        minimapHtml += `<div class="jt-minimap-bar" style="left:${range.left}%;width:${Math.max(2, range.width)}%;background:${jtColor(i)};"></div>`;
       });
       minimapHtml += '</div>';
 
-      // ── 6. Timeline Header (ticks) ──
-      const ticks = [0, 25, 50, 75, 100];
+      // ── 6. Timeline Header (句中位置刻度) ──
+      const posLabels = [
+        { pct: 0, label: '句首 0%' },
+        { pct: 25, label: '25%' },
+        { pct: 50, label: '句中 50%' },
+        { pct: 75, label: '75%' },
+        { pct: 100, label: '句尾 100%' }
+      ];
       let timelineHeaderHtml = `
         <div class="jt-timeline-header">
           <div class="jt-th-service">Service · Operation</div>
           <div class="jt-th-timeline">
-            ${ticks.map(pct => {
-              const qIdx = Math.floor(pct / 100 * (totalQ - 1));
-              const q = questions[qIdx];
-              return `<div class="jt-th-tick" style="left:${pct}%">Q${q ? q.id : ''}</div>`;
-            }).join('')}
+            ${posLabels.map(t => `<div class="jt-th-tick" style="left:${t.pct}%">${t.label}</div>`).join('')}
           </div>
         </div>`;
 
-      // ── 7. Span Rows (nested: depth-0=question, depth-1=source type, depth-2=individual context) ──
+      // ── 7. Span Rows ──
       let spanRowsHtml = '';
       qEntries.forEach((qEntry, qi) => {
         const q = qEntry.question;
@@ -1743,13 +1772,10 @@
           sourceGroups[c.source].push(c);
         });
 
-        const qIdx = questions.findIndex(qq => qq.id === q.id);
-
-        // Depth-0: Question row (parent span)
+        // Depth-0: 父 span — 範圍 = 所有 contexts 的位置跨度
         const parentKey = `${q.id}-all`;
         const isParentExpanded = jtExpandedSpan && jtExpandedSpan.startsWith(`${q.id}-`);
-        const parentBarLeft = (qIdx / totalQ) * 100;
-        const parentBarWidth = Math.max(8, (qEntry.contexts.length / Math.max(totalSpans, 1)) * 60 + 5);
+        const parentRange = findSpanRange(qEntry.contexts, wordKey);
         const preview = q.question.length > 25 ? q.question.slice(0, 25) + '…' : q.question;
 
         spanRowsHtml += `
@@ -1761,25 +1787,23 @@
               <span class="jt-span-op-name">${qEntry.contexts.length} spans</span>
             </div>
             <div class="jt-span-timeline">
-              <div class="jt-span-bar" style="left:${parentBarLeft}%;width:${parentBarWidth}%;background:${color};">
+              <div class="jt-span-bar" style="left:${parentRange.left}%;width:${parentRange.width}%;background:${color};">
                 <span class="jt-span-bar-label">${preview}</span>
               </div>
             </div>
           </div>`;
 
-        // Detail for parent
         if (jtExpandedSpan === parentKey) {
           spanRowsHtml += renderJtDetail(q, idx, qEntry.contexts, wordKey, hlWord, color, cat);
         }
 
-        // Depth-1: Source type rows (child spans)
+        // Depth-1: 來源類型 — 範圍 = 該類型所有 contexts 的位置跨度
         if (isParentExpanded) {
           Object.entries(sourceGroups).forEach(([src, ctxs]) => {
             const childKey = `${q.id}-${src}`;
             const isChildExpanded = jtExpandedSpan === childKey;
             const srcColor = srcColors[src] || color;
-            const childBarLeft = parentBarLeft;
-            const childBarWidth = Math.max(4, (ctxs.length / Math.max(totalSpans, 1)) * 40 + 3);
+            const childRange = findSpanRange(ctxs, wordKey);
 
             spanRowsHtml += `
               <div class="jt-span-row jt-depth-1 ${isChildExpanded ? 'jt-expanded' : ''}" onclick="event.stopPropagation();toggleJtSpan('${childKey}')">
@@ -1790,24 +1814,22 @@
                   <span class="jt-span-op-name">×${ctxs.length}</span>
                 </div>
                 <div class="jt-span-timeline">
-                  <div class="jt-span-bar" style="left:${childBarLeft + 1}%;width:${childBarWidth}%;background:${srcColor};opacity:0.75;">
+                  <div class="jt-span-bar" style="left:${childRange.left}%;width:${childRange.width}%;background:${srcColor};opacity:0.75;">
                     <span class="jt-span-bar-label">${src} (${ctxs.length})</span>
                   </div>
                 </div>
               </div>`;
 
-            // Detail for child
             if (isChildExpanded) {
               spanRowsHtml += renderJtDetail(q, idx, ctxs, wordKey, hlWord, srcColor, src);
             }
 
-            // Depth-2: Individual context rows
+            // Depth-2: 個別上下文 — 精確位置
             if (isChildExpanded) {
               ctxs.forEach((c, ci) => {
                 const leafKey = `${q.id}-${src}-${ci}`;
                 const isLeafExpanded = jtExpandedSpan === leafKey;
-                const leafBarLeft = childBarLeft + 2;
-                const leafBarWidth = Math.max(3, Math.min(30, c.context.length / 3));
+                const leafPos = findWordPos(c.context, wordKey);
                 const ctxPreview = c.context.length > 30 ? c.context.slice(0, 30) + '…' : c.context;
 
                 spanRowsHtml += `
@@ -1817,7 +1839,7 @@
                       <span class="jt-span-op-name" style="color:#718096;">${ctxPreview}</span>
                     </div>
                     <div class="jt-span-timeline">
-                      <div class="jt-span-bar" style="left:${leafBarLeft}%;width:${leafBarWidth}%;background:${srcColor};opacity:0.5;">
+                      <div class="jt-span-bar" style="left:${leafPos.left}%;width:${leafPos.width}%;background:${srcColor};opacity:0.5;">
                       </div>
                     </div>
                   </div>`;
@@ -1831,7 +1853,7 @@
         }
       });
 
-      // ── 8. Co-occurring Words ──
+      // ── 8. Co-occurring Words (也用句中相對位置) ──
       const coWordMap = new Map();
       qEntries.forEach(({ question: q }) => {
         const allWords = new Set();
@@ -1857,21 +1879,23 @@
           const displayName = cwEntry ? cwEntry.original : cw;
           const sortedQids = [...qids].sort((a, b) => a - b);
 
-          // 繪製 span bars 和連線
+          // 每個共現單字，用其在各題句子中的位置畫 span
           let trackHtml = '';
-          if (sortedQids.length >= 2) {
-            const firstIdx = questions.findIndex(q => q.id === sortedQids[0]);
-            const lastIdx = questions.findIndex(q => q.id === sortedQids[sortedQids.length - 1]);
-            const l = ((firstIdx + 0.5) / totalQ * 100);
-            const r = ((lastIdx + 0.5) / totalQ * 100);
-            trackHtml += `<div class="jt-cw-connector" style="left:${l}%;width:${r - l}%;background:${cwColor};"></div>`;
-          }
+          const positions = [];
           sortedQids.forEach(qid => {
-            const qIdx = questions.findIndex(q => q.id === qid);
-            const left = ((qIdx + 0.5) / totalQ * 100) - 1.5;
-            trackHtml += `<div class="jt-cw-span" style="left:${left}%;width:3%;background:${cwColor};"
-              title="Q${qid}" onclick="event.stopPropagation();clickWord('${displayName.replace(/'/g, "\\'")}')"></div>`;
+            const q = questions.find(qq => qq.id === qid);
+            if (!q) return;
+            const pos = findWordPos(q.question, cw);
+            positions.push(pos);
+            trackHtml += `<div class="jt-cw-span" style="left:${pos.left}%;width:${Math.max(2, pos.width)}%;background:${cwColor};"
+              title="Q${qid}: 位置 ${Math.round(pos.left)}%" onclick="event.stopPropagation();clickWord('${displayName.replace(/'/g, "\\'")}')"></div>`;
           });
+          // 連線
+          if (positions.length >= 2) {
+            const minL = Math.min(...positions.map(p => p.left));
+            const maxR = Math.max(...positions.map(p => p.left + p.width));
+            trackHtml += `<div class="jt-cw-connector" style="left:${minL}%;width:${maxR - minL}%;background:${cwColor};"></div>`;
+          }
 
           return `<div class="jt-cw-row">
             <div class="jt-cw-label">
@@ -1906,16 +1930,25 @@
       const tagsActive = jtDetailTab === 'tags' ? 'active' : '';
       const ctxActive = jtDetailTab === 'context' ? 'active' : '';
 
+      // 計算位置資訊
+      const posInfo = contexts.map(c => {
+        const p = findWordPos(c.context, wordKey);
+        return { source: c.source, left: Math.round(p.left), context: c.context };
+      });
+      const posRange = findSpanRange(contexts, wordKey);
+
       let bodyHtml = '';
       if (jtDetailTab === 'tags') {
         bodyHtml = `<table class="jt-tag-table">
           <tr><td class="jt-tag-key">question.id</td><td class="jt-tag-val"><a onclick="goToPageFromBacklink(${idx})">Q${q.id} (點擊跳轉)</a></td></tr>
           <tr><td class="jt-tag-key">category</td><td class="jt-tag-val">${q.category || '—'}</td></tr>
           <tr><td class="jt-tag-key">word</td><td class="jt-tag-val" style="font-weight:700;color:#c05621;">${wordKey}</td></tr>
+          <tr><td class="jt-tag-key">position</td><td class="jt-tag-val">${Math.round(posRange.left)}% ~ ${Math.round(posRange.left + posRange.width)}%（句中相對位置）</td></tr>
           <tr><td class="jt-tag-key">spans</td><td class="jt-tag-val">${contexts.length}</td></tr>
           <tr><td class="jt-tag-key">sources</td><td class="jt-tag-val">${[...new Set(contexts.map(c => c.source))].join(', ')}</td></tr>
           <tr><td class="jt-tag-key">correct_answer</td><td class="jt-tag-val">${q.options[q.correctIndex]}</td></tr>
           <tr><td class="jt-tag-key">question</td><td class="jt-tag-val">${hlWord(q.question)}</td></tr>
+          ${posInfo.map(p => `<tr><td class="jt-tag-key">${p.source} pos</td><td class="jt-tag-val">${p.left}%</td></tr>`).join('')}
         </table>`;
       } else {
         bodyHtml = contexts.map(c => `
@@ -1953,12 +1986,14 @@
 
     // ── Jaeger Leaf Span Detail (individual context) ──
     function renderJtLeafDetail(q, idx, ctx, wordKey, hlWord, color) {
+      const leafPos = findWordPos(ctx.context, wordKey);
       return `<div class="jt-detail" onclick="event.stopPropagation()">
         <div class="jt-detail-inner">
           <div class="jt-detail-sidebar">
             <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:4px;">Span Info</div>
             <div style="font-size:0.68rem;color:#718096;line-height:1.5;">
               Q${q.id} · ${ctx.source}<br>
+              位置: ${Math.round(leafPos.left)}%<br>
               <a style="color:#3182ce;cursor:pointer;text-decoration:underline;" onclick="goToPageFromBacklink(${idx})">跳到此題 →</a>
             </div>
           </div>
@@ -1966,6 +2001,7 @@
             <table class="jt-tag-table">
               <tr><td class="jt-tag-key">source</td><td class="jt-tag-val">${ctx.source}</td></tr>
               <tr><td class="jt-tag-key">word</td><td class="jt-tag-val" style="font-weight:700;color:#c05621;">${wordKey}</td></tr>
+              <tr><td class="jt-tag-key">position</td><td class="jt-tag-val">${Math.round(leafPos.left)}%（第 ${Math.round(leafPos.left / 100 * ctx.context.length)} 字 / 共 ${ctx.context.length} 字）</td></tr>
               <tr><td class="jt-tag-key">context</td><td class="jt-tag-val">${hlWord(ctx.context)}</td></tr>
             </table>
           </div>
