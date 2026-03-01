@@ -349,7 +349,7 @@
 <body>
 
   <div class="header">
-    <h1>🇩🇪 德語 Flashcard</h1>
+    <h1>Flashcard</h1>
     <div class="subtitle">把答案拖進正確的題目卡片中</div>
   </div>
 
@@ -430,6 +430,74 @@
 
     // ==================== 狀態 ====================
     let solvedSet = new Set(); // 已答對的題目 ID
+    let monkeyQuestionId = null; // 🐒 藏在哪一題
+    let monkeyCharIndex = null;  // 🐒 插在詳解文字的哪個位置
+    let monkeyFound = false;
+
+    // ==================== Chaos Monkey 初始化 ====================
+    function initChaosMonkey() {
+      // 隨機選一題藏猴子
+      monkeyQuestionId = questions[Math.floor(Math.random() * questions.length)].id;
+      // 隨機選詳解中的插入位置（避開開頭和結尾 3 字元）
+      const exp = questions.find(q => q.id === monkeyQuestionId).explanation;
+      const minPos = 3;
+      const maxPos = exp.length - 3;
+      monkeyCharIndex = Math.floor(Math.random() * (maxPos - minPos)) + minPos;
+      monkeyFound = false;
+      updateMonkeyHint();
+    }
+
+    function getExplanationWithMonkey(q) {
+      let text = q.explanation;
+      if (q.id === monkeyQuestionId && !monkeyFound) {
+        // 在 monkeyCharIndex 位置插入猴子
+        const before = text.slice(0, monkeyCharIndex);
+        const after = text.slice(monkeyCharIndex);
+        text = `${before}<span class="chaos-monkey" onclick="foundMonkey(event)">🐒</span>${after}`;
+      }
+      return text;
+    }
+
+    function foundMonkey(e) {
+      e.stopPropagation();
+      if (monkeyFound) return;
+      monkeyFound = true;
+      updateMonkeyHint();
+
+      // 彈出慶祝
+      const banner = document.createElement('div');
+      banner.className = 'monkey-found-banner';
+      banner.id = 'monkeyBanner';
+      banner.innerHTML = `
+        <div class="monkey-found-card">
+          <div class="big-monkey">🐒</div>
+          <h3>你找到 Chaos Monkey 了！</h3>
+          <p>牠藏在第 ${monkeyQuestionId} 題的詳解裡</p>
+          <button class="monkey-dismiss-btn" onclick="dismissMonkey()">知道了 👍</button>
+        </div>
+      `;
+      document.body.appendChild(banner);
+
+      // 更新詳解：把猴子標亮
+      renderQuestions();
+    }
+
+    function dismissMonkey() {
+      const banner = document.getElementById('monkeyBanner');
+      if (banner) banner.remove();
+    }
+
+    function updateMonkeyHint() {
+      const hint = document.getElementById('monkeyHint');
+      if (!hint) return;
+      if (monkeyFound) {
+        hint.textContent = '🐒 Chaos Monkey 已被你抓到了！';
+        hint.classList.add('found');
+      } else {
+        hint.textContent = '🐒 有一隻 Chaos Monkey 藏在某個詳解裡，找到牠！';
+        hint.classList.remove('found');
+      }
+    }
 
     // ==================== 渲染題目卡片 ====================
     function renderQuestions() {
@@ -445,7 +513,7 @@
           <div class="q-drop-zone" id="dz-${q.id}">
             ${solvedSet.has(q.id) ? getCorrectLabel(q) : '將答案拖到這裡'}
           </div>
-          ${solvedSet.has(q.id) ? `<div class="q-explanation">✅ ${q.explanation}</div>` : ''}
+          ${solvedSet.has(q.id) ? `<div class="q-explanation">✅ ${getExplanationWithMonkey(q)}</div>` : ''}
         </div>
       `).join('');
     }
@@ -596,11 +664,14 @@
       solvedSet.clear();
       shuffle(answerChips);
       document.getElementById('completionArea').innerHTML = '';
+      dismissMonkey();
+      initChaosMonkey();
       renderQuestions();
       renderPool();
     }
 
     // ==================== 啟動 ====================
+    initChaosMonkey();
     renderQuestions();
     renderPool();
   </script>
