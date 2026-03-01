@@ -1507,9 +1507,7 @@
     // 提取拉丁字母單字（含 ä ö ü ß），至少 2 字元
     const GERMAN_WORD_RE = /[A-Za-zÀ-ÖØ-öø-ÿß]+/g;
     // 常見停用詞：極基本功能詞（不會成為考點的）
-    const STOP_WORDS = new Set([
-      'in', 'im', 'am', 'an', 'um', 'zu', 'es', 'so', 'ob'
-    ]);
+    const STOP_WORDS = new Set([]);
 
     function extractGermanWords(text) {
       const matches = text.match(GERMAN_WORD_RE) || [];
