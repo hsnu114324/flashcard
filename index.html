@@ -85,7 +85,7 @@
       max-height: 0; overflow: hidden;
       transition: max-height 0.3s ease;
     }
-    .folder-children.open { max-height: 400px; }
+    .folder-children.open { max-height: 2000px; }
 
     .file-item {
       display: flex; align-items: center; gap: 8px;
@@ -450,6 +450,111 @@
 
     .section-hidden { display: none; }
     .spacer { height: 60px; }
+
+    /* ===== Import Modal ===== */
+    .import-overlay {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,0.4); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .import-overlay.hidden { display: none; }
+    .import-modal {
+      background: #fff; border-radius: 20px;
+      width: 90vw; max-width: 640px; max-height: 90vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      animation: monkeyPop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+      overflow: hidden;
+    }
+    .import-header {
+      padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between;
+    }
+    .import-header h2 {
+      font-size: 1.2rem; font-weight: 700;
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .import-close-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: #f0f0f5; border: none; cursor: pointer;
+      font-size: 1rem; color: #888; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .import-close-btn:hover { background: #e8e8ee; color: #555; }
+    .import-body { padding: 16px 24px; flex: 1; overflow-y: auto; }
+    .import-tabs {
+      display: flex; gap: 4px; margin-bottom: 14px;
+      background: #f0f0f5; border-radius: 10px; padding: 3px;
+    }
+    .import-tab {
+      flex: 1; padding: 8px 12px; border-radius: 8px; border: none;
+      background: transparent; font-size: 0.82rem; font-weight: 600;
+      color: #888; cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .import-tab.active { background: #fff; color: #6c5ce7; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .import-hint {
+      font-size: 0.78rem; color: #aaa; line-height: 1.6; margin-bottom: 10px;
+      background: #fafbfc; border-radius: 10px; padding: 10px 12px;
+      border: 1px solid #eef0f2;
+    }
+    .import-hint code {
+      background: #ede9fe; color: #6c5ce7; padding: 1px 5px; border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .import-textarea {
+      width: 100%; min-height: 220px; max-height: 45vh;
+      border: 1.5px solid #e2e6ea; border-radius: 12px;
+      padding: 14px; font-size: 0.88rem; font-family: inherit;
+      color: #333; background: #fafbfc; resize: vertical;
+      outline: none; transition: border-color 0.2s; line-height: 1.6;
+      -webkit-user-select: text; user-select: text;
+    }
+    .import-textarea:focus { border-color: #a78bfa; background: #fff; }
+    .import-textarea::placeholder { color: #ccc; }
+    .import-footer {
+      padding: 14px 24px 20px; display: flex; gap: 10px; justify-content: flex-end;
+      border-top: 1px solid #eef0f2;
+    }
+    .import-btn {
+      padding: 10px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; border: none;
+    }
+    .import-btn.secondary { background: #f0f0f5; color: #666; }
+    .import-btn.secondary:hover { background: #e8e8ee; }
+    .import-btn.primary {
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa); color: #fff;
+      box-shadow: 0 3px 10px rgba(108,92,231,0.25);
+    }
+    .import-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(108,92,231,0.3); }
+    .import-btn.danger {
+      background: #fff0f0; color: #ef4444; border: 1px solid #fecaca;
+    }
+    .import-btn.danger:hover { background: #fef2f2; }
+    .import-result {
+      margin-top: 10px; padding: 10px 14px; border-radius: 10px;
+      font-size: 0.82rem; line-height: 1.6; animation: fadeIn 0.3s ease;
+    }
+    .import-result.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .import-result.error { background: #fff0f0; color: #ef4444; border: 1px solid #fecaca; }
+
+    /* Sidebar import button */
+    .sidebar-import-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 10px; border-radius: 10px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 500; color: #6c5ce7;
+      background: #f5f2ff; border: 1.5px dashed #d4ccf7;
+      margin: 6px 0 2px; transition: all 0.2s;
+    }
+    .sidebar-import-btn:hover { background: #ede9fe; border-color: #a78bfa; }
+    .sidebar-clear-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 8px; cursor: pointer;
+      font-size: 0.78rem; font-weight: 500; color: #ef4444;
+      background: transparent; border: none;
+      margin: 4px 0 0; transition: all 0.2s;
+    }
+    .sidebar-clear-btn:hover { background: #fff0f0; }
   </style>
 </head>
 <body>
@@ -481,6 +586,13 @@
       <div class="folder-children open" id="questionFolder">
         <!-- JS 渲染 -->
       </div>
+
+      <div class="sidebar-import-btn" onclick="openImportModal()">
+        <span>📥</span> 匯入新題目
+      </div>
+      <button class="sidebar-clear-btn" onclick="clearAllQuestions()">
+        🗑️ 清空所有題目
+      </button>
     </div>
 
     <div class="sidebar-section">
@@ -521,6 +633,56 @@
     <div class="spacer"></div>
     <div id="completionArea"></div>
   </main>
+
+  <!-- ===== 匯入 Modal ===== -->
+  <div class="import-overlay hidden" id="importOverlay" onclick="if(event.target===this)closeImportModal()">
+    <div class="import-modal">
+      <div class="import-header">
+        <h2>📥 匯入題目</h2>
+        <button class="import-close-btn" onclick="closeImportModal()">✕</button>
+      </div>
+      <div class="import-body">
+        <div class="import-tabs">
+          <button class="import-tab active" onclick="switchImportTab(this,'text')">📝 文字格式</button>
+          <button class="import-tab" onclick="switchImportTab(this,'json')">🔧 JSON 格式</button>
+        </div>
+
+        <div id="importHintText" class="import-hint">
+          <b>📋 文字格式範例</b>（每題之間空一行）：<br><br>
+          <code>第5題</code> Der Hund ______ im Garten.<br>
+          <code>中文</code> 那隻狗在花園裡。<br>
+          <code>(A)</code> lauft <code>(B)</code> läuft <code>(C)</code> laufen <code>(D)</code> laufet<br>
+          <code>正確答案</code> (B)<br>
+          <code>詳解</code> läuft 是 laufen 的第三人稱現在式。<br>
+          laufen 是強變化動詞，au → äu。<br>
+          ❌ (A) lauft：沒有變母音。<br>
+          💡 口訣：強變化動詞第三人稱要變母音！<br><br>
+          💡 <b>題號可省略</b>（自動編號）、<b>中文可省略</b>、<b>詳解可多行</b>（每行會成為一張詳解卡片）
+        </div>
+
+        <div id="importHintJson" class="import-hint" style="display:none;">
+          <b>🔧 JSON 格式範例</b>：<br><br>
+          <code>[{</code><br>
+          &nbsp;&nbsp;<code>"question"</code>: "Der Hund ______ im Garten.",<br>
+          &nbsp;&nbsp;<code>"chinese"</code>: "那隻狗在花園裡。",<br>
+          &nbsp;&nbsp;<code>"options"</code>: ["lauft","läuft","laufen","laufet"],<br>
+          &nbsp;&nbsp;<code>"correctIndex"</code>: 1,<br>
+          &nbsp;&nbsp;<code>"expParts"</code>: ["解釋1","解釋2"]<br>
+          <code>}]</code>
+        </div>
+
+        <textarea class="import-textarea" id="importTextarea"
+          placeholder="在此貼上題目內容...&#10;&#10;格式範例請參考上方說明"></textarea>
+
+        <div id="importResult"></div>
+      </div>
+      <div class="import-footer">
+        <button class="import-btn secondary" onclick="closeImportModal()">取消</button>
+        <button class="import-btn secondary" onclick="loadSampleImport()">📋 載入範例</button>
+        <button class="import-btn primary" onclick="executeImport()">匯入 ✨</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     // ==================== 題庫 ====================
@@ -712,6 +874,12 @@
     }
 
     function updateNav() {
+      if (questions.length === 0) {
+        document.getElementById('navIndicator').textContent = '0 / 0';
+        document.getElementById('prevBtn').classList.add('disabled');
+        document.getElementById('nextBtn').classList.add('disabled');
+        return;
+      }
       document.getElementById('navIndicator').textContent = `${currentPage + 1} / ${questions.length}`;
       document.getElementById('prevBtn').classList.toggle('disabled', currentPage === 0);
       document.getElementById('nextBtn').classList.toggle('disabled', currentPage === questions.length - 1);
@@ -721,6 +889,10 @@
     let monkeyQuestionId = null, monkeyPartIndex = null, monkeyFound = false;
 
     function initChaosMonkey() {
+      if (questions.length === 0) {
+        monkeyQuestionId = null; monkeyPartIndex = null; monkeyFound = false;
+        updateMonkeyHint(); return;
+      }
       const q = questions[Math.floor(Math.random() * questions.length)];
       monkeyQuestionId = q.id;
       monkeyPartIndex = Math.floor(Math.random() * q.expParts.length);
@@ -753,6 +925,15 @@
 
     // ==================== 渲染：大卡片 ====================
     function renderCard() {
+      if (questions.length === 0) {
+        document.getElementById('cardArea').innerHTML = `
+          <div style="text-align:center; padding:60px 20px; color:#bbb;">
+            <div style="font-size:3rem; margin-bottom:12px;">📭</div>
+            <div style="font-size:1rem;">題庫是空的</div>
+            <div style="font-size:0.85rem; margin-top:6px;">點擊左側「📥 匯入新題目」開始</div>
+          </div>`;
+        return;
+      }
       const q = questions[currentPage];
       const isSolved = solvedSet.has(q.id);
       const placedArr = getExpPlaced(q.id);
@@ -803,6 +984,11 @@
 
     // ==================== 渲染：答案池 ====================
     function renderAnswerPool() {
+      if (questions.length === 0) {
+        document.getElementById('answerPool').innerHTML = '';
+        document.getElementById('answerDivider').classList.add('section-hidden');
+        return;
+      }
       const q = questions[currentPage];
       const pool = document.getElementById('answerPool');
       const currentChips = answerChips.filter(c => c.questionId === q.id);
@@ -823,6 +1009,11 @@
 
     // ==================== 渲染：詳解池 ====================
     function renderExpPool() {
+      if (questions.length === 0) {
+        document.getElementById('expPool').innerHTML = '';
+        document.getElementById('expDivider').classList.add('section-hidden');
+        return;
+      }
       const q = questions[currentPage];
       const divider = document.getElementById('expDivider');
       const pool = document.getElementById('expPool');
@@ -1080,6 +1271,7 @@
 
     // ==================== 完成 ====================
     function checkCompletion() {
+      if (questions.length === 0) return;
       if (solvedSet.size === questions.length && expCompletedSet.size === questions.length) {
         document.getElementById('completionArea').innerHTML = `
           <div class="completion-banner">
@@ -1096,6 +1288,257 @@
       shuffle(answerChips); buildExpChips();
       document.getElementById('completionArea').innerHTML = '';
       dismissMonkey(); initChaosMonkey(); renderAll();
+    }
+
+    // ==================== 匯入系統 ====================
+    let importMode = 'text'; // 'text' or 'json'
+
+    function openImportModal() {
+      document.getElementById('importOverlay').classList.remove('hidden');
+      document.getElementById('importTextarea').value = '';
+      document.getElementById('importResult').innerHTML = '';
+      if (window.innerWidth <= 768) toggleSidebar();
+    }
+    function closeImportModal() {
+      document.getElementById('importOverlay').classList.add('hidden');
+    }
+    function switchImportTab(btn, mode) {
+      importMode = mode;
+      document.querySelectorAll('.import-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('importHintText').style.display = mode === 'text' ? '' : 'none';
+      document.getElementById('importHintJson').style.display = mode === 'json' ? '' : 'none';
+    }
+
+    function loadSampleImport() {
+      if (importMode === 'text') {
+        document.getElementById('importTextarea').value =
+`第5題 Der Hund ______ im Garten.
+中文 那隻狗在花園裡。
+(A) lauft (B) läuft (C) laufen (D) laufet
+正確答案 (B)
+詳解 läuft 是 laufen 的第三人稱單數現在式。
+laufen 是強變化動詞，au → äu 變母音。
+❌ (A) lauft：沒有變母音，文法錯誤。
+❌ (C) laufen：原形/複數，不符合第三人稱單數。
+❌ (D) laufet：根本不存在這種變位。
+💡 口訣：強變化動詞第三人稱要變母音！
+
+第6題 Wir ______ morgen nach Berlin.
+中文 我們明天去柏林。
+(A) fahren (B) fährt (C) fahrt (D) gefahren
+正確答案 (A)
+詳解 wir（我們）搭配的動詞用原形 fahren。
+fahren 是強變化動詞，但 wir 的變位等同原形。
+❌ (B) fährt：第三人稱單數（er/sie/es fährt）。
+❌ (C) fahrt：第二人稱複數（ihr fahrt）。
+❌ (D) gefahren：過去分詞，不能單獨當動詞。`;
+      } else {
+        document.getElementById('importTextarea').value = JSON.stringify([
+          {
+            question: 'Der Hund ______ im Garten.',
+            chinese: '那隻狗在花園裡。',
+            options: ['lauft', 'läuft', 'laufen', 'laufet'],
+            correctIndex: 1,
+            expParts: [
+              'läuft 是 laufen 的第三人稱單數現在式。',
+              'laufen 是強變化動詞，au → äu 變母音。',
+              '❌ (A) lauft：沒有變母音，文法錯誤。',
+              '💡 口訣：強變化動詞第三人稱要變母音！'
+            ]
+          }
+        ], null, 2);
+      }
+    }
+
+    function executeImport() {
+      const text = document.getElementById('importTextarea').value.trim();
+      const resultEl = document.getElementById('importResult');
+      if (!text) {
+        resultEl.innerHTML = '<div class="import-result error">⚠️ 請先輸入或貼上題目內容</div>';
+        return;
+      }
+      try {
+        let newQuestions;
+        if (importMode === 'json') {
+          newQuestions = parseJsonImport(text);
+        } else {
+          newQuestions = parseTextImport(text);
+        }
+        if (!newQuestions || newQuestions.length === 0) {
+          resultEl.innerHTML = '<div class="import-result error">⚠️ 未能解析到任何題目，請檢查格式</div>';
+          return;
+        }
+        // 分配 ID
+        let maxId = questions.length > 0 ? Math.max(...questions.map(q => q.id)) : 0;
+        newQuestions.forEach(q => {
+          maxId++;
+          q.id = maxId;
+          if (!q.labels) q.labels = ['A', 'B', 'C', 'D'];
+          if (!q.chinese) q.chinese = '';
+          if (!q.expParts || q.expParts.length === 0) q.expParts = ['（尚無詳解）'];
+        });
+        // 加入題庫
+        questions.push(...newQuestions);
+        rebuildAfterImport();
+        resultEl.innerHTML = `<div class="import-result success">✅ 成功匯入 ${newQuestions.length} 題！（現在共 ${questions.length} 題）</div>`;
+        setTimeout(() => closeImportModal(), 1200);
+      } catch (err) {
+        resultEl.innerHTML = `<div class="import-result error">⚠️ 解析失敗：${err.message}</div>`;
+      }
+    }
+
+    // ---------- JSON 解析 ----------
+    function parseJsonImport(text) {
+      const data = JSON.parse(text);
+      const arr = Array.isArray(data) ? data : [data];
+      return arr.map(item => {
+        if (!item.question || !item.options || item.options.length < 2) {
+          throw new Error('每題必須有 question 和至少 2 個 options');
+        }
+        if (item.correctIndex == null || item.correctIndex < 0 || item.correctIndex >= item.options.length) {
+          throw new Error(`correctIndex 必須在 0~${item.options.length - 1} 之間`);
+        }
+        return {
+          question: item.question,
+          chinese: item.chinese || '',
+          options: item.options,
+          labels: item.labels || ['A','B','C','D'].slice(0, item.options.length),
+          correctIndex: item.correctIndex,
+          expParts: item.expParts || ['（尚無詳解）']
+        };
+      });
+    }
+
+    // ---------- 文字解析 ----------
+    function parseTextImport(text) {
+      // 先按空行分組（每組 = 一題）
+      const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+      const results = [];
+
+      for (const block of blocks) {
+        const lines = block.split('\n').map(l => l.replace(/^[-\s]*/, '').trim()).filter(Boolean);
+        if (lines.length < 3) continue; // 至少要有題目、選項、答案
+
+        let question = '', chinese = '', options = [], correctIndex = -1, expParts = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+
+          // 題目行：以「第X題」開頭或第一行
+          if (/^第\s*\d+\s*題/.test(line)) {
+            question = line.replace(/^第\s*\d+\s*題\s*/, '').trim();
+            continue;
+          }
+
+          // 中文行
+          if (/^中文\s/.test(line) || /^（.*）$/.test(line) || /^\(.*\)$/.test(line) && i === 1 && !question) {
+            chinese = line.replace(/^中文\s*/, '').replace(/^[（(]/, '').replace(/[）)]$/, '').trim();
+            continue;
+          }
+
+          // 選項行：包含 (A) (B) 等
+          if (/\(A\)/i.test(line) && /\(B\)/i.test(line)) {
+            const optMatches = [...line.matchAll(/\(([A-Z])\)\s*([^(]*)/gi)];
+            if (optMatches.length >= 2) {
+              options = optMatches.map(m => m[2].trim().replace(/[　\s]+$/, ''));
+              // 如果還沒有題目，第一行就是題目
+              if (!question && i > 0) question = lines[0];
+              else if (!question) question = '（無題目）';
+              continue;
+            }
+          }
+
+          // 正確答案行
+          if (/正確答案/.test(line)) {
+            const ansMatch = line.match(/\(([A-Z])\)/i);
+            if (ansMatch) {
+              const letter = ansMatch[1].toUpperCase();
+              correctIndex = letter.charCodeAt(0) - 65; // A=0, B=1...
+            }
+            continue;
+          }
+
+          // 詳解行
+          if (/^詳解\s/.test(line) || /^詳細解釋/.test(line)) {
+            const expText = line.replace(/^詳解\s*/, '').replace(/^詳細解釋[：:]\s*/, '').trim();
+            if (expText) expParts.push(expText);
+            continue;
+          }
+
+          // 如果已經有選項和答案了，剩餘行都是詳解
+          if (options.length > 0 && correctIndex >= 0) {
+            expParts.push(line);
+            continue;
+          }
+
+          // 尚無題目，第一行當題目
+          if (!question) {
+            question = line;
+          } else if (!chinese && options.length === 0) {
+            // 第二行可能是中文
+            chinese = line.replace(/^[（(]/, '').replace(/[）)]$/, '').trim();
+          }
+        }
+
+        if (question && options.length >= 2 && correctIndex >= 0 && correctIndex < options.length) {
+          results.push({
+            question, chinese, options, correctIndex,
+            expParts: expParts.length > 0 ? expParts : ['（尚無詳解）']
+          });
+        }
+      }
+      return results;
+    }
+
+    // ---------- 匯入後重建 ----------
+    function rebuildAfterImport() {
+      // 重建答案 chips
+      answerChips = [];
+      questions.forEach(q => {
+        q.options.forEach((opt, i) => {
+          answerChips.push({
+            chipId: `ans-q${q.id}-${i}`, type: 'answer',
+            questionId: q.id, label: (q.labels || ['A','B','C','D'])[i] || String.fromCharCode(65+i),
+            text: opt, isCorrect: i === q.correctIndex
+          });
+        });
+      });
+      shuffle(answerChips);
+
+      // 重建詳解 chips
+      buildExpChips();
+
+      // 重置 Chaos Monkey
+      dismissMonkey();
+      initChaosMonkey();
+
+      // 渲染
+      currentPage = Math.min(currentPage, questions.length - 1);
+      renderAll();
+    }
+
+    // ---------- 清空題目 ----------
+    function clearAllQuestions() {
+      if (!confirm('確定要清空所有題目嗎？此操作無法復原。')) return;
+      questions.length = 0;
+      solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear();
+      answerChips = []; expChips = [];
+      currentPage = 0;
+      dismissMonkey(); monkeyFound = false;
+      document.getElementById('completionArea').innerHTML = '';
+      document.getElementById('cardArea').innerHTML = `
+        <div style="text-align:center; padding:60px 20px; color:#bbb;">
+          <div style="font-size:3rem; margin-bottom:12px;">📭</div>
+          <div style="font-size:1rem;">題庫是空的</div>
+          <div style="font-size:0.85rem; margin-top:6px;">點擊左側「📥 匯入新題目」開始</div>
+        </div>`;
+      renderSidebar();
+      updateNav();
+      document.getElementById('answerPool').innerHTML = '';
+      document.getElementById('expPool').innerHTML = '';
+      document.getElementById('answerDivider').classList.add('section-hidden');
+      document.getElementById('expDivider').classList.add('section-hidden');
     }
 
     // ==================== 滑動手勢 ====================
