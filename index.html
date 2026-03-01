@@ -136,7 +136,19 @@
     .exp-slot.filled {
       border-style: solid; border-color: rgba(167,139,250,0.35);
       background: rgba(167,139,250,0.08); color: rgba(255,255,255,0.75);
+      cursor: grab; touch-action: none;
       animation: slotFill 0.4s ease;
+      position: relative;
+    }
+    .exp-slot.filled:active { cursor: grabbing; }
+    .exp-slot.filled.reorder-source { opacity: 0.3; }
+    .exp-slot.insert-above {
+      border-top: 2px solid #a78bfa !important;
+      margin-top: 0;
+    }
+    .exp-slot.insert-below {
+      border-bottom: 2px solid #a78bfa !important;
+      margin-bottom: 0;
     }
     @keyframes slotFill {
       from { transform: scale(0.95); opacity: 0; }
@@ -488,11 +500,11 @@
         let expZoneHtml = '';
         if (isSolved) {
           // 已放入的 chip：最新的在最上方（Kanban 堆疊）
-          const filledHtml = placedArr.map(chipId => {
+          const filledHtml = placedArr.map((chipId, arrIdx) => {
             const chip = expChips.find(c => c.chipId === chipId);
             if (!chip) return '';
             const displayText = getExpText(q.id, chip.partIndex, chip.text);
-            return `<div class="exp-slot filled">${displayText}</div>`;
+            return `<div class="exp-slot filled" data-chip-id="${chipId}" data-reorder-qid="${q.id}" data-arr-idx="${arrIdx}">${displayText}</div>`;
           }).join('');
 
           // 未填的空槽在下方
@@ -522,6 +534,148 @@
             ${expZoneHtml}
           </div>`;
       }).join('');
+    }
+
+    // 綁定已填入的詳解 slot 拖動排序事件
+    function bindReorderEvents() {
+      document.querySelectorAll('.exp-slot.filled[data-chip-id]').forEach(el => {
+        el.addEventListener('pointerdown', onReorderStart);
+      });
+    }
+
+    // ==================== 詳解排序拖放 ====================
+    let reorderState = null;
+
+    function onReorderStart(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const el = e.currentTarget;
+      const chipId = el.dataset.chipId;
+      const qid = parseInt(el.dataset.reorderQid);
+      const arrIdx = parseInt(el.dataset.arrIdx);
+
+      const chip = expChips.find(c => c.chipId === chipId);
+      if (!chip) return;
+
+      // 建立 ghost
+      const ghost = document.createElement('div');
+      ghost.className = 'drag-ghost ghost-exp';
+      ghost.textContent = chip.text;
+      document.body.appendChild(ghost);
+
+      const x = e.clientX, y = e.clientY;
+      ghost.style.left = x + 'px';
+      ghost.style.top = y + 'px';
+      el.classList.add('reorder-source');
+
+      reorderState = { sourceEl: el, ghost, chipId, qid, sourceIdx: arrIdx, startX: x, startY: y };
+
+      document.addEventListener('pointermove', onReorderMove);
+      document.addEventListener('pointerup', onReorderEnd);
+      document.addEventListener('pointercancel', onReorderEnd);
+    }
+
+    function onReorderMove(e) {
+      if (!reorderState) return;
+      e.preventDefault();
+      const x = e.clientX, y = e.clientY;
+      reorderState.ghost.style.left = x + 'px';
+      reorderState.ghost.style.top = y + 'px';
+
+      // 清除所有 indicator
+      document.querySelectorAll('.exp-slot.insert-above, .exp-slot.insert-below').forEach(s => {
+        s.classList.remove('insert-above', 'insert-below');
+      });
+
+      // 找到同題目的 exp-zone 裡的 filled slots
+      const expZone = document.querySelector(`.exp-zone[data-qid="${reorderState.qid}"]`);
+      if (!expZone) return;
+
+      const slots = [...expZone.querySelectorAll('.exp-slot.filled')];
+      let closestSlot = null;
+      let insertPos = 'below'; // 'above' or 'below'
+      let minDist = Infinity;
+
+      slots.forEach(slot => {
+        if (slot === reorderState.sourceEl) return;
+        const r = slot.getBoundingClientRect();
+        const centerY = r.top + r.height / 2;
+        const dist = Math.abs(y - centerY);
+        if (dist < minDist) {
+          minDist = dist;
+          closestSlot = slot;
+          insertPos = y < centerY ? 'above' : 'below';
+        }
+      });
+
+      if (closestSlot) {
+        closestSlot.classList.add(insertPos === 'above' ? 'insert-above' : 'insert-below');
+      }
+    }
+
+    function onReorderEnd(e) {
+      if (!reorderState) return;
+      const x = e.clientX, y = e.clientY;
+      const { sourceEl, ghost, chipId, qid, sourceIdx, startX, startY } = reorderState;
+
+      ghost.remove();
+      sourceEl.classList.remove('reorder-source');
+
+      // 清除 indicator
+      document.querySelectorAll('.exp-slot.insert-above, .exp-slot.insert-below').forEach(s => {
+        s.classList.remove('insert-above', 'insert-below');
+      });
+
+      const dist = Math.sqrt((x - startX) ** 2 + (y - startY) ** 2);
+
+      if (dist >= 10) {
+        // 計算目標位置
+        const expZone = document.querySelector(`.exp-zone[data-qid="${qid}"]`);
+        if (expZone) {
+          const slots = [...expZone.querySelectorAll('.exp-slot.filled')];
+          let targetIdx = sourceIdx; // 預設不動
+
+          let closestSlot = null;
+          let insertPos = 'below';
+          let minDist = Infinity;
+
+          slots.forEach(slot => {
+            const r = slot.getBoundingClientRect();
+            const centerY = r.top + r.height / 2;
+            const d = Math.abs(y - centerY);
+            if (d < minDist) {
+              minDist = d;
+              closestSlot = slot;
+              insertPos = y < centerY ? 'above' : 'below';
+            }
+          });
+
+          if (closestSlot) {
+            const closestIdx = parseInt(closestSlot.dataset.arrIdx);
+            if (insertPos === 'above') {
+              targetIdx = closestIdx;
+            } else {
+              targetIdx = closestIdx + 1;
+            }
+          }
+
+          // 執行重排
+          const placedArr = getExpPlaced(qid);
+          if (targetIdx !== sourceIdx && targetIdx !== sourceIdx + 1) {
+            // 先移除
+            const [removed] = placedArr.splice(sourceIdx, 1);
+            // 計算新位置（因為移除後 index 可能偏移）
+            const newIdx = targetIdx > sourceIdx ? targetIdx - 1 : targetIdx;
+            placedArr.splice(newIdx, 0, removed);
+            renderAll();
+          }
+        }
+      }
+
+      document.removeEventListener('pointermove', onReorderMove);
+      document.removeEventListener('pointerup', onReorderEnd);
+      document.removeEventListener('pointercancel', onReorderEnd);
+      reorderState = null;
     }
 
     // ==================== 渲染：答案池 ====================
@@ -727,6 +881,7 @@
     // ==================== 渲染全部 ====================
     function renderAll() {
       renderQuestions();
+      bindReorderEvents();
       renderAnswerPool();
       renderExpPool();
     }
