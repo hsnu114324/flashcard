@@ -679,6 +679,135 @@
       padding: 0 3px; border-radius: 3px;
     }
 
+    /* ===== Word Trace Waterfall ===== */
+    .word-trace-panel {
+      background: #fff; border: 2px solid #ea580c; border-radius: 16px;
+      padding: 18px 20px; margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(234,88,12,0.08);
+      animation: fadeIn 0.3s ease;
+    }
+    .word-trace-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+    }
+    .word-trace-title {
+      font-size: 1rem; font-weight: 700; color: #ea580c;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .word-trace-subtitle {
+      font-size: 0.78rem; color: #94a3b8; margin-bottom: 14px;
+    }
+    .word-trace-close {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: #fff7ed; border: none; cursor: pointer;
+      font-size: 0.85rem; color: #ea580c; display: flex;
+      align-items: center; justify-content: center; transition: background 0.15s;
+    }
+    .word-trace-close:hover { background: #ffedd5; }
+
+    /* Timeline ruler */
+    .wt-ruler {
+      display: flex; align-items: center; gap: 0;
+      margin-bottom: 8px; padding: 0 4px; position: relative; height: 18px;
+    }
+    .wt-ruler-label {
+      font-size: 0.6rem; color: #cbd5e1; position: absolute;
+      transform: translateX(-50%); top: 0;
+    }
+    .wt-ruler-line {
+      position: absolute; top: 14px; left: 0; right: 0; height: 1px;
+      background: #e2e8f0;
+    }
+
+    /* Question span row */
+    .wt-span-row {
+      display: flex; align-items: stretch; gap: 0; margin-bottom: 6px;
+      min-height: 36px; position: relative;
+    }
+    .wt-span-label {
+      width: 100px; flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+      padding-right: 8px; cursor: pointer; transition: all 0.15s;
+    }
+    .wt-span-label:hover { opacity: 0.8; }
+    .wt-span-label .wt-qnum {
+      font-size: 0.65rem; font-weight: 700; color: #fff;
+      background: #ea580c; padding: 2px 6px; border-radius: 5px; flex-shrink: 0;
+    }
+    .wt-span-label .wt-cat {
+      font-size: 0.55rem; color: #bbb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .wt-span-track {
+      flex: 1; position: relative; min-height: 36px;
+    }
+    .wt-span-bar {
+      position: absolute; height: 22px; top: 7px;
+      border-radius: 4px; display: flex; align-items: center;
+      padding: 0 8px; cursor: pointer; transition: all 0.2s;
+      overflow: hidden; white-space: nowrap;
+    }
+    .wt-span-bar:hover { filter: brightness(1.1); box-shadow: 0 2px 8px rgba(0,0,0,0.12); transform: scaleY(1.15); }
+    .wt-span-bar .wt-bar-text {
+      font-size: 0.68rem; font-weight: 600; color: #fff;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Source type bars */
+    .wt-bar-question { background: linear-gradient(90deg, #ea580c, #f97316); }
+    .wt-bar-option { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+    .wt-bar-exp { background: linear-gradient(90deg, #0ea5e9, #38bdf8); }
+
+    /* Co-word chips */
+    .wt-cowords {
+      margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;
+    }
+    .wt-cowords-title {
+      font-size: 0.78rem; font-weight: 600; color: #64748b; margin-bottom: 8px;
+    }
+    .wt-coword-row {
+      display: flex; align-items: center; gap: 0; margin-bottom: 4px; min-height: 26px;
+    }
+    .wt-coword-label {
+      width: 100px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;
+      padding-right: 8px;
+    }
+    .wt-coword-label .wt-cw-text {
+      font-size: 0.72rem; font-weight: 600; color: #475569;
+      font-family: Georgia, serif; font-style: italic;
+      cursor: pointer; transition: color 0.15s;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .wt-coword-label .wt-cw-text:hover { color: #ea580c; }
+    .wt-coword-label .wt-cw-cnt {
+      font-size: 0.55rem; color: #94a3b8; flex-shrink: 0;
+    }
+    .wt-coword-track {
+      flex: 1; position: relative; height: 26px;
+    }
+    .wt-coword-dot {
+      position: absolute; width: 10px; height: 10px; border-radius: 50%;
+      top: 8px; transform: translateX(-50%);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .wt-coword-dot:hover { transform: translateX(-50%) scale(1.5); box-shadow: 0 0 0 3px rgba(234,88,12,0.15); }
+    .wt-coword-line {
+      position: absolute; height: 2px; top: 12px;
+      border-radius: 1px; opacity: 0.4;
+    }
+
+    /* Span detail popup */
+    .wt-detail {
+      background: #fffbf7; border: 1px solid #fed7aa; border-radius: 10px;
+      padding: 12px 14px; margin: 6px 0 10px; animation: fadeIn 0.2s ease;
+      font-size: 0.8rem; line-height: 1.6; color: #555;
+    }
+    .wt-detail-sentence {
+      padding: 8px 10px; background: #fff; border: 1px solid #f1f5f9;
+      border-radius: 8px; margin-top: 6px; font-size: 0.82rem;
+    }
+    .wt-detail-sentence .word-highlight {
+      background: #fed7aa; color: #ea580c; font-weight: 700;
+      padding: 0 3px; border-radius: 3px;
+    }
+
     /* Clickable words in question text */
     .q-text .clickable-word {
       cursor: pointer; border-bottom: 1.5px dashed transparent;
@@ -1369,7 +1498,7 @@
 
     function goToPage(idx) {
       currentPage = idx;
-      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null; // 切換頁面時清除反向連結
+      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null; wordTraceDetail = null; // 切換頁面時清除反向連結
       if (questions[idx]) {
         emitSpan('page_view', { questionId: questions[idx].id, question: questions[idx].question, via: '側邊欄' });
       }
@@ -1517,47 +1646,9 @@
         return;
       }
 
-      // 德文單字索引模式
+      // 德文單字 Trace 模式
       if (activeWordKey) {
-        const wordIndex = buildWordIndex();
-        const entry = wordIndex.get(activeWordKey);
-        if (!entry || entry.sources.length === 0) {
-          area.innerHTML = ''; activeWordKey = null; return;
-        }
-        // 按題目分組
-        const qMap = new Map();
-        entry.sources.forEach(s => {
-          if (!qMap.has(s.question.id)) qMap.set(s.question.id, { question: s.question, contexts: [] });
-          qMap.get(s.question.id).contexts.push(s);
-        });
-        const qEntries = [...qMap.values()];
-        // 高亮函數
-        const hlWord = (text) => {
-          const re = new RegExp(`(${activeWordKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-          return text.replace(re, '<span class="word-highlight">$1</span>');
-        };
-        const questionsHtml = qEntries.map(({ question: q, contexts }) => {
-          const idx = questions.indexOf(q);
-          const catTag = q.category ? `<span style="font-size:0.65rem;color:#999;background:#f5f3ff;padding:1px 5px;border-radius:4px;margin-left:4px;">${q.category}</span>` : '';
-          const contextHtml = contexts.map(c =>
-            `<div class="backlink-word-context"><span style="font-size:0.65rem;color:#bbb;margin-right:4px;">${c.source}</span>${hlWord(c.context)}</div>`
-          ).join('');
-          return `<div class="backlink-question" onclick="goToPageFromBacklink(${idx})" style="flex-direction:column;align-items:stretch;gap:6px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="bq-num">第${q.id}題</span>
-              <span class="bq-text" style="flex:1;">${q.question.length > 35 ? q.question.slice(0, 35) + '…' : q.question}${catTag}</span>
-            </div>
-            ${contextHtml}
-          </div>`;
-        }).join('');
-        area.innerHTML = `
-          <div class="backlink-panel word-panel">
-            <div class="backlink-header">
-              <div class="backlink-title">🔤 包含「${entry.original}」的題目 (${qEntries.length})</div>
-              <button class="backlink-close" onclick="clearBacklink()">✕</button>
-            </div>
-            ${questionsHtml}
-          </div>`;
+        area.innerHTML = renderWordTrace(activeWordKey);
         return;
       }
 
@@ -1578,7 +1669,200 @@
       activeOptionKey = null;
       activeExpKey = null;
       activeWordKey = null;
+      wordTraceDetail = null;
       renderAll();
+    }
+
+    // ==================== 單字 Trace 瀑布圖 ====================
+    let wordTraceDetail = null; // {qid, source} 被展開的 span detail
+
+    function toggleWordTraceDetail(qid, source) {
+      if (wordTraceDetail && wordTraceDetail.qid === qid && wordTraceDetail.source === source) {
+        wordTraceDetail = null;
+      } else {
+        wordTraceDetail = { qid, source };
+      }
+      renderAll();
+    }
+
+    function renderWordTrace(wordKey) {
+      const wordIndex = buildWordIndex();
+      const entry = wordIndex.get(wordKey);
+      if (!entry || entry.sources.length === 0) return '';
+
+      // 1. 按題目分組，收集來源
+      const qMap = new Map();
+      entry.sources.forEach(s => {
+        if (!qMap.has(s.question.id)) qMap.set(s.question.id, { question: s.question, contexts: [] });
+        qMap.get(s.question.id).contexts.push(s);
+      });
+      const qEntries = [...qMap.values()];
+      const totalQ = questions.length;
+
+      // 高亮函數
+      const hlWord = (text) => {
+        const re = new RegExp(`(${wordKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(re, '<span class="word-highlight">$1</span>');
+      };
+
+      // 2. 也搜尋詳解中是否出現
+      const expSources = [];
+      questions.forEach(q => {
+        q.expParts.forEach((part, pi) => {
+          if (part.toLowerCase().includes(wordKey)) {
+            if (!qMap.has(q.id)) {
+              qMap.set(q.id, { question: q, contexts: [] });
+              qEntries.push(qMap.get(q.id));
+            }
+            qMap.get(q.id).contexts.push({ question: q, context: part.length > 60 ? part.slice(0, 60) + '…' : part, source: '詳解' });
+          }
+        });
+      });
+
+      // 3. 計算 co-occurring words（與 activeWordKey 同時出現在 2+ 題的其他單字）
+      const coWordMap = new Map(); // otherWord → Set of qids
+      const matchedQids = new Set(qEntries.map(e => e.question.id));
+      qEntries.forEach(({ question: q }) => {
+        const allWords = new Set();
+        extractGermanWords(q.question).forEach(w => allWords.add(w.toLowerCase()));
+        q.options.forEach(opt => extractGermanWords(opt).forEach(w => allWords.add(w.toLowerCase())));
+        allWords.forEach(w => {
+          if (w === wordKey || w.length < 2) return;
+          if (!coWordMap.has(w)) coWordMap.set(w, new Set());
+          coWordMap.get(w).add(q.id);
+        });
+      });
+      // 只保留出現 >= 2 題的共現詞
+      const coWords = [...coWordMap.entries()]
+        .filter(([, qids]) => qids.size >= 2)
+        .sort((a, b) => b[1].size - a[1].size)
+        .slice(0, 12); // 限制最多顯示 12 個
+
+      // 4. 渲染瀑布圖
+      // 題目按 ID 排序
+      qEntries.sort((a, b) => a.question.id - b.question.id);
+
+      // 刻度尺 — 題號作為 X 軸
+      const rulerHtml = (() => {
+        let h = '<div class="wt-ruler" style="padding-left:100px;position:relative;height:20px;">';
+        h += '<div class="wt-ruler-line"></div>';
+        questions.forEach((q, i) => {
+          const pct = ((i + 0.5) / totalQ * 100);
+          h += `<div class="wt-ruler-label" style="left:${pct}%">Q${q.id}</div>`;
+        });
+        h += '</div>';
+        return h;
+      })();
+
+      // Span rows
+      const spanRowsHtml = qEntries.map(({ question: q, contexts }) => {
+        const idx = questions.indexOf(q);
+        const qIdx = questions.findIndex(qq => qq.id === q.id);
+        const cat = q.category || '';
+
+        // 按 source 分類生成不同 bar
+        const sourceTypes = {};
+        contexts.forEach(c => {
+          if (!sourceTypes[c.source]) sourceTypes[c.source] = [];
+          sourceTypes[c.source].push(c);
+        });
+
+        // 每個 bar 的 X 位置 = 題目在 questions 中的索引
+        const leftPct = (qIdx / totalQ * 100);
+        const barWidth = Math.max(12, (1.5 / totalQ * 100));
+
+        let barsHtml = '';
+        const barClasses = { '題目': 'wt-bar-question', '選項': 'wt-bar-option', '詳解': 'wt-bar-exp' };
+        const srcEntries = Object.entries(sourceTypes);
+        srcEntries.forEach(([src, ctxs], si) => {
+          const cls = barClasses[src] || 'wt-bar-question';
+          const barTop = si * 26;
+          barsHtml += `<div class="wt-span-bar ${cls}" style="left:${leftPct}%;width:${barWidth}%;top:${barTop}px;" onclick="toggleWordTraceDetail(${q.id},'${src}')">
+            <span class="wt-bar-text">${src}(${ctxs.length})</span>
+          </div>`;
+        });
+
+        // Detail panel
+        let detailHtml = '';
+        if (wordTraceDetail && wordTraceDetail.qid === q.id) {
+          const dtSrc = wordTraceDetail.source;
+          const dtContexts = sourceTypes[dtSrc] || contexts;
+          const contextCards = dtContexts.map(c =>
+            `<div class="wt-detail-sentence">${hlWord(c.context)}</div>`
+          ).join('');
+          detailHtml = `<div class="wt-detail">
+            <div style="font-size:0.75rem;font-weight:600;color:#ea580c;margin-bottom:6px;">📍 第${q.id}題 · ${dtSrc}</div>
+            ${contextCards}
+            <div style="margin-top:8px;"><a style="font-size:0.75rem;color:#0ea5e9;cursor:pointer;text-decoration:underline;" onclick="goToPageFromBacklink(${idx})">→ 跳到第${q.id}題</a></div>
+          </div>`;
+        }
+
+        const rowHeight = Math.max(36, srcEntries.length * 26 + 10);
+        return `<div>
+          <div class="wt-span-row" style="min-height:${rowHeight}px;">
+            <div class="wt-span-label" onclick="goToPageFromBacklink(${idx})">
+              <span class="wt-qnum">Q${q.id}</span>
+              <span class="wt-cat">${cat}</span>
+            </div>
+            <div class="wt-span-track" style="min-height:${rowHeight}px;">${barsHtml}</div>
+          </div>
+          ${detailHtml}
+        </div>`;
+      }).join('');
+
+      // 5. Co-word traces
+      let coWordsHtml = '';
+      if (coWords.length > 0) {
+        // 色盤
+        const colors = ['#6366f1','#8b5cf6','#ec4899','#14b8a6','#f59e0b','#10b981','#3b82f6','#ef4444','#84cc16','#06b6d4','#e879f9','#22d3ee'];
+        const coWordRows = coWords.map(([cw, qids], ci) => {
+          const color = colors[ci % colors.length];
+          const cwEntry = wordIndex.get(cw);
+          const displayName = cwEntry ? cwEntry.original : cw;
+          const sortedQids = [...qids].sort((a, b) => a - b);
+
+          // 畫點和連線
+          let dotsHtml = '';
+          sortedQids.forEach((qid, di) => {
+            const qIdx = questions.findIndex(q => q.id === qid);
+            const pct = ((qIdx + 0.5) / totalQ * 100);
+            dotsHtml += `<div class="wt-coword-dot" style="left:${pct}%;background:${color};" title="Q${qid}" onclick="clickWord('${displayName.replace(/'/g, "\\'")}')"></div>`;
+          });
+          // 連線
+          if (sortedQids.length >= 2) {
+            const firstIdx = questions.findIndex(q => q.id === sortedQids[0]);
+            const lastIdx = questions.findIndex(q => q.id === sortedQids[sortedQids.length - 1]);
+            const leftPct = ((firstIdx + 0.5) / totalQ * 100);
+            const rightPct = ((lastIdx + 0.5) / totalQ * 100);
+            dotsHtml += `<div class="wt-coword-line" style="left:${leftPct}%;width:${rightPct - leftPct}%;background:${color};"></div>`;
+          }
+
+          return `<div class="wt-coword-row">
+            <div class="wt-coword-label">
+              <span class="wt-cw-text" onclick="clickWord('${displayName.replace(/'/g, "\\'")}')">${displayName}</span>
+              <span class="wt-cw-cnt">(${qids.size})</span>
+            </div>
+            <div class="wt-coword-track">${dotsHtml}</div>
+          </div>`;
+        }).join('');
+
+        coWordsHtml = `<div class="wt-cowords">
+          <div class="wt-cowords-title">🔗 共現單字（同時出現在含有「${entry.original}」的題目中）</div>
+          ${coWordRows}
+        </div>`;
+      }
+
+      return `
+        <div class="word-trace-panel">
+          <div class="word-trace-header">
+            <div class="word-trace-title">🔤 Word Trace：「${entry.original}」</div>
+            <button class="word-trace-close" onclick="clearBacklink()">✕</button>
+          </div>
+          <div class="word-trace-subtitle">追蹤「${entry.original}」在 ${qEntries.length} 題中的出現位置 · 點擊 span 查看上下文</div>
+          ${rulerHtml}
+          ${spanRowsHtml}
+          ${coWordsHtml}
+        </div>`;
     }
 
     // ==================== 選項索引（全選項反向連結）====================
@@ -1772,7 +2056,7 @@
     // 點擊卡片中的單字觸發反向連結
     function clickWord(word) {
       const key = word.toLowerCase();
-      if (STOP_WORDS.has(key) || key.length < 2) return;
+      if (key.length < 1) return;
       if (activeWordKey === key) {
         activeWordKey = null;
       } else {
