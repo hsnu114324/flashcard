@@ -85,7 +85,7 @@
       max-height: 0; overflow: hidden;
       transition: max-height 0.3s ease;
     }
-    .folder-children.open { max-height: 2000px; }
+    .folder-children.open { max-height: 5000px; }
 
     .file-item {
       display: flex; align-items: center; gap: 8px;
@@ -696,13 +696,8 @@
     <div class="sidebar-section">
       <div class="sidebar-section-title">題庫</div>
 
-      <div class="folder-item expanded" onclick="toggleFolder(this)">
-        <span class="folder-icon">📂</span>
-        <span class="folder-name">德語文法練習</span>
-        <span class="folder-arrow">▶</span>
-      </div>
-      <div class="folder-children open" id="questionFolder">
-        <!-- JS 渲染 -->
+      <div id="categoryFolders">
+        <!-- JS 依 category 動態渲染 -->
       </div>
 
       <div class="sidebar-import-btn" onclick="openImportModal()">
@@ -840,6 +835,7 @@
     const questions = [
       {
         id: 1,
+        category: '93德文導遊',
         question: 'Es ______ viele alte Gemälde im Palastmuseum in Taipeh.',
         chinese: '故宮博物院裡有許多古畫。',
         options: ['haben', 'hat', 'geht', 'gibt'],
@@ -860,6 +856,7 @@
       },
       {
         id: 2,
+        category: '93德文導遊',
         question: 'Ich unterhalte ______ gern mit Ausländern.',
         chinese: '我很喜歡跟外國人聊天。',
         options: ['mich', 'sich', 'ihn', 'uns'],
@@ -880,6 +877,7 @@
       },
       {
         id: 3,
+        category: '93德文導遊',
         question: 'Ich glaube, es hat ______.',
         chinese: '我覺得門鈴響了／電話響了。',
         options: ['geklungen', 'geklingelt', 'gelungen', 'klingen'],
@@ -897,6 +895,7 @@
       },
       {
         id: 4,
+        category: '93德文導遊',
         question: 'Herr Meier ______ gestern von Frankfurt nach Hongkong.',
         chinese: '梅爾先生昨天從法蘭克福飛到香港。',
         options: ['flog', 'fliegte', 'fliegt', 'flug'],
@@ -914,6 +913,7 @@
       },
       {
         id: 5,
+        category: '93德文導遊',
         question: 'Ich ______ Ihnen sehr dankbar, wenn Sie mir bald antworten könnten.',
         chinese: '如果您能盡快回覆，我會非常感激。',
         options: ['bin', 'wäre', 'würde', 'sei'],
@@ -930,6 +930,7 @@
       },
       {
         id: 6,
+        category: '93德文導遊',
         question: 'Der Student spricht, als ob er ein Professor ______.',
         chinese: '這個學生說話好像他是教授一樣。',
         options: ['ist', 'war', 'wäre', 'sind'],
@@ -942,6 +943,67 @@
           '❌ (A) ist：直陳式現在式，表示真實，不符合「好像」的非真實語氣。',
           '❌ (B) war：過去式，不是虛擬式。',
           '❌ (D) sind：複數形式，主語 er 是第三人稱單數，不能用 sind。'
+        ]
+      },
+      // ===== 93德文領隊考題 =====
+      {
+        id: 7,
+        category: '93德文領隊',
+        question: 'Sie brauchen ______ Visum.',
+        chinese: '您不需要簽證。',
+        options: ['kein', 'keinen', 'keins', 'keinem'],
+        labels: ['A', 'B', 'C', 'D'],
+        correctIndex: 0,
+        expParts: [
+          '這題考的是德語否定不定冠詞（negativer Artikel）的變化規則，結合動詞「brauchen」（需要）＋第四格賓語（Akkusativ）的用法。',
+          'Visum 是中性名詞（das Visum），單數，在句子中作直接賓語，因此需要第四格形式。',
+          '📝 否定不定冠詞「kein」的變化表：陽性第四格：keinen ／ 中性第四格：kein ／ 陰性第四格：keine ／ 複數：keine。',
+          '所以「kein Visum」完全正確。完整句子：「Sie brauchen kein Visum.」（您不需要簽證。）',
+          '❌ (B) keinen：這是陽性第四格（例如 einen Mann → keinen Mann），但 Visum 是中性，不是陽性，用錯性別就文法不通。',
+          '❌ (C) keins：這是中性第一格或第四格的簡寫形式（kein + es），通常用在單獨回答時（如「Keins.」），不能直接放在名詞前面當冠詞。',
+          '❌ (D) keinem：這是中性第三格（Dativ），用在間接賓語或介詞後（如 mit keinem Visum），但這裡是直接賓語，需要第四格。',
+          '🎤 導遊應用：帶團時常用：「Sie brauchen kein Visum für dieses Land.」（您去這個國家不需要簽證。）',
+          '💡 記憶口訣：看到中性名詞（das）＋ 第四格 → kein 不變（和第一格一樣）！'
+        ]
+      },
+      // ===== 94德文導遊考題 =====
+      {
+        id: 8,
+        category: '94德文導遊',
+        question: 'Deutschland ist ungefähr zehnmal ______ Taiwan.',
+        chinese: '德國大約是台灣的十倍大。',
+        options: ['größer als', 'so groß wie', 'nicht so groß wie', 'kleiner als'],
+        labels: ['A', 'B', 'C', 'D'],
+        correctIndex: 0,
+        expParts: [
+          '這題考的是德語比較級的標準句型「größer als」（比……更大）。',
+          '「zehnmal größer als」是「十倍大於」的固定表達法，非常常用在導遊介紹國家面積、人口、經濟規模的時候。',
+          '完整正確句子：Deutschland ist ungefähr zehnmal größer als Taiwan.（德國面積約 357,000 km²，台灣約 36,000 km²，確實大約十倍。）',
+          '❌ (B) so groß wie：這是「和……一樣大」的同級比較（so … wie），意思變成「德國和台灣一樣大」，完全相反。',
+          '❌ (C) nicht so groß wie：變成「沒有台灣那麼大」，事實錯誤。',
+          '❌ (D) kleiner als：變成「比台灣小」，也完全相反。',
+          '🎤 導遊應用：介紹國家比較時超好用：「Taiwan ist ungefähr so groß wie Baden-Württemberg.」（台灣大約和巴登-符騰堡州一樣大。）',
+          '💡 記憶口訣：比較級 + als（比……更）；so + 原級 + wie（和……一樣）。'
+        ]
+      },
+      // ===== 94德文領隊考題 =====
+      {
+        id: 9,
+        category: '94德文領隊',
+        question: 'Ich melde mich aus ________ Urlaub in den Bergen, der leider schon zu Ende geht.',
+        chinese: '我從山區的假期向大家報平安，可惜這個假期已經要結束了。',
+        options: ['mein', 'meinem', 'meiner', 'meinen'],
+        labels: ['A', 'B', 'C', 'D'],
+        correctIndex: 1,
+        expParts: [
+          '這題是典型的「介詞 + 格 + 所有格形容詞變化」考題。德語中「aus」屬於固定要求第三格（Dativ）的介詞，意思是「從……出來／從……」。',
+          '名詞「Urlaub」（假期）是陽性單數（der Urlaub），在第三格時冠詞要變成「dem」，所有格形容詞「mein」也要跟著強變化規則變成「meinem」。',
+          '完整正確句子：Ich melde mich aus meinem Urlaub in den Bergen…',
+          '🎤 導遊應用：「Ich melde mich aus meinem Hotel in Taipeh.」或「Die Gruppe meldet sich aus dem Urlaub in den Alpen.」——這句話聽起來非常專業、自然。',
+          '❌ (A) mein：這是第一格（Nominativ）或第四格（Accusativ）陽性形式，用在主語或直接賓語時才對，但「aus」絕對不能接第一／四格，文法上完全不通。',
+          '❌ (C) meiner：這是陰性單數第三格（meiner Frau），但「Urlaub」是陽性，絕對不能用。',
+          '❌ (D) meinen：這是陽性第四格或複數第一／四格，與「aus + Dativ」完全不符。',
+          '💡 記憶口訣：aus / bei / mit / nach / seit / von / zu → 永遠接第三格（Dativ）！'
         ]
       }
     ];
@@ -1006,27 +1068,65 @@
     }
     function filterSidebar(val) {
       const v = val.toLowerCase();
-      document.querySelectorAll('#questionFolder .file-item').forEach(item => {
+      document.querySelectorAll('#categoryFolders .file-item').forEach(item => {
         const text = item.textContent.toLowerCase();
         item.style.display = text.includes(v) ? '' : 'none';
       });
+      // 搜尋時也匹配 category 名稱
+      if (v) {
+        document.querySelectorAll('#categoryFolders .folder-children').forEach(fc => {
+          const hasVisible = [...fc.querySelectorAll('.file-item')].some(i => i.style.display !== 'none');
+          fc.classList.toggle('open', hasVisible);
+          const folder = fc.previousElementSibling;
+          if (folder) folder.classList.toggle('expanded', hasVisible);
+        });
+      }
     }
 
     function renderSidebar() {
-      const folder = document.getElementById('questionFolder');
-      folder.innerHTML = questions.map((q, idx) => {
-        const isSolved = solvedSet.has(q.id);
-        const expDone = expCompletedSet.has(q.id);
-        let statusClass = '';
-        if (expDone) statusClass = 'exp-done';
-        else if (isSolved) statusClass = 'solved';
-        const isActive = idx === currentPage;
-        const preview = q.question.length > 28 ? q.question.slice(0, 28) + '…' : q.question;
-        return `<div class="file-item ${isActive ? 'active' : ''}" onclick="goToPage(${idx})">
-          <span class="file-icon">📄</span>
-          <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">第${q.id}題 ${preview}</span>
-          <span class="file-status ${statusClass}"></span>
-        </div>`;
+      const container = document.getElementById('categoryFolders');
+      // 按 category 分組
+      const catMap = new Map();
+      questions.forEach((q, idx) => {
+        const cat = q.category || '未分類';
+        if (!catMap.has(cat)) catMap.set(cat, []);
+        catMap.get(cat).push({ q, idx });
+      });
+      // 分類圖示對應
+      const catIcons = { '導遊': '🏛️', '領隊': '✈️' };
+      const getCatIcon = (cat) => {
+        if (cat.includes('導遊')) return '🏛️';
+        if (cat.includes('領隊')) return '✈️';
+        return '📂';
+      };
+      // 判斷當前題目所在的 category 是否展開
+      const currentCat = questions.length > 0 ? (questions[currentPage]?.category || '未分類') : '';
+      container.innerHTML = [...catMap.entries()].map(([cat, items]) => {
+        const isExpanded = cat === currentCat;
+        const solvedCount = items.filter(it => solvedSet.has(it.q.id)).length;
+        const itemsHtml = items.map(({ q, idx }) => {
+          const isSolved = solvedSet.has(q.id);
+          const expDone = expCompletedSet.has(q.id);
+          let statusClass = '';
+          if (expDone) statusClass = 'exp-done';
+          else if (isSolved) statusClass = 'solved';
+          const isActive = idx === currentPage;
+          const preview = q.question.length > 26 ? q.question.slice(0, 26) + '…' : q.question;
+          return `<div class="file-item ${isActive ? 'active' : ''}" onclick="goToPage(${idx})">
+            <span class="file-icon">📄</span>
+            <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">第${q.id}題 ${preview}</span>
+            <span class="file-status ${statusClass}"></span>
+          </div>`;
+        }).join('');
+        return `
+          <div class="folder-item ${isExpanded ? 'expanded' : ''}" onclick="toggleFolder(this)">
+            <span class="folder-icon">${getCatIcon(cat)}</span>
+            <span class="folder-name">${cat}</span>
+            <span style="margin-left:auto;font-size:0.65rem;color:#aaa;padding-right:4px;">${solvedCount}/${items.length}</span>
+            <span class="folder-arrow">▶</span>
+          </div>
+          <div class="folder-children ${isExpanded ? 'open' : ''}">${itemsHtml}</div>
+        `;
       }).join('');
 
       // 統計
@@ -1105,9 +1205,10 @@
         const questionsHtml = matchedQuestions.map(q => {
           const preview = q.question.length > 40 ? q.question.slice(0, 40) + '…' : q.question;
           const idx = questions.indexOf(q);
+          const catTag = q.category ? `<span style="font-size:0.65rem;color:#999;background:#f5f3ff;padding:1px 5px;border-radius:4px;margin-left:4px;">${q.category}</span>` : '';
           return `<div class="backlink-question" onclick="goToPageFromBacklink(${idx})">
             <span class="bq-num">第${q.id}題</span>
-            <span class="bq-text">${preview}</span>
+            <span class="bq-text">${preview}${catTag}</span>
           </div>`;
         }).join('');
         area.innerHTML = `
@@ -1133,9 +1234,10 @@
           const preview = q.question.length > 40 ? q.question.slice(0, 40) + '…' : q.question;
           const idx = questions.indexOf(q);
           const label = q.labels[q.options.indexOf(activeOptionKey)] || '?';
+          const catTag = q.category ? `<span style="font-size:0.65rem;color:#999;background:#f5f3ff;padding:1px 5px;border-radius:4px;margin-left:4px;">${q.category}</span>` : '';
           return `<div class="backlink-question" onclick="goToPageFromBacklink(${idx})">
             <span class="bq-num">第${q.id}題</span>
-            <span class="bq-text">(${label}) ${preview}</span>
+            <span class="bq-text">(${label}) ${preview}${catTag}</span>
           </div>`;
         }).join('');
         area.innerHTML = `
@@ -1384,7 +1486,10 @@
 
       document.getElementById('cardArea').innerHTML = `
         <div class="question-card ${isSolved ? 'solved' : ''}" data-qid="${q.id}">
-          <span class="q-number">第 ${q.id} 題</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+            <span class="q-number">第 ${q.id} 題</span>
+            ${q.category ? `<span style="font-size:0.7rem;color:#999;background:#f5f3ff;padding:2px 8px;border-radius:6px;">${q.category}</span>` : ''}
+          </div>
           <div class="q-text">${q.question}</div>
           <div class="q-chinese-toggle" onclick="toggleCh(this, ${q.id})">
             <span class="arrow">▶</span> 中文翻譯
@@ -1801,6 +1906,7 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
           q.id = maxId;
           if (!q.labels) q.labels = ['A', 'B', 'C', 'D'];
           if (!q.chinese) q.chinese = '';
+          if (!q.category) q.category = '匯入題目';
           if (!q.expParts || q.expParts.length === 0) q.expParts = ['（尚無詳解）'];
         });
         // 加入題庫
@@ -1827,6 +1933,7 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
         return {
           question: item.question,
           chinese: item.chinese || '',
+          category: item.category || '',
           options: item.options,
           labels: item.labels || ['A','B','C','D'].slice(0, item.options.length),
           correctIndex: item.correctIndex,
