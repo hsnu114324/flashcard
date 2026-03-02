@@ -488,6 +488,20 @@
       color: #fff; transition: all 0.15s;
     }
     .quiz-stats-bar .qs-new-btn:hover { transform: scale(1.03); }
+    .quiz-stats-bar .qs-mastery-row {
+      display: flex; gap: 6px; align-items: center;
+    }
+    .qs-mastery-dot {
+      font-size: 0.7rem; padding: 2px 8px; border-radius: 6px;
+      white-space: nowrap; cursor: default;
+      background: #f0f0f0; color: #999; font-weight: 600;
+      transition: all 0.2s;
+    }
+    .qs-mastery-dot.mastery-perfect { background: #dcfce7; color: #16a34a; }
+    .qs-mastery-dot.mastery-good { background: #e0f2fe; color: #0284c7; }
+    .qs-mastery-dot.mastery-ok { background: #fef9c3; color: #ca8a04; }
+    .qs-mastery-dot.mastery-weak { background: #fee2e2; color: #dc2626; }
+    .qs-mastery-dot.mastery-none { background: #fecaca; color: #b91c1c; }
 
     .quiz-sidebar-btn {
       display: flex; align-items: center; gap: 8px;
@@ -2565,18 +2579,15 @@
       const filledCount = placedArr.length;
       const isExpDone = expCompletedSet.has(q.id);
 
-      // Quiz 模式的精簡詳解區：只顯示數量 + 最近放入的一張
-      let expMiniHtml = '';
-      if (isSolved) {
-        const lastChipId = placedArr.length > 0 ? placedArr[placedArr.length - 1] : null;
-        const lastChip = lastChipId ? expChips.find(c => c.chipId === lastChipId) : null;
-        const cls = isExpDone ? 'quiz-exp-mini exp-done' : (filledCount > 0 ? 'quiz-exp-mini has-items' : 'quiz-exp-mini');
-        expMiniHtml = `
-          <div class="${cls}" data-qid="${q.id}" data-accept-exp="true">
-            <div class="quiz-exp-mini-label">${isExpDone ? '✅' : '📖'} 詳解 ${filledCount}/${totalParts}</div>
-            ${lastChip ? `<div class="quiz-exp-mini-latest">${lastChip.text}</div>` : `<div class="quiz-exp-mini-latest" style="opacity:0.4">拖入詳解卡片</div>`}
-          </div>`;
-      }
+      // Quiz 模式的精簡詳解區：不需要先答對就能放入詳解
+      const lastChipId = placedArr.length > 0 ? placedArr[placedArr.length - 1] : null;
+      const lastChip = lastChipId ? expChips.find(c => c.chipId === lastChipId) : null;
+      const cls = isExpDone ? 'quiz-exp-mini exp-done' : (filledCount > 0 ? 'quiz-exp-mini has-items' : 'quiz-exp-mini');
+      const expMiniHtml = `
+        <div class="${cls}" data-qid="${q.id}" data-accept-exp="true">
+          <div class="quiz-exp-mini-label">${isExpDone ? '✅' : '📖'} 詳解 ${filledCount}/${totalParts}</div>
+          ${lastChip ? `<div class="quiz-exp-mini-latest">${lastChip.text}</div>` : `<div class="quiz-exp-mini-latest" style="opacity:0.4">拖入詳解卡片</div>`}
+        </div>`;
 
       const clickableQuestion = q.question.replace(GERMAN_WORD_RE, (match) => {
         if (match.length < 2 || STOP_WORDS.has(match.toLowerCase()) || match === '______') return match;
@@ -2857,8 +2868,8 @@
             card.classList.add(hoverClass);
           } else if (dragState.dragType === 'explanation') {
             if (viewMode === 'quiz') {
-              // Quiz 模式：已答對且未完成的題都可 hover
-              if (solvedSet.has(qid) && !expCompletedSet.has(qid)) {
+              // Quiz 模式：不需先答對，未完成詳解的題都可 hover
+              if (!expCompletedSet.has(qid)) {
                 card.classList.add(hoverClass);
               }
             } else {
@@ -2918,12 +2929,8 @@
           } else {
             // 詳解拖放
             if (viewMode === 'quiz') {
-              // ======= Quiz 模式：只驗證 questionId 是否匹配 =======
-              if (!solvedSet.has(targetQid)) {
-                targetCard.classList.add('shake');
-                setTimeout(() => targetCard.classList.remove('shake'), 500);
-                showDragToast('⚠️ 請先答對此題再放入詳解');
-              } else if (expCompletedSet.has(targetQid)) {
+              // ======= Quiz 模式：不需先答對，只驗 questionId =======
+              if (expCompletedSet.has(targetQid)) {
                 showDragToast('✅ 此題詳解已全部放入');
               } else if (chipData.questionId === targetQid) {
                 // 正確配對：放入 + 消失
@@ -3165,6 +3172,32 @@
     }
 
     // ==================== Quiz Stats Bar ====================
+    function getQuizMastery(q) {
+      // 根據答題嘗試次數計算掌握度
+      const isSolved = solvedSet.has(q.id);
+      const attempts = quizAttempts.get(q.id) || 0; // 答錯次數
+      const expDone = expCompletedSet.has(q.id);
+      const expPlaced = getExpPlaced(q.id).length;
+      const expTotal = q.expParts.length;
+
+      if (!isSolved && attempts === 0) return { level: '—', cls: '', tip: '尚未作答' };
+      if (isSolved && attempts === 0) {
+        // 一次就答對
+        const expPct = expTotal > 0 ? Math.round(expPlaced / expTotal * 100) : 100;
+        if (expDone) return { level: '★★★', cls: 'mastery-perfect', tip: '完美：一次答對 + 詳解完成' };
+        return { level: '★★☆', cls: 'mastery-good', tip: `一次答對・詳解 ${expPct}%` };
+      }
+      if (isSolved && attempts === 1) {
+        if (expDone) return { level: '★★☆', cls: 'mastery-good', tip: '良好：2次答對 + 詳解完成' };
+        return { level: '★☆☆', cls: 'mastery-ok', tip: `2次答對・詳解 ${Math.round(expPlaced/expTotal*100)}%` };
+      }
+      if (isSolved && attempts >= 2) {
+        return { level: '★☆☆', cls: 'mastery-weak', tip: `${attempts+1}次才答對，需加強` };
+      }
+      // 還沒答對但已嘗試
+      return { level: '☆☆☆', cls: 'mastery-none', tip: `已錯 ${attempts} 次，繼續加油` };
+    }
+
     function renderQuizStatsBar() {
       const bar = document.getElementById('quizStatsBar');
       if (viewMode !== 'quiz') { bar.classList.add('hidden'); return; }
@@ -3174,14 +3207,32 @@
       const total = quizQs.length;
       const quizSolved = quizQs.filter(q => solvedSet.has(q.id)).length;
       const quizExpDone = quizQs.filter(q => expCompletedSet.has(q.id)).length;
-      const quizFirstTry = quizQs.filter(q => solvedSet.has(q.id) && !(quizAttempts.get(q.id) > 0)).length;
-      const accuracy = quizSolved > 0 ? Math.round(quizFirstTry / quizSolved * 100) : 0;
-      const accCls = accuracy >= 80 ? 'green' : accuracy >= 50 ? 'amber' : '';
+
+      // 個別題目掌握度
+      const masteryHtml = quizQs.map(q => {
+        const m = getQuizMastery(q);
+        return `<span class="qs-mastery-dot ${m.cls}" title="${m.tip}">Q${q.id} ${m.level}</span>`;
+      }).join('');
+
+      // 整體掌握度：加權平均
+      let totalScore = 0;
+      quizQs.forEach(q => {
+        const attempts = quizAttempts.get(q.id) || 0;
+        const isSolved = solvedSet.has(q.id);
+        const expRatio = q.expParts.length > 0 ? getExpPlaced(q.id).length / q.expParts.length : 0;
+        if (isSolved && attempts === 0) totalScore += 80 + 20 * expRatio; // 一次對 80~100
+        else if (isSolved && attempts === 1) totalScore += 50 + 20 * expRatio; // 兩次 50~70
+        else if (isSolved) totalScore += 20 + 10 * expRatio; // 多次 20~30
+        else totalScore += 0; // 未答對
+      });
+      const overallPct = total > 0 ? Math.round(totalScore / total) : 0;
+      const overallCls = overallPct >= 80 ? 'green' : overallPct >= 50 ? 'amber' : '';
 
       bar.innerHTML = `
-        <div class="qs-item">🎯 <span class="qs-val">${quizSolved}/${total}</span> 答題</div>
-        <div class="qs-item">📖 <span class="qs-val">${quizExpDone}/${total}</span> 詳解</div>
-        <div class="qs-item">✅ <span class="qs-val ${accCls}">${quizSolved > 0 ? accuracy + '%' : '-'}</span> 正確率</div>
+        <div class="qs-mastery-row">${masteryHtml}</div>
+        <div class="qs-item">🎯 <span class="qs-val">${quizSolved}/${total}</span></div>
+        <div class="qs-item">📖 <span class="qs-val">${quizExpDone}/${total}</span></div>
+        <div class="qs-item">📊 <span class="qs-val ${overallCls}">${overallPct}%</span> 掌握</div>
         <button class="qs-new-btn" onclick="startQuiz()">🎲 再來四題</button>`;
     }
 
