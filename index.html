@@ -377,6 +377,101 @@
     .exp-slot.order-wrong { border-left: 3px solid #fca5a5 !important; }
     .exp-slot.order-right { border-left: 3px solid #86efac !important; }
 
+    /* ===== Quiz Mode (2×2 Grid) ===== */
+    .quiz-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 14px; margin-bottom: 14px;
+    }
+    .quiz-grid .question-card {
+      min-height: 140px; padding: 16px 14px;
+      margin-bottom: 0; font-size: 0.88rem;
+    }
+    .quiz-grid .q-number {
+      font-size: 0.72rem; padding: 3px 10px; margin-bottom: 8px;
+    }
+    .quiz-grid .q-text { font-size: 0.95rem; line-height: 1.55; }
+    .quiz-grid .q-chinese-toggle { font-size: 0.78rem; margin-top: 8px; }
+    .quiz-grid .q-drop-zone {
+      min-height: 38px; font-size: 0.82rem; margin-top: 10px;
+    }
+    .quiz-grid .exp-zone { margin-top: 10px; padding: 8px; }
+    .quiz-grid .exp-zone-label { font-size: 0.72rem; }
+    .quiz-grid .exp-slot { font-size: 0.75rem; padding: 5px 8px; min-height: 26px; padding-right: 28px; }
+    .quiz-grid .exp-slot-remove { width: 18px; height: 18px; font-size: 0.6rem; right: 4px; }
+    .quiz-grid .check-order-btn { font-size: 0.72rem; padding: 6px 10px; }
+    .quiz-grid .order-result { font-size: 0.72rem; padding: 6px 8px; }
+
+    @media (max-width: 768px) {
+      .quiz-grid { grid-template-columns: 1fr; }
+    }
+
+    .quiz-mode-banner {
+      text-align: center; margin-bottom: 12px; animation: fadeIn 0.4s ease;
+    }
+    .quiz-mode-banner h2 {
+      font-size: 1.15rem; font-weight: 700;
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .quiz-mode-banner .subtitle { font-size: 0.82rem; color: #999; margin-top: 4px; }
+
+    .quiz-stats-panel {
+      background: #fff; border-radius: 16px; padding: 18px 20px;
+      border: 1.5px solid #e8e8ee; margin-top: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      animation: fadeIn 0.4s ease;
+    }
+    .quiz-stats-title {
+      font-size: 0.88rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .quiz-stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    }
+    .quiz-stat-item {
+      text-align: center; padding: 12px 8px;
+      background: #f8f7ff; border-radius: 12px;
+      border: 1px solid #eee;
+    }
+    .quiz-stat-value {
+      font-size: 1.5rem; font-weight: 800; color: #6c5ce7;
+    }
+    .quiz-stat-value.green { color: #16a34a; }
+    .quiz-stat-value.amber { color: #d97706; }
+    .quiz-stat-value.red { color: #dc2626; }
+    .quiz-stat-label {
+      font-size: 0.72rem; color: #999; margin-top: 4px;
+    }
+    .quiz-actions {
+      display: flex; gap: 10px; margin-top: 14px; justify-content: center;
+    }
+    .quiz-action-btn {
+      padding: 10px 22px; border-radius: 12px; font-size: 0.88rem;
+      font-weight: 600; cursor: pointer; transition: all 0.2s; border: none;
+    }
+    .quiz-action-btn.primary {
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
+      color: #fff; box-shadow: 0 3px 10px rgba(108,92,231,0.2);
+    }
+    .quiz-action-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(108,92,231,0.3); }
+    .quiz-action-btn.secondary {
+      background: #f5f2ff; color: #6c5ce7; border: 1.5px solid #d4ccf7;
+    }
+    .quiz-action-btn.secondary:hover { background: #ede9fe; }
+
+    .quiz-sidebar-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; margin: 4px 12px 8px;
+      border-radius: 10px; cursor: pointer;
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
+      color: #fff; font-weight: 600; font-size: 0.82rem;
+      transition: all 0.2s; border: none; width: calc(100% - 24px);
+      box-shadow: 0 2px 8px rgba(108,92,231,0.2);
+    }
+    .quiz-sidebar-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(108,92,231,0.3); }
+
+    .nav-row.quiz-hidden { display: none; }
+
     /* ===== Divider ===== */
     .divider {
       text-align: center; font-size: 0.82rem;
@@ -1018,6 +1113,8 @@
         <!-- JS 依 category 動態渲染 -->
       </div>
 
+      <button class="quiz-sidebar-btn" onclick="startQuiz()">🎲 隨機四題測驗</button>
+
       <div class="sidebar-import-btn" onclick="openImportModal()">
         <span>📥</span> 匯入新題目
       </div>
@@ -1080,7 +1177,7 @@
   <main class="main-content" id="mainContent">
     <div class="header">
       <h1> Flashcard</h1>
-      <div class="subtitle">把答案拖進正確的題目卡片中</div>
+      <div class="subtitle" id="headerSubtitle">把答案拖進正確的題目卡片中</div>
     </div>
 
     <div class="nav-row">
@@ -1377,6 +1474,11 @@
     let expCompletedSet = new Set();
     let orderCheckResults = new Map();
 
+    // Quiz 模式
+    let viewMode = 'quiz'; // 'quiz' | 'single'
+    let quizIndices = []; // quiz 模式顯示的 4 個題目的 questions 陣列索引
+    let quizAttempts = new Map(); // qid → 答錯次數（用於統計正確率）
+
     function getExpPlaced(qid) {
       if (!expPlacedMap.has(qid)) expPlacedMap.set(qid, []);
       return expPlacedMap.get(qid);
@@ -1426,9 +1528,10 @@
         return '📂';
       };
       // 判斷當前題目所在的 category 是否展開
-      const currentCat = questions.length > 0 ? (questions[currentPage]?.category || '未分類') : '';
+      const currentCat = (viewMode === 'single' && questions.length > 0) ? (questions[currentPage]?.category || '未分類') : '';
+      const quizQidSet = viewMode === 'quiz' ? new Set(quizIndices.map(i => questions[i]?.id)) : new Set();
       container.innerHTML = [...catMap.entries()].map(([cat, items]) => {
-        const isExpanded = cat === currentCat;
+        const isExpanded = cat === currentCat || (viewMode === 'quiz' && items.some(it => quizQidSet.has(it.q.id)));
         const solvedCount = items.filter(it => solvedSet.has(it.q.id)).length;
         const itemsHtml = items.map(({ q, idx }) => {
           const isSolved = solvedSet.has(q.id);
@@ -1436,7 +1539,7 @@
           let statusClass = '';
           if (expDone) statusClass = 'exp-done';
           else if (isSolved) statusClass = 'solved';
-          const isActive = idx === currentPage;
+          const isActive = (viewMode === 'single' && idx === currentPage) || (viewMode === 'quiz' && quizQidSet.has(q.id));
           const preview = q.question.length > 26 ? q.question.slice(0, 26) + '…' : q.question;
           return `<div class="file-item ${isActive ? 'active' : ''}" onclick="goToPage(${idx})">
             <span class="file-icon">📄</span>
@@ -1466,9 +1569,7 @@
     }
 
     function goToPage(idx) {
-      currentPage = idx;
-      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null; jtExpandedSpans.clear(); jtDetailKey = null; // 切換頁面時清除反向連結
-      renderAll();
+      switchToSingle(idx);
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -1622,8 +1723,7 @@
     }
 
     function goToPageFromBacklink(idx) {
-      currentPage = idx;
-      renderAll();
+      switchToSingle(idx);
     }
 
     function clearBacklink() {
@@ -2275,13 +2375,48 @@
       renderAll();
     }
 
+    // ==================== Quiz 模式 ====================
+    function startQuiz() {
+      if (questions.length === 0) return;
+      viewMode = 'quiz';
+      quizAttempts.clear();
+      // 隨機選 4 題（或全部，若不足 4 題）
+      const indices = questions.map((_, i) => i);
+      shuffle(indices);
+      quizIndices = indices.slice(0, Math.min(4, questions.length));
+      // 清除反向連結狀態
+      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null;
+      jtExpandedSpans.clear(); jtDetailKey = null;
+      document.getElementById('completionArea').innerHTML = '';
+      renderAll();
+      // 捲到頂部
+      document.getElementById('mainContent').scrollTo(0, 0);
+      if (window.innerWidth <= 768) toggleSidebar();
+    }
+
+    function switchToSingle(idx) {
+      viewMode = 'single';
+      currentPage = idx;
+      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null;
+      jtExpandedSpans.clear(); jtDetailKey = null;
+      renderAll();
+      document.getElementById('mainContent').scrollTo(0, 0);
+    }
+
     // ==================== 分頁導航 ====================
     function goPage(delta) {
+      viewMode = 'single';
       currentPage = Math.max(0, Math.min(questions.length - 1, currentPage + delta));
       renderAll();
     }
 
     function updateNav() {
+      const navRow = document.querySelector('.nav-row');
+      if (viewMode === 'quiz') {
+        navRow.classList.add('quiz-hidden');
+        return;
+      }
+      navRow.classList.remove('quiz-hidden');
       if (questions.length === 0) {
         document.getElementById('navIndicator').textContent = '0 / 0';
         document.getElementById('prevBtn').classList.add('disabled');
@@ -2294,17 +2429,9 @@
     }
 
     // ==================== 渲染：大卡片 ====================
-    function renderCard() {
-      if (questions.length === 0) {
-        document.getElementById('cardArea').innerHTML = `
-          <div style="text-align:center; padding:60px 20px; color:#bbb;">
-            <div style="font-size:3rem; margin-bottom:12px;">📭</div>
-            <div style="font-size:1rem;">題庫是空的</div>
-            <div style="font-size:0.85rem; margin-top:6px;">點擊左側「📥 匯入新題目」開始</div>
-          </div>`;
-        return;
-      }
-      const q = questions[currentPage];
+
+    // 產生單張題目卡片 HTML
+    function buildCardHtml(q) {
       const isSolved = solvedSet.has(q.id);
       const placedArr = getExpPlaced(q.id);
       const expDone = expCompletedSet.has(q.id);
@@ -2348,14 +2475,13 @@
           </div>`;
       }
 
-      // 將德文單字包成可點擊的 span
       const clickableQuestion = q.question.replace(GERMAN_WORD_RE, (match) => {
         if (match.length < 2 || STOP_WORDS.has(match.toLowerCase()) || match === '______') return match;
         const isActive = activeWordKey === match.toLowerCase();
         return `<span class="clickable-word${isActive ? ' word-active' : ''}" onclick="clickWord('${match.replace(/'/g, "\\'")}')">${match}</span>`;
       });
 
-      document.getElementById('cardArea').innerHTML = `
+      return `
         <div class="question-card ${isSolved ? 'solved' : ''}" data-qid="${q.id}">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
             <span class="q-number">第 ${q.id} 題</span>
@@ -2373,6 +2499,67 @@
         </div>`;
     }
 
+    function renderCard() {
+      if (questions.length === 0) {
+        document.getElementById('cardArea').innerHTML = `
+          <div style="text-align:center; padding:60px 20px; color:#bbb;">
+            <div style="font-size:3rem; margin-bottom:12px;">📭</div>
+            <div style="font-size:1rem;">題庫是空的</div>
+            <div style="font-size:0.85rem; margin-top:6px;">點擊左側「📥 匯入新題目」開始</div>
+          </div>`;
+        return;
+      }
+
+      if (viewMode === 'quiz') {
+        // Quiz 模式：2×2 grid
+        const quizQs = quizIndices.map(i => questions[i]).filter(Boolean);
+        if (quizQs.length === 0) { startQuiz(); return; }
+
+        const cardsHtml = quizQs.map(q => buildCardHtml(q)).join('');
+        const quizSolved = quizQs.filter(q => solvedSet.has(q.id)).length;
+        const quizExpDone = quizQs.filter(q => expCompletedSet.has(q.id)).length;
+        const quizFirstTry = quizQs.filter(q => solvedSet.has(q.id) && !(quizAttempts.get(q.id) > 0)).length;
+        const total = quizQs.length;
+        const accuracy = quizSolved > 0 ? Math.round(quizFirstTry / quizSolved * 100) : 0;
+        const allDone = quizSolved === total && quizExpDone === total;
+
+        document.getElementById('cardArea').innerHTML = `
+          <div class="quiz-mode-banner">
+            <h2>🎲 隨機四題測驗</h2>
+            <div class="subtitle">將答案與詳解拖進正確的題目卡</div>
+          </div>
+          <div class="quiz-grid">${cardsHtml}</div>
+          <div class="quiz-stats-panel">
+            <div class="quiz-stats-title">📊 本輪統計</div>
+            <div class="quiz-stats-grid">
+              <div class="quiz-stat-item">
+                <div class="quiz-stat-value">${quizSolved}/${total}</div>
+                <div class="quiz-stat-label">答題數</div>
+              </div>
+              <div class="quiz-stat-item">
+                <div class="quiz-stat-value green">${quizFirstTry}/${quizSolved || 0}</div>
+                <div class="quiz-stat-label">一次正確</div>
+              </div>
+              <div class="quiz-stat-item">
+                <div class="quiz-stat-value ${accuracy >= 80 ? 'green' : accuracy >= 50 ? 'amber' : 'red'}">${quizSolved > 0 ? accuracy + '%' : '-'}</div>
+                <div class="quiz-stat-label">正確率</div>
+              </div>
+              <div class="quiz-stat-item">
+                <div class="quiz-stat-value">${quizExpDone}/${total}</div>
+                <div class="quiz-stat-label">詳解完成</div>
+              </div>
+            </div>
+            <div class="quiz-actions">
+              <button class="quiz-action-btn primary" onclick="startQuiz()">🎲 再來四題</button>
+              ${allDone ? `<button class="quiz-action-btn secondary" onclick="startQuiz()">🏆 全部完成！再來？</button>` : ''}
+            </div>
+          </div>`;
+      } else {
+        // Single 模式：單張卡片 + 導航
+        document.getElementById('cardArea').innerHTML = buildCardHtml(questions[currentPage]);
+      }
+    }
+
     function bindReorderEvents() {
       document.querySelectorAll('.exp-slot.filled[data-chip-id]').forEach(el => {
         el.addEventListener('pointerdown', onReorderStart);
@@ -2380,44 +2567,23 @@
     }
 
     // ==================== 渲染：答案池 ====================
-    function renderAnswerPool() {
-      if (questions.length === 0) {
-        document.getElementById('answerPool').innerHTML = '';
-        document.getElementById('answerDivider').classList.add('section-hidden');
-        return;
-      }
-      const q = questions[currentPage];
-      const pool = document.getElementById('answerPool');
-      const currentChips = answerChips.filter(c => c.questionId === q.id);
-      pool.innerHTML = currentChips.map(chip => {
-        const isPlaced = solvedSet.has(chip.questionId) && chip.isCorrect;
-        return `<div class="answer-chip ${isPlaced ? 'placed' : ''}"
-                     data-chip-id="${chip.chipId}" data-drag-type="answer">
-                  (${chip.label}) ${chip.text}
-                </div>`;
-      }).join('');
-      pool.querySelectorAll('.answer-chip:not(.placed)').forEach(el => {
-        el.addEventListener('pointerdown', onDragStart);
-      });
-      const isSolved = solvedSet.has(q.id);
-      document.getElementById('answerDivider').classList.toggle('section-hidden', isSolved);
-      pool.classList.toggle('section-hidden', isSolved);
+    function getActiveQuestions() {
+      if (viewMode === 'quiz') return quizIndices.map(i => questions[i]).filter(Boolean);
+      return questions.length > 0 ? [questions[currentPage]] : [];
     }
 
-    // ==================== 渲染：詳解池 ====================
-    function renderExpPool() {
+    function renderAnswerPool() {
+      const pool = document.getElementById('answerPool');
+      const divider = document.getElementById('answerDivider');
       if (questions.length === 0) {
-        document.getElementById('expPool').innerHTML = '';
-        document.getElementById('expDivider').classList.add('section-hidden');
+        pool.innerHTML = ''; divider.classList.add('section-hidden');
         return;
       }
-      const q = questions[currentPage];
-      const divider = document.getElementById('expDivider');
-      const pool = document.getElementById('expPool');
-      const isSolved = solvedSet.has(q.id);
-      const expDone = expCompletedSet.has(q.id);
+      const activeQs = getActiveQuestions();
+      const activeQids = new Set(activeQs.map(q => q.id));
+      const allSolved = activeQs.every(q => solvedSet.has(q.id));
 
-      if (!isSolved || expDone) {
+      if (allSolved) {
         divider.classList.add('section-hidden');
         pool.classList.add('section-hidden');
         return;
@@ -2426,10 +2592,46 @@
       divider.classList.remove('section-hidden');
       pool.classList.remove('section-hidden');
 
-      const currentExpChips = expChips.filter(c => c.questionId === q.id);
-      const placedArr = getExpPlaced(q.id);
+      const currentChips = answerChips.filter(c => activeQids.has(c.questionId));
+      pool.innerHTML = currentChips.map(chip => {
+        // quiz 模式：已解答的題目的所有選項都標為 placed
+        const isPlaced = viewMode === 'quiz'
+          ? solvedSet.has(chip.questionId)
+          : (solvedSet.has(chip.questionId) && chip.isCorrect);
+        return `<div class="answer-chip ${isPlaced ? 'placed' : ''}"
+                     data-chip-id="${chip.chipId}" data-drag-type="answer">
+                  (${chip.label}) ${chip.text}
+                </div>`;
+      }).join('');
+      pool.querySelectorAll('.answer-chip:not(.placed)').forEach(el => {
+        el.addEventListener('pointerdown', onDragStart);
+      });
+    }
 
+    // ==================== 渲染：詳解池 ====================
+    function renderExpPool() {
+      const divider = document.getElementById('expDivider');
+      const pool = document.getElementById('expPool');
+      if (questions.length === 0) {
+        pool.innerHTML = ''; divider.classList.add('section-hidden');
+        return;
+      }
+      const activeQs = getActiveQuestions();
+      // 找出已答對但詳解未完成的題目
+      const needExpQids = activeQs.filter(q => solvedSet.has(q.id) && !expCompletedSet.has(q.id)).map(q => q.id);
+
+      if (needExpQids.length === 0) {
+        divider.classList.add('section-hidden');
+        pool.classList.add('section-hidden');
+        return;
+      }
+
+      divider.classList.remove('section-hidden');
+      pool.classList.remove('section-hidden');
+
+      const currentExpChips = expChips.filter(c => needExpQids.includes(c.questionId));
       pool.innerHTML = currentExpChips.map(chip => {
+        const placedArr = getExpPlaced(chip.questionId);
         const isPlaced = placedArr.includes(chip.chipId);
         return `<div class="exp-chip ${isPlaced ? 'placed' : ''}"
                      data-chip-id="${chip.chipId}" data-drag-type="explanation">
@@ -2589,10 +2791,12 @@
                 renderAll();
                 checkCompletion();
               } else {
-                // ② 錯誤答案 → shake + toast
+                // ② 錯誤答案 → shake + toast + 統計
+                quizAttempts.set(targetQid, (quizAttempts.get(targetQid) || 0) + 1);
                 targetCard.classList.add('shake');
                 setTimeout(() => targetCard.classList.remove('shake'), 500);
                 showDragToast('❌ 答案不正確，再試試！');
+                if (viewMode === 'quiz') renderAll(); // 更新統計
               }
             } else {
               showDragToast('✅ 此題已經答對了');
@@ -2763,6 +2967,11 @@
 
     // ==================== 渲染全部 ====================
     function renderAll() {
+      // 更新 header 副標題
+      const sub = document.getElementById('headerSubtitle');
+      if (sub) sub.textContent = viewMode === 'quiz'
+        ? '🎲 隨機四題挑戰模式 · 把答案拖進正確的題目卡'
+        : '把答案拖進正確的題目卡片中';
       updateNav();
       renderBacklinkPanel();
       renderCard();
@@ -2779,6 +2988,10 @@
     // ==================== 完成 ====================
     function checkCompletion() {
       if (questions.length === 0) return;
+      if (viewMode === 'quiz') {
+        // Quiz 模式由卡片區域的統計面板處理，不需要 completionArea
+        return;
+      }
       if (solvedSet.size === questions.length && expCompletedSet.size === questions.length) {
         document.getElementById('completionArea').innerHTML = `
           <div class="completion-banner">
@@ -2791,10 +3004,16 @@
 
     function restart() {
       solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear(); orderCheckResults.clear();
+      quizAttempts.clear();
       currentPage = 0;
       shuffle(answerChips); buildExpChips();
       document.getElementById('completionArea').innerHTML = '';
-      renderAll();
+      if (questions.length >= 4) {
+        startQuiz();
+      } else {
+        viewMode = 'single';
+        renderAll();
+      }
     }
 
     // ==================== 匯入系統 ====================
@@ -3029,7 +3248,9 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
       if (!confirm('確定要清空所有題目嗎？此操作無法復原。')) return;
       questions.length = 0;
       solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear(); orderCheckResults.clear();
+      quizAttempts.clear(); quizIndices = [];
       answerChips = []; expChips = [];
+      viewMode = 'single';
       currentPage = 0;
       document.getElementById('completionArea').innerHTML = '';
       document.getElementById('cardArea').innerHTML = `
@@ -3050,6 +3271,7 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
     let swipeStartX = null;
     const mc = document.getElementById('mainContent');
     mc.addEventListener('touchstart', (e) => {
+      if (viewMode === 'quiz') return; // quiz 模式不用左右滑
       if (e.target.closest('.answer-chip, .exp-chip, .exp-slot.filled, .nav-btn')) return;
       swipeStartX = e.touches[0].clientX;
     }, { passive: true });
@@ -3061,7 +3283,13 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
     }, { passive: true });
 
     // ==================== 啟動 ====================
-    renderAll();
+    // 初始進入 quiz 模式
+    if (questions.length >= 4) {
+      startQuiz();
+    } else {
+      viewMode = 'single';
+      renderAll();
+    }
   </script>
 </body>
 </html>
