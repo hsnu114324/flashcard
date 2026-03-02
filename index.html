@@ -377,87 +377,117 @@
     .exp-slot.order-wrong { border-left: 3px solid #fca5a5 !important; }
     .exp-slot.order-right { border-left: 3px solid #86efac !important; }
 
-    /* ===== Quiz Mode (2×2 Grid) ===== */
-    .quiz-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 14px; margin-bottom: 14px;
+    /* ===== Sidebar Resizer ===== */
+    .sidebar-resizer {
+      width: 5px; cursor: col-resize; background: transparent;
+      position: relative; z-index: 101; flex-shrink: 0;
+      transition: background 0.2s;
     }
-    .quiz-grid .question-card {
-      min-height: 140px; padding: 16px 14px;
-      margin-bottom: 0; font-size: 0.88rem;
+    .sidebar-resizer:hover, .sidebar-resizer.active {
+      background: #d4ccf7;
     }
-    .quiz-grid .q-number {
-      font-size: 0.72rem; padding: 3px 10px; margin-bottom: 8px;
-    }
-    .quiz-grid .q-text { font-size: 0.95rem; line-height: 1.55; }
-    .quiz-grid .q-chinese-toggle { font-size: 0.78rem; margin-top: 8px; }
-    .quiz-grid .q-drop-zone {
-      min-height: 38px; font-size: 0.82rem; margin-top: 10px;
-    }
-    .quiz-grid .exp-zone { margin-top: 10px; padding: 8px; }
-    .quiz-grid .exp-zone-label { font-size: 0.72rem; }
-    .quiz-grid .exp-slot { font-size: 0.75rem; padding: 5px 8px; min-height: 26px; padding-right: 28px; }
-    .quiz-grid .exp-slot-remove { width: 18px; height: 18px; font-size: 0.6rem; right: 4px; }
-    .quiz-grid .check-order-btn { font-size: 0.72rem; padding: 6px 10px; }
-    .quiz-grid .order-result { font-size: 0.72rem; padding: 6px 8px; }
-
     @media (max-width: 768px) {
-      .quiz-grid { grid-template-columns: 1fr; }
+      .sidebar-resizer { display: none; }
     }
 
-    .quiz-mode-banner {
-      text-align: center; margin-bottom: 12px; animation: fadeIn 0.4s ease;
-    }
-    .quiz-mode-banner h2 {
-      font-size: 1.15rem; font-weight: 700;
-      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
-    .quiz-mode-banner .subtitle { font-size: 0.82rem; color: #999; margin-top: 4px; }
+    /* ===== Quiz Mode Layout ===== */
+    /* Single 模式：wrapper 透明，不影響正常捲動 */
+    #quizFixedTop, #quizPoolScroller { display: contents; }
 
-    .quiz-stats-panel {
-      background: #fff; border-radius: 16px; padding: 18px 20px;
-      border: 1.5px solid #e8e8ee; margin-top: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-      animation: fadeIn 0.4s ease;
+    .main-content.quiz-active {
+      display: flex; flex-direction: column; overflow: hidden;
     }
-    .quiz-stats-title {
-      font-size: 0.88rem; font-weight: 700; color: #6c5ce7; margin-bottom: 12px;
-      display: flex; align-items: center; gap: 6px;
+    .main-content.quiz-active #quizFixedTop {
+      display: block;
+      flex-shrink: 0; padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
+      overflow-x: auto; overflow-y: hidden;
     }
-    .quiz-stats-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    .main-content.quiz-active #quizPoolScroller {
+      display: block;
+      flex: 1; overflow-y: auto; padding: 8px 0;
+      touch-action: pan-y;
     }
-    .quiz-stat-item {
-      text-align: center; padding: 12px 8px;
-      background: #f8f7ff; border-radius: 12px;
-      border: 1px solid #eee;
+    .main-content.quiz-active .header { padding: 6px 0 4px; }
+    .main-content.quiz-active .header h1 { font-size: 1.2rem; }
+    .main-content.quiz-active .header .subtitle { font-size: 0.78rem; }
+
+    /* Quiz: 4-column row */
+    .quiz-row {
+      display: flex; gap: 12px; min-width: 0;
     }
-    .quiz-stat-value {
-      font-size: 1.5rem; font-weight: 800; color: #6c5ce7;
+    .quiz-row .question-card {
+      flex: 1; min-width: 200px; min-height: auto;
+      padding: 14px 12px; margin-bottom: 0;
+      font-size: 0.82rem;
     }
-    .quiz-stat-value.green { color: #16a34a; }
-    .quiz-stat-value.amber { color: #d97706; }
-    .quiz-stat-value.red { color: #dc2626; }
-    .quiz-stat-label {
-      font-size: 0.72rem; color: #999; margin-top: 4px;
+    .quiz-row .q-number {
+      font-size: 0.68rem; padding: 2px 8px; margin-bottom: 6px;
     }
-    .quiz-actions {
-      display: flex; gap: 10px; margin-top: 14px; justify-content: center;
+    .quiz-row .q-text { font-size: 0.85rem; line-height: 1.5; }
+    .quiz-row .q-chinese-toggle { font-size: 0.72rem; margin-top: 6px; }
+    .quiz-row .q-chinese.show { max-height: 50px; font-size: 0.78rem; }
+    .quiz-row .q-drop-zone {
+      min-height: 34px; font-size: 0.78rem; margin-top: 8px;
+      padding: 6px 10px;
     }
-    .quiz-action-btn {
-      padding: 10px 22px; border-radius: 12px; font-size: 0.88rem;
-      font-weight: 600; cursor: pointer; transition: all 0.2s; border: none;
+    /* Quiz exp mini zone */
+    .quiz-exp-mini {
+      margin-top: 8px; padding: 8px; border-radius: 10px;
+      border: 1.5px dashed #ddd; background: #fafbfc;
+      font-size: 0.72rem; transition: all 0.3s;
     }
-    .quiz-action-btn.primary {
+    .quiz-exp-mini.has-items { border-style: solid; border-color: #d4ccf7; background: #faf8ff; }
+    .quiz-exp-mini.exp-done {
+      border-color: #a78bfa; background: #f5f2ff;
+      box-shadow: 0 0 0 2px rgba(167,139,250,0.2);
+    }
+    .question-card.drag-over-exp .quiz-exp-mini:not(.exp-done) {
+      border-color: #a78bfa; background: #ede9fe;
+      box-shadow: 0 0 0 2px rgba(167,139,250,0.3);
+    }
+    .quiz-exp-mini-label {
+      font-weight: 600; color: #6c5ce7; margin-bottom: 4px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .quiz-exp-mini-latest {
+      color: #666; line-height: 1.4; font-size: 0.72rem;
+      max-height: 48px; overflow: hidden;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+
+    @media (max-width: 1100px) {
+      .quiz-row { flex-wrap: wrap; }
+      .quiz-row .question-card { flex: 1 1 calc(50% - 6px); min-width: 0; }
+    }
+    @media (max-width: 600px) {
+      .quiz-row .question-card { flex: 1 1 100%; }
+    }
+
+    /* Quiz Stats Bar (fixed bottom) */
+    .quiz-stats-bar {
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px; gap: 12px;
+      background: #fff; border-top: 1px solid #eee;
+      font-size: 0.78rem; color: #666;
+    }
+    .quiz-stats-bar.hidden { display: none; }
+    .quiz-stats-bar .qs-item {
+      display: flex; align-items: center; gap: 5px;
+    }
+    .quiz-stats-bar .qs-val {
+      font-weight: 700; color: #6c5ce7; font-size: 0.88rem;
+    }
+    .quiz-stats-bar .qs-val.green { color: #16a34a; }
+    .quiz-stats-bar .qs-val.amber { color: #d97706; }
+    .quiz-stats-bar .qs-new-btn {
+      padding: 5px 14px; border-radius: 8px; font-size: 0.78rem;
+      font-weight: 600; cursor: pointer; border: none;
       background: linear-gradient(135deg, #6c5ce7, #a78bfa);
-      color: #fff; box-shadow: 0 3px 10px rgba(108,92,231,0.2);
+      color: #fff; transition: all 0.15s;
     }
-    .quiz-action-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(108,92,231,0.3); }
-    .quiz-action-btn.secondary {
-      background: #f5f2ff; color: #6c5ce7; border: 1.5px solid #d4ccf7;
-    }
-    .quiz-action-btn.secondary:hover { background: #ede9fe; }
+    .quiz-stats-bar .qs-new-btn:hover { transform: scale(1.03); }
 
     .quiz-sidebar-btn {
       display: flex; align-items: center; gap: 8px;
@@ -488,6 +518,12 @@
     .chip-pool {
       display: flex; flex-wrap: wrap; gap: 10px;
       justify-content: center; padding: 10px 0;
+    }
+    /* Quiz combined pool label */
+    .quiz-pool-label {
+      width: 100%; text-align: center;
+      font-size: 0.72rem; font-weight: 600; color: #999;
+      padding: 6px 0 2px; letter-spacing: 1px;
     }
 
     .answer-chip {
@@ -1173,33 +1209,45 @@
     </div>
   </aside>
 
+  <!-- ===== Sidebar Resizer ===== -->
+  <div class="sidebar-resizer" id="sidebarResizer"></div>
+
   <!-- ===== 右側主內容 ===== -->
   <main class="main-content" id="mainContent">
-    <div class="header">
-      <h1> Flashcard</h1>
-      <div class="subtitle" id="headerSubtitle">把答案拖進正確的題目卡片中</div>
+    <!-- 頂部區：header + nav + 題目卡 -->
+    <div id="quizFixedTop">
+      <div class="header" id="mainHeader">
+        <h1> Flashcard</h1>
+        <div class="subtitle" id="headerSubtitle">把答案拖進正確的題目卡片中</div>
+      </div>
+
+      <div class="nav-row">
+        <button class="nav-btn" id="prevBtn" onclick="goPage(-1)">◀</button>
+        <div class="nav-indicator" id="navIndicator">1 / 4</div>
+        <button class="nav-btn" id="nextBtn" onclick="goPage(1)">▶</button>
+      </div>
+
+      <div id="cardArea"></div>
     </div>
 
-    <div class="nav-row">
-      <button class="nav-btn" id="prevBtn" onclick="goPage(-1)">◀</button>
-      <div class="nav-indicator" id="navIndicator">1 / 4</div>
-      <button class="nav-btn" id="nextBtn" onclick="goPage(1)">▶</button>
+    <!-- 中間：可捲動區域 -->
+    <div id="quizPoolScroller">
+      <div id="backlinkArea"></div>
+
+      <div class="reverse-lookup-tip" id="reverseTip">💡 點擊的答案是這些題目的正確答案</div>
+
+      <div class="divider" id="answerDivider">⬇ 拖動答案到題目 · 點擊可反向查詢 ⬇</div>
+      <div class="chip-pool" id="answerPool"></div>
+
+      <div class="divider section-hidden" id="expDivider">⬇ 拖動詳解到已答對的題目 ⬇</div>
+      <div class="chip-pool section-hidden" id="expPool"></div>
+
+      <div class="spacer"></div>
+      <div id="completionArea"></div>
     </div>
 
-    <div id="backlinkArea"></div>
-
-    <div id="cardArea"></div>
-
-    <div class="reverse-lookup-tip" id="reverseTip">💡 點擊的答案是這些題目的正確答案</div>
-
-    <div class="divider" id="answerDivider">⬇ 拖動答案到題目 · 點擊可反向查詢 ⬇</div>
-    <div class="chip-pool" id="answerPool"></div>
-
-    <div class="divider section-hidden" id="expDivider">⬇ 拖動詳解到已答對的題目 ⬇</div>
-    <div class="chip-pool section-hidden" id="expPool"></div>
-
-    <div class="spacer"></div>
-    <div id="completionArea"></div>
+    <!-- 底部：quiz 模式統計條 -->
+    <div class="quiz-stats-bar hidden" id="quizStatsBar"></div>
   </main>
 
   <!-- ===== 匯入 Modal ===== -->
@@ -2384,13 +2432,24 @@
       const indices = questions.map((_, i) => i);
       shuffle(indices);
       quizIndices = indices.slice(0, Math.min(4, questions.length));
+      // 清除 quiz 題目相關的已放入詳解（重新開始）
+      quizIndices.forEach(i => {
+        const q = questions[i];
+        if (q) {
+          expPlacedMap.delete(q.id);
+          expCompletedSet.delete(q.id);
+          orderCheckResults.delete(q.id);
+          solvedSet.delete(q.id);
+        }
+      });
       // 清除反向連結狀態
       activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null;
       jtExpandedSpans.clear(); jtDetailKey = null;
       document.getElementById('completionArea').innerHTML = '';
       renderAll();
       // 捲到頂部
-      document.getElementById('mainContent').scrollTo(0, 0);
+      const poolScroller = document.getElementById('quizPoolScroller');
+      if (poolScroller) poolScroller.scrollTo(0, 0);
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -2499,6 +2558,50 @@
         </div>`;
     }
 
+    function buildQuizCardHtml(q) {
+      const isSolved = solvedSet.has(q.id);
+      const placedArr = getExpPlaced(q.id);
+      const totalParts = q.expParts.length;
+      const filledCount = placedArr.length;
+      const isExpDone = expCompletedSet.has(q.id);
+
+      // Quiz 模式的精簡詳解區：只顯示數量 + 最近放入的一張
+      let expMiniHtml = '';
+      if (isSolved) {
+        const lastChipId = placedArr.length > 0 ? placedArr[placedArr.length - 1] : null;
+        const lastChip = lastChipId ? expChips.find(c => c.chipId === lastChipId) : null;
+        const cls = isExpDone ? 'quiz-exp-mini exp-done' : (filledCount > 0 ? 'quiz-exp-mini has-items' : 'quiz-exp-mini');
+        expMiniHtml = `
+          <div class="${cls}" data-qid="${q.id}" data-accept-exp="true">
+            <div class="quiz-exp-mini-label">${isExpDone ? '✅' : '📖'} 詳解 ${filledCount}/${totalParts}</div>
+            ${lastChip ? `<div class="quiz-exp-mini-latest">${lastChip.text}</div>` : `<div class="quiz-exp-mini-latest" style="opacity:0.4">拖入詳解卡片</div>`}
+          </div>`;
+      }
+
+      const clickableQuestion = q.question.replace(GERMAN_WORD_RE, (match) => {
+        if (match.length < 2 || STOP_WORDS.has(match.toLowerCase()) || match === '______') return match;
+        const isActive = activeWordKey === match.toLowerCase();
+        return `<span class="clickable-word${isActive ? ' word-active' : ''}" onclick="clickWord('${match.replace(/'/g, "\\'")}')">${match}</span>`;
+      });
+
+      return `
+        <div class="question-card ${isSolved ? 'solved' : ''}" data-qid="${q.id}">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+            <span class="q-number">第 ${q.id} 題</span>
+            ${q.category ? `<span style="font-size:0.65rem;color:#999;background:#f5f3ff;padding:1px 6px;border-radius:5px;">${q.category}</span>` : ''}
+          </div>
+          <div class="q-text">${clickableQuestion}</div>
+          <div class="q-chinese-toggle" onclick="toggleCh(this, ${q.id})">
+            <span class="arrow">▶</span> 中文
+          </div>
+          <div class="q-chinese" id="ch-${q.id}">${q.chinese}</div>
+          <div class="q-drop-zone" id="dz-${q.id}">
+            ${isSolved ? `✅ (${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}` : '將答案拖到這裡'}
+          </div>
+          ${expMiniHtml}
+        </div>`;
+    }
+
     function renderCard() {
       if (questions.length === 0) {
         document.getElementById('cardArea').innerHTML = `
@@ -2511,49 +2614,11 @@
       }
 
       if (viewMode === 'quiz') {
-        // Quiz 模式：2×2 grid
+        // Quiz 模式：橫排
         const quizQs = quizIndices.map(i => questions[i]).filter(Boolean);
         if (quizQs.length === 0) { startQuiz(); return; }
-
-        const cardsHtml = quizQs.map(q => buildCardHtml(q)).join('');
-        const quizSolved = quizQs.filter(q => solvedSet.has(q.id)).length;
-        const quizExpDone = quizQs.filter(q => expCompletedSet.has(q.id)).length;
-        const quizFirstTry = quizQs.filter(q => solvedSet.has(q.id) && !(quizAttempts.get(q.id) > 0)).length;
-        const total = quizQs.length;
-        const accuracy = quizSolved > 0 ? Math.round(quizFirstTry / quizSolved * 100) : 0;
-        const allDone = quizSolved === total && quizExpDone === total;
-
-        document.getElementById('cardArea').innerHTML = `
-          <div class="quiz-mode-banner">
-            <h2>🎲 隨機四題測驗</h2>
-            <div class="subtitle">將答案與詳解拖進正確的題目卡</div>
-          </div>
-          <div class="quiz-grid">${cardsHtml}</div>
-          <div class="quiz-stats-panel">
-            <div class="quiz-stats-title">📊 本輪統計</div>
-            <div class="quiz-stats-grid">
-              <div class="quiz-stat-item">
-                <div class="quiz-stat-value">${quizSolved}/${total}</div>
-                <div class="quiz-stat-label">答題數</div>
-              </div>
-              <div class="quiz-stat-item">
-                <div class="quiz-stat-value green">${quizFirstTry}/${quizSolved || 0}</div>
-                <div class="quiz-stat-label">一次正確</div>
-              </div>
-              <div class="quiz-stat-item">
-                <div class="quiz-stat-value ${accuracy >= 80 ? 'green' : accuracy >= 50 ? 'amber' : 'red'}">${quizSolved > 0 ? accuracy + '%' : '-'}</div>
-                <div class="quiz-stat-label">正確率</div>
-              </div>
-              <div class="quiz-stat-item">
-                <div class="quiz-stat-value">${quizExpDone}/${total}</div>
-                <div class="quiz-stat-label">詳解完成</div>
-              </div>
-            </div>
-            <div class="quiz-actions">
-              <button class="quiz-action-btn primary" onclick="startQuiz()">🎲 再來四題</button>
-              ${allDone ? `<button class="quiz-action-btn secondary" onclick="startQuiz()">🏆 全部完成！再來？</button>` : ''}
-            </div>
-          </div>`;
+        const cardsHtml = quizQs.map(q => buildQuizCardHtml(q)).join('');
+        document.getElementById('cardArea').innerHTML = `<div class="quiz-row">${cardsHtml}</div>`;
       } else {
         // Single 模式：單張卡片 + 導航
         document.getElementById('cardArea').innerHTML = buildCardHtml(questions[currentPage]);
@@ -2592,6 +2657,12 @@
       divider.classList.remove('section-hidden');
       pool.classList.remove('section-hidden');
 
+      if (viewMode === 'quiz') {
+        divider.textContent = '⬇ 選項卡池 · 拖動到題目卡 ⬇';
+      } else {
+        divider.textContent = '⬇ 拖動答案到題目 · 點擊可反向查詢 ⬇';
+      }
+
       const currentChips = answerChips.filter(c => activeQids.has(c.questionId));
       pool.innerHTML = currentChips.map(chip => {
         // quiz 模式：已解答的題目的所有選項都標為 placed
@@ -2617,7 +2688,39 @@
         return;
       }
       const activeQs = getActiveQuestions();
-      // 找出已答對但詳解未完成的題目
+      const activeQids = new Set(activeQs.map(q => q.id));
+
+      if (viewMode === 'quiz') {
+        // Quiz 模式：所有題的詳解都同時顯示（不需先答對）
+        divider.classList.remove('section-hidden');
+        pool.classList.remove('section-hidden');
+        divider.textContent = '⬇ 詳解卡池 · 拖入已答對的題目卡 ⬇';
+
+        const currentExpChips = expChips.filter(c => activeQids.has(c.questionId));
+        // 隱藏已放入的
+        pool.innerHTML = currentExpChips.map(chip => {
+          const placedArr = getExpPlaced(chip.questionId);
+          const isPlaced = placedArr.includes(chip.chipId);
+          return `<div class="exp-chip ${isPlaced ? 'placed' : ''}"
+                       data-chip-id="${chip.chipId}" data-drag-type="explanation">
+                    ${chip.text}
+                  </div>`;
+        }).join('');
+
+        // 如果全部都放完了就隱藏
+        const allExpDone = activeQs.every(q => expCompletedSet.has(q.id));
+        if (allExpDone) {
+          divider.classList.add('section-hidden');
+          pool.classList.add('section-hidden');
+        }
+
+        pool.querySelectorAll('.exp-chip:not(.placed)').forEach(el => {
+          el.addEventListener('pointerdown', onDragStart);
+        });
+        return;
+      }
+
+      // Single 模式：只顯示已答對但詳解未完成的題目
       const needExpQids = activeQs.filter(q => solvedSet.has(q.id) && !expCompletedSet.has(q.id)).map(q => q.id);
 
       if (needExpQids.length === 0) {
@@ -2628,6 +2731,7 @@
 
       divider.classList.remove('section-hidden');
       pool.classList.remove('section-hidden');
+      divider.textContent = '⬇ 拖動詳解到已答對的題目 ⬇';
 
       const currentExpChips = expChips.filter(c => needExpQids.includes(c.questionId));
       pool.innerHTML = currentExpChips.map(chip => {
@@ -2727,14 +2831,18 @@
       const x = e.clientX, y = e.clientY;
       dragState.ghost.style.left = x + 'px'; dragState.ghost.style.top = y + 'px';
 
-      // ③ 自動捲動：靠近主內容區上下邊緣時自動滾動
-      const mainEl = document.getElementById('mainContent');
-      const mcRect = mainEl.getBoundingClientRect();
-      const edgeThreshold = 50;
-      if (y < mcRect.top + edgeThreshold && y > mcRect.top) {
-        mainEl.scrollBy(0, -10);
-      } else if (y > mcRect.bottom - edgeThreshold && y < mcRect.bottom) {
-        mainEl.scrollBy(0, 10);
+      // ③ 自動捲動：在 quiz 模式捲動 pool scroller，否則捲動 mainContent
+      const scrollTarget = viewMode === 'quiz'
+        ? document.getElementById('quizPoolScroller')
+        : document.getElementById('mainContent');
+      if (scrollTarget) {
+        const scRect = scrollTarget.getBoundingClientRect();
+        const edgeThreshold = 50;
+        if (y < scRect.top + edgeThreshold && y > scRect.top) {
+          scrollTarget.scrollBy(0, -10);
+        } else if (y > scRect.bottom - edgeThreshold && y < scRect.bottom) {
+          scrollTarget.scrollBy(0, 10);
+        }
       }
 
       // ④ 視覺回饋
@@ -2747,12 +2855,20 @@
           const qid = parseInt(card.dataset.qid);
           if (dragState.dragType === 'answer' && !solvedSet.has(qid)) {
             card.classList.add(hoverClass);
-          } else if (dragState.dragType === 'explanation' && solvedSet.has(qid) && !expCompletedSet.has(qid)) {
-            card.classList.add(hoverClass);
-            // 空 slot 高亮提示
-            card.querySelectorAll('.exp-slot:not(.filled)').forEach(slot => {
-              slot.classList.add('drop-ready');
-            });
+          } else if (dragState.dragType === 'explanation') {
+            if (viewMode === 'quiz') {
+              // Quiz 模式：已答對且未完成的題都可 hover
+              if (solvedSet.has(qid) && !expCompletedSet.has(qid)) {
+                card.classList.add(hoverClass);
+              }
+            } else {
+              if (solvedSet.has(qid) && !expCompletedSet.has(qid)) {
+                card.classList.add(hoverClass);
+                card.querySelectorAll('.exp-slot:not(.filled)').forEach(slot => {
+                  slot.classList.add('drop-ready');
+                });
+              }
+            }
           }
         } else {
           card.classList.remove('drag-over-answer', 'drag-over-exp');
@@ -2784,48 +2900,80 @@
             if (!solvedSet.has(targetQid)) {
               const tq = questions.find(q => q.id === targetQid);
               if (chipData.text === tq.options[tq.correctIndex]) {
-                // ② 正確 → 震動 + 渲染
                 solvedSet.add(targetQid);
                 clearReverseLookup();
                 if (navigator.vibrate) navigator.vibrate(50);
                 renderAll();
                 checkCompletion();
               } else {
-                // ② 錯誤答案 → shake + toast + 統計
                 quizAttempts.set(targetQid, (quizAttempts.get(targetQid) || 0) + 1);
                 targetCard.classList.add('shake');
                 setTimeout(() => targetCard.classList.remove('shake'), 500);
                 showDragToast('❌ 答案不正確，再試試！');
-                if (viewMode === 'quiz') renderAll(); // 更新統計
+                if (viewMode === 'quiz') renderAll();
               }
             } else {
               showDragToast('✅ 此題已經答對了');
             }
           } else {
-            if (solvedSet.has(targetQid) && !expCompletedSet.has(targetQid)) {
-              if (chipData.questionId === targetQid) {
+            // 詳解拖放
+            if (viewMode === 'quiz') {
+              // ======= Quiz 模式：只驗證 questionId 是否匹配 =======
+              if (!solvedSet.has(targetQid)) {
+                targetCard.classList.add('shake');
+                setTimeout(() => targetCard.classList.remove('shake'), 500);
+                showDragToast('⚠️ 請先答對此題再放入詳解');
+              } else if (expCompletedSet.has(targetQid)) {
+                showDragToast('✅ 此題詳解已全部放入');
+              } else if (chipData.questionId === targetQid) {
+                // 正確配對：放入 + 消失
                 const placedArr = getExpPlaced(targetQid);
                 if (!placedArr.includes(chipData.chipId)) {
                   placedArr.push(chipData.chipId);
-                  orderCheckResults.delete(targetQid);
                   const tq = questions.find(q => q.id === targetQid);
                   if (placedArr.length === tq.expParts.length) {
                     expCompletedSet.add(targetQid);
                     if (navigator.vibrate) navigator.vibrate([30, 30, 60]);
-                    showDragToast('🎉 詳解全部放入！可檢查排序');
+                    showDragToast('🎉 詳解全部正確放入！');
                   } else {
                     if (navigator.vibrate) navigator.vibrate(30);
                   }
                   renderAll();
                   checkCompletion();
                 }
+              } else {
+                // 詳解配對錯誤
+                targetCard.classList.add('shake');
+                setTimeout(() => targetCard.classList.remove('shake'), 500);
+                showDragToast('❌ 這張詳解不屬於此題，換一張試試！');
               }
-            } else if (solvedSet.has(targetQid) && expCompletedSet.has(targetQid)) {
-              showDragToast('✅ 此題詳解已全部放入');
-            } else if (!solvedSet.has(targetQid)) {
-              targetCard.classList.add('shake');
-              setTimeout(() => targetCard.classList.remove('shake'), 500);
-              showDragToast('⚠️ 請先答對此題再放入詳解');
+            } else {
+              // ======= Single 模式：原本邏輯 =======
+              if (solvedSet.has(targetQid) && !expCompletedSet.has(targetQid)) {
+                if (chipData.questionId === targetQid) {
+                  const placedArr = getExpPlaced(targetQid);
+                  if (!placedArr.includes(chipData.chipId)) {
+                    placedArr.push(chipData.chipId);
+                    orderCheckResults.delete(targetQid);
+                    const tq = questions.find(q => q.id === targetQid);
+                    if (placedArr.length === tq.expParts.length) {
+                      expCompletedSet.add(targetQid);
+                      if (navigator.vibrate) navigator.vibrate([30, 30, 60]);
+                      showDragToast('🎉 詳解全部放入！可檢查排序');
+                    } else {
+                      if (navigator.vibrate) navigator.vibrate(30);
+                    }
+                    renderAll();
+                    checkCompletion();
+                  }
+                }
+              } else if (solvedSet.has(targetQid) && expCompletedSet.has(targetQid)) {
+                showDragToast('✅ 此題詳解已全部放入');
+              } else if (!solvedSet.has(targetQid)) {
+                targetCard.classList.add('shake');
+                setTimeout(() => targetCard.classList.remove('shake'), 500);
+                showDragToast('⚠️ 請先答對此題再放入詳解');
+              }
             }
           }
         }
@@ -2870,10 +3018,14 @@
       reorderState.ghost.style.left = x + 'px'; reorderState.ghost.style.top = y + 'px';
 
       // ③ 排序時也自動捲動
-      const mainEl = document.getElementById('mainContent');
-      const mcRect = mainEl.getBoundingClientRect();
-      if (y < mcRect.top + 50 && y > mcRect.top) mainEl.scrollBy(0, -10);
-      else if (y > mcRect.bottom - 50 && y < mcRect.bottom) mainEl.scrollBy(0, 10);
+      const scrollTarget = viewMode === 'quiz'
+        ? document.getElementById('quizPoolScroller')
+        : document.getElementById('mainContent');
+      if (scrollTarget) {
+        const mcRect = scrollTarget.getBoundingClientRect();
+        if (y < mcRect.top + 50 && y > mcRect.top) scrollTarget.scrollBy(0, -10);
+        else if (y > mcRect.bottom - 50 && y < mcRect.bottom) scrollTarget.scrollBy(0, 10);
+      }
 
       document.querySelectorAll('.exp-slot.insert-above, .exp-slot.insert-below').forEach(s => {
         s.classList.remove('insert-above', 'insert-below');
@@ -2967,17 +3119,27 @@
 
     // ==================== 渲染全部 ====================
     function renderAll() {
+      const mainEl = document.getElementById('mainContent');
+      const statsBar = document.getElementById('quizStatsBar');
+      if (viewMode === 'quiz') {
+        mainEl.classList.add('quiz-active');
+        statsBar.classList.remove('hidden');
+      } else {
+        mainEl.classList.remove('quiz-active');
+        statsBar.classList.add('hidden');
+      }
       // 更新 header 副標題
       const sub = document.getElementById('headerSubtitle');
       if (sub) sub.textContent = viewMode === 'quiz'
-        ? '🎲 隨機四題挑戰模式 · 把答案拖進正確的題目卡'
+        ? '🎲 隨機四題挑戰模式 · 把答案與詳解拖進正確的題目卡'
         : '把答案拖進正確的題目卡片中';
       updateNav();
       renderBacklinkPanel();
       renderCard();
-      bindReorderEvents();
+      if (viewMode !== 'quiz') bindReorderEvents();
       renderAnswerPool();
       renderExpPool();
+      renderQuizStatsBar();
       renderSidebar();
       renderAnswerIndex();
       renderOptionIndex();
@@ -3000,6 +3162,27 @@
             <button class="restart-btn" onclick="restart()">再玩一次 🔄</button>
           </div>`;
       }
+    }
+
+    // ==================== Quiz Stats Bar ====================
+    function renderQuizStatsBar() {
+      const bar = document.getElementById('quizStatsBar');
+      if (viewMode !== 'quiz') { bar.classList.add('hidden'); return; }
+      bar.classList.remove('hidden');
+
+      const quizQs = quizIndices.map(i => questions[i]).filter(Boolean);
+      const total = quizQs.length;
+      const quizSolved = quizQs.filter(q => solvedSet.has(q.id)).length;
+      const quizExpDone = quizQs.filter(q => expCompletedSet.has(q.id)).length;
+      const quizFirstTry = quizQs.filter(q => solvedSet.has(q.id) && !(quizAttempts.get(q.id) > 0)).length;
+      const accuracy = quizSolved > 0 ? Math.round(quizFirstTry / quizSolved * 100) : 0;
+      const accCls = accuracy >= 80 ? 'green' : accuracy >= 50 ? 'amber' : '';
+
+      bar.innerHTML = `
+        <div class="qs-item">🎯 <span class="qs-val">${quizSolved}/${total}</span> 答題</div>
+        <div class="qs-item">📖 <span class="qs-val">${quizExpDone}/${total}</span> 詳解</div>
+        <div class="qs-item">✅ <span class="qs-val ${accCls}">${quizSolved > 0 ? accuracy + '%' : '-'}</span> 正確率</div>
+        <button class="qs-new-btn" onclick="startQuiz()">🎲 再來四題</button>`;
     }
 
     function restart() {
@@ -3266,6 +3449,36 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
       document.getElementById('answerDivider').classList.add('section-hidden');
       document.getElementById('expDivider').classList.add('section-hidden');
     }
+
+    // ==================== Sidebar Resizer ====================
+    (function initSidebarResizer() {
+      const resizer = document.getElementById('sidebarResizer');
+      const sidebar = document.getElementById('sidebar');
+      if (!resizer || !sidebar) return;
+      let isResizing = false, startX = 0, startW = 0;
+
+      resizer.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        isResizing = true;
+        startX = e.clientX;
+        startW = sidebar.getBoundingClientRect().width;
+        resizer.classList.add('active');
+        resizer.setPointerCapture(e.pointerId);
+      });
+      resizer.addEventListener('pointermove', (e) => {
+        if (!isResizing) return;
+        e.preventDefault();
+        const newW = Math.max(180, Math.min(500, startW + (e.clientX - startX)));
+        sidebar.style.width = newW + 'px';
+        sidebar.style.minWidth = newW + 'px';
+      });
+      const stopResize = () => {
+        isResizing = false;
+        resizer.classList.remove('active');
+      };
+      resizer.addEventListener('pointerup', stopResize);
+      resizer.addEventListener('pointercancel', stopResize);
+    })();
 
     // ==================== 滑動手勢 ====================
     let swipeStartX = null;
