@@ -172,7 +172,7 @@
     .nav-btn.disabled { opacity: 0.3; pointer-events: none; }
     .nav-indicator {
       font-size: 1rem; font-weight: 600; color: #888;
-      min-width: 80px; text-align: center;
+      min-width: 200px; text-align: center;
     }
 
     /* ===== Question Card ===== */
@@ -211,6 +211,16 @@
       padding: 4px 14px; border-radius: 12px;
       margin-bottom: 14px; align-self: flex-start;
     }
+    /* Facemash 掌握度徽章 */
+    .mastery-badge {
+      display: inline-block; font-size: 0.7rem; font-weight: 700;
+      padding: 2px 10px; border-radius: 10px;
+      white-space: nowrap; cursor: default; transition: all 0.2s;
+    }
+    .mastery-badge-high { background: #dcfce7; color: #16a34a; }
+    .mastery-badge-mid { background: #fef9c3; color: #ca8a04; }
+    .mastery-badge-low { background: #fee2e2; color: #dc2626; }
+    .mastery-badge-new { background: #e0f2fe; color: #0284c7; }
     .q-text {
       font-size: 1.15rem; line-height: 1.7; font-weight: 500;
       color: #2d2d3a; word-break: break-word;
@@ -1541,6 +1551,40 @@
     let quizIndices = []; // quiz 模式顯示的 4 個題目的 questions 陣列索引
     let quizAttempts = new Map(); // qid → 答錯次數（用於統計正確率）
 
+    // ===== Facemash 掌握度追蹤 =====
+    // questionStats: qid → { rounds: N, firstTry: N, totalWrong: N }
+    //   rounds = 曾經答對幾輪, firstTry = 其中幾輪一次就對, totalWrong = 累計錯誤次數
+    let questionStats = new Map();
+
+    function getQStats(qid) {
+      if (!questionStats.has(qid)) questionStats.set(qid, { rounds: 0, firstTry: 0, totalWrong: 0 });
+      return questionStats.get(qid);
+    }
+    function recordCorrect(qid, wrongCount) {
+      const s = getQStats(qid);
+      s.rounds++;
+      if (wrongCount === 0) s.firstTry++;
+      s.totalWrong += wrongCount;
+    }
+    function getMasteryScore(qid) {
+      const s = getQStats(qid);
+      if (s.rounds === 0) return 0; // 從未答過
+      // 掌握度 = 一次正確率 × 100，有少量衰減讓多次作答的更穩定
+      const accuracy = s.firstTry / s.rounds;
+      // 給予經驗加成：答越多輪，信心越高
+      const confidence = Math.min(1, s.rounds / 3); // 3 輪以上才算穩定
+      return Math.round(accuracy * confidence * 100);
+    }
+    // 取得按掌握度排序的索引陣列（低→高）
+    function getMasterySortedIndices() {
+      return questions.map((_, i) => i).sort((a, b) => {
+        const sa = getMasteryScore(questions[a].id);
+        const sb = getMasteryScore(questions[b].id);
+        if (sa !== sb) return sa - sb; // 低掌握度在前（左）
+        return a - b; // 同分按原始順序
+      });
+    }
+
     function getExpPlaced(qid) {
       if (!expPlacedMap.has(qid)) expPlacedMap.set(qid, []);
       return expPlacedMap.get(qid);
@@ -2476,11 +2520,17 @@
       document.getElementById('mainContent').scrollTo(0, 0);
     }
 
-    // ==================== 分頁導航 ====================
+    // ==================== 分頁導航（Facemash 掌握度排序）====================
     function goPage(delta) {
       viewMode = 'single';
-      currentPage = Math.max(0, Math.min(questions.length - 1, currentPage + delta));
+      if (questions.length === 0) return;
+      // 按掌握度排序：左（◀）→ 較不熟 / 右（▶）→ 較熟
+      const sorted = getMasterySortedIndices();
+      const curSortedPos = sorted.indexOf(currentPage);
+      const newSortedPos = Math.max(0, Math.min(sorted.length - 1, curSortedPos + delta));
+      currentPage = sorted[newSortedPos];
       renderAll();
+      document.getElementById('mainContent').scrollTo(0, 0);
     }
 
     function updateNav() {
@@ -2496,9 +2546,27 @@
         document.getElementById('nextBtn').classList.add('disabled');
         return;
       }
-      document.getElementById('navIndicator').textContent = `${currentPage + 1} / ${questions.length}`;
-      document.getElementById('prevBtn').classList.toggle('disabled', currentPage === 0);
-      document.getElementById('nextBtn').classList.toggle('disabled', currentPage === questions.length - 1);
+
+      const sorted = getMasterySortedIndices();
+      const curSortedPos = sorted.indexOf(currentPage);
+      const q = questions[currentPage];
+      const score = getMasteryScore(q.id);
+      const stats = getQStats(q.id);
+
+      // 導航指示：顯示排名 + 掌握度
+      let masteryLabel = '';
+      if (stats.rounds === 0) masteryLabel = '🆕 未作答';
+      else if (score >= 80) masteryLabel = `🟢 ${score}%`;
+      else if (score >= 40) masteryLabel = `🟡 ${score}%`;
+      else masteryLabel = `🔴 ${score}%`;
+
+      document.getElementById('navIndicator').innerHTML =
+        `<div style="line-height:1.3">
+          <div>${curSortedPos + 1} / ${questions.length}</div>
+          <div style="font-size:0.68rem;color:#999;">◀ 較不熟 ┃ ${masteryLabel} ┃ 較熟 ▶</div>
+        </div>`;
+      document.getElementById('prevBtn').classList.toggle('disabled', curSortedPos === 0);
+      document.getElementById('nextBtn').classList.toggle('disabled', curSortedPos === sorted.length - 1);
     }
 
     // ==================== 渲染：大卡片 ====================
@@ -2554,11 +2622,24 @@
         return `<span class="clickable-word${isActive ? ' word-active' : ''}" onclick="clickWord('${match.replace(/'/g, "\\'")}')">${match}</span>`;
       });
 
+      // 掌握度指標（單卡模式顯示）
+      const stats = getQStats(q.id);
+      const score = getMasteryScore(q.id);
+      let masteryBadge = '';
+      if (stats.rounds > 0) {
+        const mCls = score >= 80 ? 'mastery-badge-high' : score >= 40 ? 'mastery-badge-mid' : 'mastery-badge-low';
+        const mDetail = `作答 ${stats.rounds} 輪・一次正確 ${stats.firstTry} 次`;
+        masteryBadge = `<span class="mastery-badge ${mCls}" title="${mDetail}">掌握 ${score}%</span>`;
+      } else {
+        masteryBadge = `<span class="mastery-badge mastery-badge-new" title="尚未作答過">🆕 新題</span>`;
+      }
+
       return `
         <div class="question-card ${isSolved ? 'solved' : ''}" data-qid="${q.id}">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;flex-wrap:wrap;">
             <span class="q-number">第 ${q.id} 題</span>
             ${q.category ? `<span style="font-size:0.7rem;color:#999;background:#f5f3ff;padding:2px 8px;border-radius:6px;">${q.category}</span>` : ''}
+            ${masteryBadge}
           </div>
           <div class="q-text">${clickableQuestion}</div>
           <div class="q-chinese-toggle" onclick="toggleCh(this, ${q.id})">
@@ -2911,6 +2992,8 @@
             if (!solvedSet.has(targetQid)) {
               const tq = questions.find(q => q.id === targetQid);
               if (chipData.text === tq.options[tq.correctIndex]) {
+                const wrongBefore = quizAttempts.get(targetQid) || 0;
+                recordCorrect(targetQid, wrongBefore);
                 solvedSet.add(targetQid);
                 clearReverseLookup();
                 if (navigator.vibrate) navigator.vibrate(50);
@@ -3173,29 +3256,30 @@
 
     // ==================== Quiz Stats Bar ====================
     function getQuizMastery(q) {
-      // 根據答題嘗試次數計算掌握度
+      // 綜合當輪嘗試 + 歷史掌握度
       const isSolved = solvedSet.has(q.id);
-      const attempts = quizAttempts.get(q.id) || 0; // 答錯次數
+      const attempts = quizAttempts.get(q.id) || 0;
       const expDone = expCompletedSet.has(q.id);
       const expPlaced = getExpPlaced(q.id).length;
       const expTotal = q.expParts.length;
+      const histScore = getMasteryScore(q.id);
+      const stats = getQStats(q.id);
+      const histTip = stats.rounds > 0 ? ` (歷史掌握 ${histScore}%・${stats.rounds}輪)` : '';
 
-      if (!isSolved && attempts === 0) return { level: '—', cls: '', tip: '尚未作答' };
+      if (!isSolved && attempts === 0) return { level: '—', cls: '', tip: '尚未作答' + histTip };
       if (isSolved && attempts === 0) {
-        // 一次就答對
         const expPct = expTotal > 0 ? Math.round(expPlaced / expTotal * 100) : 100;
-        if (expDone) return { level: '★★★', cls: 'mastery-perfect', tip: '完美：一次答對 + 詳解完成' };
-        return { level: '★★☆', cls: 'mastery-good', tip: `一次答對・詳解 ${expPct}%` };
+        if (expDone) return { level: '★★★', cls: 'mastery-perfect', tip: '完美：一次答對 + 詳解完成' + histTip };
+        return { level: '★★☆', cls: 'mastery-good', tip: `一次答對・詳解 ${expPct}%` + histTip };
       }
       if (isSolved && attempts === 1) {
-        if (expDone) return { level: '★★☆', cls: 'mastery-good', tip: '良好：2次答對 + 詳解完成' };
-        return { level: '★☆☆', cls: 'mastery-ok', tip: `2次答對・詳解 ${Math.round(expPlaced/expTotal*100)}%` };
+        if (expDone) return { level: '★★☆', cls: 'mastery-good', tip: '良好：2次答對 + 詳解完成' + histTip };
+        return { level: '★☆☆', cls: 'mastery-ok', tip: `2次答對・詳解 ${Math.round(expPlaced/expTotal*100)}%` + histTip };
       }
       if (isSolved && attempts >= 2) {
-        return { level: '★☆☆', cls: 'mastery-weak', tip: `${attempts+1}次才答對，需加強` };
+        return { level: '★☆☆', cls: 'mastery-weak', tip: `${attempts+1}次才答對，需加強` + histTip };
       }
-      // 還沒答對但已嘗試
-      return { level: '☆☆☆', cls: 'mastery-none', tip: `已錯 ${attempts} 次，繼續加油` };
+      return { level: '☆☆☆', cls: 'mastery-none', tip: `已錯 ${attempts} 次，繼續加油` + histTip };
     }
 
     function renderQuizStatsBar() {
@@ -3482,7 +3566,7 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
       if (!confirm('確定要清空所有題目嗎？此操作無法復原。')) return;
       questions.length = 0;
       solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear(); orderCheckResults.clear();
-      quizAttempts.clear(); quizIndices = [];
+      quizAttempts.clear(); quizIndices = []; questionStats.clear();
       answerChips = []; expChips = [];
       viewMode = 'single';
       currentPage = 0;
