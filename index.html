@@ -285,6 +285,7 @@
       background: #faf8ff; color: #444;
       cursor: grab; touch-action: none; position: relative;
       animation: slotFill 0.4s ease;
+      padding-right: 34px;
     }
     .exp-slot.filled:active { cursor: grabbing; }
     .exp-slot.filled.reorder-source { opacity: 0.3; }
@@ -298,6 +299,83 @@
       from { opacity: 0; transform: translateY(4px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+    @keyframes modalPop {
+      from { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    /* ===== Drag Improvements ===== */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+    .question-card.shake { animation: shake 0.4s ease; }
+
+    .drag-toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: rgba(45,55,72,0.92); color: #fff; padding: 10px 22px;
+      border-radius: 12px; font-size: 0.85rem; font-weight: 500; z-index: 9999;
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 1.5s forwards;
+      pointer-events: none; white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+    .exp-slot.drop-ready {
+      border-color: #a78bfa !important; background: #f8f5ff !important;
+      border-style: dashed !important;
+      animation: pulseSlot 1s ease-in-out infinite;
+    }
+    .exp-slot.drop-ready span { color: #a78bfa !important; opacity: 1 !important; }
+    @keyframes pulseSlot {
+      0%, 100% { border-color: #d4ccf7; }
+      50% { border-color: #a78bfa; }
+    }
+
+    .exp-slot-remove {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      width: 22px; height: 22px; border-radius: 6px;
+      background: #f0f0f5; border: none; cursor: pointer;
+      font-size: 0.7rem; color: #999; display: flex; align-items: center; justify-content: center;
+      opacity: 0.35; transition: opacity 0.2s; flex-shrink: 0;
+    }
+    .exp-slot.filled:hover .exp-slot-remove { opacity: 1; }
+    .exp-slot.filled:hover .exp-slot-remove:hover { background: #ffe4e6; color: #ef4444; }
+
+    .check-order-btn {
+      margin-top: 10px; padding: 9px 16px; border-radius: 10px; width: 100%;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      background: #f5f2ff; color: #6c5ce7; border: 1.5px solid #d4ccf7;
+      transition: all 0.2s; display: flex; align-items: center; gap: 6px; justify-content: center;
+    }
+    .check-order-btn:hover { background: #ede9fe; border-color: #a78bfa; }
+
+    .order-result {
+      margin-top: 6px; padding: 8px 12px; border-radius: 8px;
+      font-size: 0.8rem; line-height: 1.5; animation: fadeIn 0.3s ease; text-align: center;
+    }
+    .order-result.correct { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+    .order-result.incorrect { background: #fff0f0; color: #b91c1c; border: 1px solid #fecaca; }
+
+    .exp-zone.order-perfect {
+      border-color: #f59e0b !important;
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.25), 0 4px 20px rgba(245,158,11,0.12) !important;
+      animation: goldGlow 2.5s ease-in-out infinite !important;
+    }
+    @keyframes goldGlow {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(245,158,11,0.25), 0 4px 20px rgba(245,158,11,0.12); }
+      50%      { box-shadow: 0 0 0 5px rgba(245,158,11,0.35), 0 4px 28px rgba(245,158,11,0.18); }
+    }
+
+    .exp-slot.order-wrong { border-left: 3px solid #fca5a5 !important; }
+    .exp-slot.order-right { border-left: 3px solid #86efac !important; }
 
     /* ===== Divider ===== */
     .divider {
@@ -374,7 +452,7 @@
       font-size: 1rem; font-weight: 600;
       box-shadow: 0 12px 32px rgba(0,0,0,0.12);
       transform: translate(-50%, -50%) scale(1.08);
-      transition: none; max-width: 70vw;
+      transition: none; max-width: 70vw; opacity: 0.92;
     }
     .drag-ghost.ghost-answer {
       background: #fff; border: 2px solid #a78bfa; color: #444;
@@ -384,48 +462,6 @@
       background: #fff; border: 2px solid #6c5ce7; color: #444;
       font-size: 0.88rem; white-space: normal; line-height: 1.45;
     }
-
-    /* ===== Chaos Monkey ===== */
-    .chaos-monkey {
-      cursor: pointer; font-size: 0.75rem; opacity: 0.35;
-      display: inline; transition: all 0.3s ease; vertical-align: middle;
-    }
-    .chaos-monkey:hover { opacity: 1; transform: scale(1.4); }
-    .monkey-found-banner {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      z-index: 10000; display: flex; align-items: center; justify-content: center;
-      animation: fadeIn 0.3s ease;
-    }
-    .monkey-found-card {
-      background: #fff; border: 2px solid #f59e0b;
-      border-radius: 24px; padding: 36px 28px; text-align: center; max-width: 320px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-      animation: monkeyPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
-    }
-    @keyframes monkeyPop {
-      from { transform: scale(0.3) rotate(-10deg); opacity: 0; }
-      to   { transform: scale(1) rotate(0deg); opacity: 1; }
-    }
-    .monkey-found-card .big-monkey { font-size: 4rem; }
-    .monkey-found-card h3 {
-      font-size: 1.2rem; margin: 14px 0 8px; font-weight: 700;
-      background: linear-gradient(135deg, #f59e0b, #ef4444);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
-    .monkey-found-card p { font-size: 0.95rem; color: #888; margin-bottom: 18px; }
-    .monkey-dismiss-btn {
-      padding: 10px 28px; font-size: 1rem; font-weight: 600; color: #fff;
-      background: linear-gradient(135deg, #6c5ce7, #a78bfa); border: none; border-radius: 12px; cursor: pointer;
-      transition: transform 0.15s;
-    }
-    .monkey-dismiss-btn:hover { transform: scale(1.03); }
-
-    .monkey-hint-bar {
-      text-align: center; font-size: 0.8rem; color: #bbb;
-      margin: 6px 0; transition: all 0.3s;
-    }
-    .monkey-hint-bar.found { color: #f59e0b; }
 
     /* ===== Completion ===== */
     .completion-banner {
@@ -464,7 +500,7 @@
       width: 90vw; max-width: 640px; max-height: 90vh;
       display: flex; flex-direction: column;
       box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-      animation: monkeyPop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+      animation: modalPop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
       overflow: hidden;
     }
     .import-header {
@@ -1036,8 +1072,7 @@
     </div>
 
     <div class="sidebar-footer">
-      🐒 Chaos Monkey Edition<br>
-      <span id="sidebarMonkey" style="font-size: 0.72rem; color: #ccc;">尚未找到</span>
+      Flashcard v3.0
     </div>
   </aside>
 
@@ -1058,7 +1093,6 @@
 
     <div id="cardArea"></div>
 
-    <div class="monkey-hint-bar" id="monkeyHint">🐒 Chaos Monkey 藏在某個詳解裡，找到牠！</div>
     <div class="reverse-lookup-tip" id="reverseTip">💡 點擊的答案是這些題目的正確答案</div>
 
     <div class="divider" id="answerDivider">⬇ 拖動答案到題目 · 點擊可反向查詢 ⬇</div>
@@ -1341,6 +1375,7 @@
     let solvedSet = new Set();
     let expPlacedMap = new Map();
     let expCompletedSet = new Set();
+    let orderCheckResults = new Map();
 
     function getExpPlaced(qid) {
       if (!expPlacedMap.has(qid)) expPlacedMap.set(qid, []);
@@ -1428,10 +1463,6 @@
         📊 進度：${Math.round((solvedSet.size + expCompletedSet.size) / (questions.length * 2) * 100)}%
       `;
 
-      // Monkey
-      const sm = document.getElementById('sidebarMonkey');
-      sm.textContent = monkeyFound ? '🐒 已抓到！' : '🐒 尚未找到';
-      sm.style.color = monkeyFound ? '#f59e0b' : '#ccc';
     }
 
     function goToPage(idx) {
@@ -2262,44 +2293,6 @@
       document.getElementById('nextBtn').classList.toggle('disabled', currentPage === questions.length - 1);
     }
 
-    // ==================== Chaos Monkey ====================
-    let monkeyQuestionId = null, monkeyPartIndex = null, monkeyFound = false;
-
-    function initChaosMonkey() {
-      if (questions.length === 0) {
-        monkeyQuestionId = null; monkeyPartIndex = null; monkeyFound = false;
-        updateMonkeyHint(); return;
-      }
-      const q = questions[Math.floor(Math.random() * questions.length)];
-      monkeyQuestionId = q.id;
-      monkeyPartIndex = Math.floor(Math.random() * q.expParts.length);
-      monkeyFound = false;
-      updateMonkeyHint();
-    }
-    function getExpText(qid, partIndex, text) {
-      if (qid === monkeyQuestionId && partIndex === monkeyPartIndex && !monkeyFound) {
-        const pos = Math.floor(text.length / 2);
-        return text.slice(0, pos) + '<span class="chaos-monkey" onclick="foundMonkey(event)">🐒</span>' + text.slice(pos);
-      }
-      return text;
-    }
-    function foundMonkey(e) {
-      e.stopPropagation();
-      if (monkeyFound) return;
-      monkeyFound = true;
-      updateMonkeyHint(); renderSidebar();
-      const b = document.createElement('div');
-      b.className = 'monkey-found-banner'; b.id = 'monkeyBanner';
-      b.innerHTML = `<div class="monkey-found-card"><div class="big-monkey">🐒</div><h3>你找到 Chaos Monkey 了！</h3><p>牠藏在第 ${monkeyQuestionId} 題的詳解裡</p><button class="monkey-dismiss-btn" onclick="dismissMonkey()">知道了 👍</button></div>`;
-      document.body.appendChild(b);
-    }
-    function dismissMonkey() { const b = document.getElementById('monkeyBanner'); if (b) b.remove(); }
-    function updateMonkeyHint() {
-      const h = document.getElementById('monkeyHint'); if (!h) return;
-      if (monkeyFound) { h.textContent = '🐒 Chaos Monkey 已被你抓到了！'; h.classList.add('found'); }
-      else { h.textContent = '🐒 Chaos Monkey 藏在某個詳解裡，找到牠！'; h.classList.remove('found'); }
-    }
-
     // ==================== 渲染：大卡片 ====================
     function renderCard() {
       if (questions.length === 0) {
@@ -2321,20 +2314,37 @@
 
       let expZoneHtml = '';
       if (isSolved) {
+        const checkResult = orderCheckResults.get(q.id);
         const filledHtml = placedArr.map((chipId, arrIdx) => {
           const chip = expChips.find(c => c.chipId === chipId);
           if (!chip) return '';
-          const displayText = getExpText(q.id, chip.partIndex, chip.text);
-          return `<div class="exp-slot filled" data-chip-id="${chipId}" data-reorder-qid="${q.id}" data-arr-idx="${arrIdx}">${displayText}</div>`;
+          const displayText = chip.text;
+          let orderClass = '';
+          if (checkResult) orderClass = checkResult.wrongIndices.includes(arrIdx) ? 'order-wrong' : 'order-right';
+          return `<div class="exp-slot filled ${orderClass}" data-chip-id="${chipId}" data-reorder-qid="${q.id}" data-arr-idx="${arrIdx}">${displayText}<button class="exp-slot-remove" onclick="event.stopPropagation();removeExpChip(${q.id},'${chipId}')" title="退回詳解池">✕</button></div>`;
         }).join('');
         let emptyHtml = '';
         for (let i = 0; i < emptyCount; i++) {
           emptyHtml += `<div class="exp-slot"><span style="opacity:0.3">⬜ 拖入詳解</span></div>`;
         }
+        let orderHtml = '';
+        if (expDone) {
+          orderHtml = `<button class="check-order-btn" onclick="checkExpOrder(${q.id})">🔍 檢查排序是否正確</button>`;
+          if (checkResult) {
+            if (checkResult.correct) {
+              orderHtml += `<div class="order-result correct">🏆 排序完全正確！與原始詳解順序一致</div>`;
+            } else {
+              const wrongCount = checkResult.wrongIndices.length;
+              orderHtml += `<div class="order-result incorrect">🔄 有 ${wrongCount}/${placedArr.length} 張位置不同，紅色邊線代表位置不對，可嘗試重新排序</div>`;
+            }
+          }
+        }
+        const isOrderPerfect = checkResult && checkResult.correct;
         expZoneHtml = `
-          <div class="exp-zone ${expDone ? 'completed' : ''}" data-qid="${q.id}">
+          <div class="exp-zone ${expDone ? 'completed' : ''} ${isOrderPerfect ? 'order-perfect' : ''}" data-qid="${q.id}">
             <div class="exp-zone-label">📖 詳解區 (${filledCount}/${totalParts})</div>
             ${filledHtml}${emptyHtml}
+            ${orderHtml}
           </div>`;
       }
 
@@ -2438,6 +2448,49 @@
       document.getElementById(`ch-${qid}`).classList.toggle('show');
     }
 
+    // ==================== 拖放輔助 ====================
+    function showDragToast(msg) {
+      const old = document.querySelector('.drag-toast');
+      if (old) old.remove();
+      const t = document.createElement('div');
+      t.className = 'drag-toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 1800);
+    }
+
+    function removeExpChip(qid, chipId) {
+      const placedArr = getExpPlaced(qid);
+      const idx = placedArr.indexOf(chipId);
+      if (idx >= 0) {
+        placedArr.splice(idx, 1);
+        expCompletedSet.delete(qid);
+        orderCheckResults.delete(qid);
+        renderAll();
+        if (navigator.vibrate) navigator.vibrate(30);
+        showDragToast('↩️ 已退回詳解池');
+      }
+    }
+
+    function checkExpOrder(qid) {
+      const placedArr = getExpPlaced(qid);
+      const q = questions.find(qq => qq.id === qid);
+      if (!q) return;
+      const wrongIndices = [];
+      placedArr.forEach((chipId, idx) => {
+        const chip = expChips.find(c => c.chipId === chipId);
+        if (!chip || chip.partIndex !== idx) wrongIndices.push(idx);
+      });
+      orderCheckResults.set(qid, { correct: wrongIndices.length === 0, wrongIndices });
+      renderAll();
+      if (wrongIndices.length === 0) {
+        if (navigator.vibrate) navigator.vibrate([50, 50, 100]);
+        showDragToast('🏆 排序完全正確！');
+      } else {
+        showDragToast(`🔄 有 ${wrongIndices.length} 張位置不對`);
+      }
+    }
+
     // ==================== 統一拖放 ====================
     let dragState = null;
 
@@ -2472,14 +2525,33 @@
       const x = e.clientX, y = e.clientY;
       dragState.ghost.style.left = x + 'px'; dragState.ghost.style.top = y + 'px';
 
+      // ③ 自動捲動：靠近主內容區上下邊緣時自動滾動
+      const mainEl = document.getElementById('mainContent');
+      const mcRect = mainEl.getBoundingClientRect();
+      const edgeThreshold = 50;
+      if (y < mcRect.top + edgeThreshold && y > mcRect.top) {
+        mainEl.scrollBy(0, -10);
+      } else if (y > mcRect.bottom - edgeThreshold && y < mcRect.bottom) {
+        mainEl.scrollBy(0, 10);
+      }
+
+      // ④ 視覺回饋
       const hoverClass = dragState.dragType === 'answer' ? 'drag-over-answer' : 'drag-over-exp';
+      document.querySelectorAll('.exp-slot.drop-ready').forEach(s => s.classList.remove('drop-ready'));
       document.querySelectorAll('.question-card').forEach(card => {
         const r = card.getBoundingClientRect();
         const isOver = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
         if (isOver) {
           const qid = parseInt(card.dataset.qid);
-          if (dragState.dragType === 'answer' && !solvedSet.has(qid)) card.classList.add(hoverClass);
-          else if (dragState.dragType === 'explanation' && solvedSet.has(qid) && !expCompletedSet.has(qid)) card.classList.add(hoverClass);
+          if (dragState.dragType === 'answer' && !solvedSet.has(qid)) {
+            card.classList.add(hoverClass);
+          } else if (dragState.dragType === 'explanation' && solvedSet.has(qid) && !expCompletedSet.has(qid)) {
+            card.classList.add(hoverClass);
+            // 空 slot 高亮提示
+            card.querySelectorAll('.exp-slot:not(.filled)').forEach(slot => {
+              slot.classList.add('drop-ready');
+            });
+          }
         } else {
           card.classList.remove('drag-over-answer', 'drag-over-exp');
         }
@@ -2493,6 +2565,7 @@
       ghost.remove();
       chipEl.classList.remove('dragging-source');
       document.querySelectorAll('.question-card').forEach(c => c.classList.remove('drag-over-answer', 'drag-over-exp'));
+      document.querySelectorAll('.exp-slot.drop-ready').forEach(s => s.classList.remove('drop-ready'));
 
       const dist = Math.sqrt((x - startX) ** 2 + (y - startY) ** 2);
       if (dist < 10 && dragType === 'answer') {
@@ -2509,11 +2582,20 @@
             if (!solvedSet.has(targetQid)) {
               const tq = questions.find(q => q.id === targetQid);
               if (chipData.text === tq.options[tq.correctIndex]) {
+                // ② 正確 → 震動 + 渲染
                 solvedSet.add(targetQid);
                 clearReverseLookup();
+                if (navigator.vibrate) navigator.vibrate(50);
                 renderAll();
                 checkCompletion();
+              } else {
+                // ② 錯誤答案 → shake + toast
+                targetCard.classList.add('shake');
+                setTimeout(() => targetCard.classList.remove('shake'), 500);
+                showDragToast('❌ 答案不正確，再試試！');
               }
+            } else {
+              showDragToast('✅ 此題已經答對了');
             }
           } else {
             if (solvedSet.has(targetQid) && !expCompletedSet.has(targetQid)) {
@@ -2521,14 +2603,25 @@
                 const placedArr = getExpPlaced(targetQid);
                 if (!placedArr.includes(chipData.chipId)) {
                   placedArr.push(chipData.chipId);
+                  orderCheckResults.delete(targetQid);
                   const tq = questions.find(q => q.id === targetQid);
                   if (placedArr.length === tq.expParts.length) {
                     expCompletedSet.add(targetQid);
+                    if (navigator.vibrate) navigator.vibrate([30, 30, 60]);
+                    showDragToast('🎉 詳解全部放入！可檢查排序');
+                  } else {
+                    if (navigator.vibrate) navigator.vibrate(30);
                   }
                   renderAll();
                   checkCompletion();
                 }
               }
+            } else if (solvedSet.has(targetQid) && expCompletedSet.has(targetQid)) {
+              showDragToast('✅ 此題詳解已全部放入');
+            } else if (!solvedSet.has(targetQid)) {
+              targetCard.classList.add('shake');
+              setTimeout(() => targetCard.classList.remove('shake'), 500);
+              showDragToast('⚠️ 請先答對此題再放入詳解');
             }
           }
         }
@@ -2572,6 +2665,12 @@
       const x = e.clientX, y = e.clientY;
       reorderState.ghost.style.left = x + 'px'; reorderState.ghost.style.top = y + 'px';
 
+      // ③ 排序時也自動捲動
+      const mainEl = document.getElementById('mainContent');
+      const mcRect = mainEl.getBoundingClientRect();
+      if (y < mcRect.top + 50 && y > mcRect.top) mainEl.scrollBy(0, -10);
+      else if (y > mcRect.bottom - 50 && y < mcRect.bottom) mainEl.scrollBy(0, 10);
+
       document.querySelectorAll('.exp-slot.insert-above, .exp-slot.insert-below').forEach(s => {
         s.classList.remove('insert-above', 'insert-below');
       });
@@ -2601,25 +2700,39 @@
       const dist = Math.sqrt((x - startX) ** 2 + (y - startY) ** 2);
       if (dist >= 10) {
         const expZone = document.querySelector(`.exp-zone[data-qid="${qid}"]`);
+        // ① 拖出 exp-zone 範圍 → 退回詳解池
         if (expZone) {
-          const slots = [...expZone.querySelectorAll('.exp-slot.filled')];
-          let closestSlot = null, insertPos = 'below', minDist = Infinity, targetIdx = sourceIdx;
-          slots.forEach(slot => {
-            const r = slot.getBoundingClientRect();
-            const centerY = r.top + r.height / 2;
-            const d = Math.abs(y - centerY);
-            if (d < minDist) { minDist = d; closestSlot = slot; insertPos = y < centerY ? 'above' : 'below'; }
-          });
-          if (closestSlot) {
-            const closestIdx = parseInt(closestSlot.dataset.arrIdx);
-            targetIdx = insertPos === 'above' ? closestIdx : closestIdx + 1;
-          }
-          const placedArr = getExpPlaced(qid);
-          if (targetIdx !== sourceIdx && targetIdx !== sourceIdx + 1) {
-            const [removed] = placedArr.splice(sourceIdx, 1);
-            const newIdx = targetIdx > sourceIdx ? targetIdx - 1 : targetIdx;
-            placedArr.splice(newIdx, 0, removed);
+          const ezRect = expZone.getBoundingClientRect();
+          const isOutside = x < ezRect.left - 40 || x > ezRect.right + 40 || y < ezRect.top - 40 || y > ezRect.bottom + 40;
+          if (isOutside) {
+            const placedArr = getExpPlaced(qid);
+            placedArr.splice(sourceIdx, 1);
+            expCompletedSet.delete(qid);
+            orderCheckResults.delete(qid);
+            if (navigator.vibrate) navigator.vibrate(30);
+            showDragToast('↩️ 已退回詳解池');
             renderAll();
+          } else {
+            const slots = [...expZone.querySelectorAll('.exp-slot.filled')];
+            let closestSlot = null, insertPos = 'below', minDist = Infinity, targetIdx = sourceIdx;
+            slots.forEach(slot => {
+              const r = slot.getBoundingClientRect();
+              const centerY = r.top + r.height / 2;
+              const d = Math.abs(y - centerY);
+              if (d < minDist) { minDist = d; closestSlot = slot; insertPos = y < centerY ? 'above' : 'below'; }
+            });
+            if (closestSlot) {
+              const closestIdx = parseInt(closestSlot.dataset.arrIdx);
+              targetIdx = insertPos === 'above' ? closestIdx : closestIdx + 1;
+            }
+            const placedArr = getExpPlaced(qid);
+            if (targetIdx !== sourceIdx && targetIdx !== sourceIdx + 1) {
+              const [removed] = placedArr.splice(sourceIdx, 1);
+              const newIdx = targetIdx > sourceIdx ? targetIdx - 1 : targetIdx;
+              placedArr.splice(newIdx, 0, removed);
+              orderCheckResults.delete(qid);
+              renderAll();
+            }
           }
         }
       }
@@ -2677,11 +2790,11 @@
     }
 
     function restart() {
-      solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear();
+      solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear(); orderCheckResults.clear();
       currentPage = 0;
       shuffle(answerChips); buildExpChips();
       document.getElementById('completionArea').innerHTML = '';
-      dismissMonkey(); initChaosMonkey(); renderAll();
+      renderAll();
     }
 
     // ==================== 匯入系統 ====================
@@ -2889,6 +3002,7 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
 
     // ---------- 匯入後重建 ----------
     function rebuildAfterImport() {
+      orderCheckResults.clear();
       // 重建答案 chips
       answerChips = [];
       questions.forEach(q => {
@@ -2905,10 +3019,6 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
       // 重建詳解 chips
       buildExpChips();
 
-      // 重置 Chaos Monkey
-      dismissMonkey();
-      initChaosMonkey();
-
       // 渲染
       currentPage = Math.min(currentPage, questions.length - 1);
       renderAll();
@@ -2918,10 +3028,9 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
     function clearAllQuestions() {
       if (!confirm('確定要清空所有題目嗎？此操作無法復原。')) return;
       questions.length = 0;
-      solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear();
+      solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear(); orderCheckResults.clear();
       answerChips = []; expChips = [];
       currentPage = 0;
-      dismissMonkey(); monkeyFound = false;
       document.getElementById('completionArea').innerHTML = '';
       document.getElementById('cardArea').innerHTML = `
         <div style="text-align:center; padding:60px 20px; color:#bbb;">
@@ -2952,7 +3061,6 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
     }, { passive: true });
 
     // ==================== 啟動 ====================
-    initChaosMonkey();
     renderAll();
   </script>
 </body>
