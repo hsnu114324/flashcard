@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Flashcard v8.0</title>
+  <title>Flashcard v9.0</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1165,7 +1165,16 @@
       width: 1px; height: 4px; background: #e2e8f0;
     }
 
-    /* ── Span rows ── */
+    /* ── Span rows container ── */
+    #jtSpanRows {
+      contain: layout style;
+    }
+    /* 更新時暫停所有子元素的動畫和過渡，避免閃爍 */
+    #jtSpanRows.updating,
+    #jtSpanRows.updating * {
+      animation: none !important;
+      transition: none !important;
+    }
     .jt-span-row {
       display: flex; min-height: 28px; border-bottom: 1px solid #edf2f7;
       transition: background 0.1s; cursor: pointer;
@@ -1215,7 +1224,7 @@
 
     /* ── Span Detail (Jaeger-style collapsible) ── */
     .jt-detail {
-      border-bottom: 2px solid #bee3f8; animation: fadeIn 0.2s ease;
+      border-bottom: 2px solid #bee3f8;
     }
     .jt-detail-inner {
       padding: 0; display: flex;
@@ -1226,6 +1235,7 @@
     }
     .jt-detail-main {
       flex: 1; padding: 10px 14px; background: #fffff0;
+      min-height: 160px;
     }
     .jt-detail-tabs {
       display: flex; gap: 0; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0;
@@ -2354,6 +2364,62 @@
     }
     function switchJtTab(spanKey, tab) {
       jtDetailTabMap.set(spanKey, tab);
+      // 嘗試只更新目標 detail panel 的 body + tab 狀態（不重建所有 span rows）
+      const panel = document.querySelector(`.jt-detail[data-spankey="${spanKey}"]`);
+      if (panel) {
+        // 更新 tab active 狀態
+        panel.querySelectorAll('.jt-detail-tab').forEach(btn => {
+          btn.classList.toggle('active', btn.textContent.toLowerCase() === tab);
+        });
+        // 重建 body 內容
+        const bodyEl = panel.querySelector('.jt-detail-body');
+        if (bodyEl) {
+          const data = collectWordTraceData(activeWordKey);
+          if (data) {
+            // 找到對應的 question 與 contexts
+            const keyParts = spanKey.split('-');
+            const qid = Number(keyParts[0]);
+            const qEntry = data.qEntries.find(e => e.question.id === qid);
+            if (qEntry) {
+              const q = qEntry.question;
+              const idx = questions.indexOf(q);
+              let contexts = qEntry.contexts;
+              // 如果是 child key（如 "1-題幹"），取對應 source 的 contexts
+              if (keyParts.length >= 2 && keyParts[1] !== 'all') {
+                const src = keyParts.slice(1).join('-');
+                contexts = qEntry.contexts.filter(c => c.source === src);
+              }
+              const posInfo = contexts.map(c => {
+                const p = findWordPos(c.context, activeWordKey);
+                return { source: c.source, left: Math.round(p.left), context: c.context };
+              });
+              const posRange = findSpanRange(contexts, activeWordKey);
+              if (tab === 'tags') {
+                bodyEl.innerHTML = `<table class="jt-tag-table">
+                  <tr><td class="jt-tag-key">question.id</td><td class="jt-tag-val"><a onclick="goToPageFromBacklink(${idx})">Q${q.id} (點擊跳轉)</a></td></tr>
+                  <tr><td class="jt-tag-key">category</td><td class="jt-tag-val">${q.category || '—'}</td></tr>
+                  <tr><td class="jt-tag-key">word</td><td class="jt-tag-val" style="font-weight:700;color:#c05621;">${activeWordKey}</td></tr>
+                  <tr><td class="jt-tag-key">position</td><td class="jt-tag-val">${Math.round(posRange.left)}% ~ ${Math.round(posRange.left + posRange.width)}%（句中相對位置）</td></tr>
+                  <tr><td class="jt-tag-key">spans</td><td class="jt-tag-val">${contexts.length}</td></tr>
+                  <tr><td class="jt-tag-key">sources</td><td class="jt-tag-val">${[...new Set(contexts.map(c => c.source))].join(', ')}</td></tr>
+                  <tr><td class="jt-tag-key">correct_answer</td><td class="jt-tag-val">${q.options[q.correctIndex]}</td></tr>
+                  <tr><td class="jt-tag-key">question</td><td class="jt-tag-val">${data.hlWord(q.question)}</td></tr>
+                  ${posInfo.map(p => `<tr><td class="jt-tag-key">${p.source} pos</td><td class="jt-tag-val">${p.left}%</td></tr>`).join('')}
+                </table>`;
+              } else {
+                bodyEl.innerHTML = contexts.map(c => `
+                  <div class="jt-context-block">
+                    <div style="font-size:0.65rem;color:#a0aec0;margin-bottom:4px;">source: ${c.source}</div>
+                    ${data.hlWord(c.context)}
+                  </div>
+                `).join('');
+              }
+              return; // 成功，不需要重建所有 span rows
+            }
+          }
+        }
+      }
+      // fallback：找不到 panel 時整體重建
       rerenderWordTraceOnly();
     }
 
@@ -2367,8 +2433,17 @@
         if (data) {
           const scroller = document.getElementById('quizPoolScroller') || document.getElementById('mainContent');
           const scrollTop = scroller ? scroller.scrollTop : 0;
+          // 鎖定高度 + 禁用動畫，防止閃爍
+          const prevH = spanContainer.offsetHeight;
+          spanContainer.style.minHeight = prevH + 'px';
+          spanContainer.classList.add('updating');
           spanContainer.innerHTML = buildJtSpanRowsHtml(data.qEntries, activeWordKey, data.hlWord, data.srcColors);
           if (scroller) scroller.scrollTop = scrollTop;
+          // 下一幀解鎖
+          requestAnimationFrame(() => {
+            spanContainer.classList.remove('updating');
+            spanContainer.style.minHeight = '';
+          });
           return;
         }
       }
@@ -2735,7 +2810,7 @@
         `).join('');
       }
 
-      return `<div class="jt-detail" onclick="event.stopPropagation()">
+      return `<div class="jt-detail" data-spankey="${spanKey}" onclick="event.stopPropagation()">
         <div class="jt-detail-inner">
           <div class="jt-detail-sidebar">
             <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:6px;">Process</div>
@@ -2754,7 +2829,7 @@
               <button class="jt-detail-tab ${tagsActive}" onclick="event.stopPropagation();switchJtTab('${spanKey}','tags')">Tags</button>
               <button class="jt-detail-tab ${ctxActive}" onclick="event.stopPropagation();switchJtTab('${spanKey}','context')">Context</button>
             </div>
-            ${bodyHtml}
+            <div class="jt-detail-body">${bodyHtml}</div>
           </div>
         </div>
       </div>`;
