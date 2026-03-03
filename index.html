@@ -2039,7 +2039,7 @@
         activeAnswerKey = ansText;
         activeOptionKey = null; activeExpKey = null; activeWordKey = null;
       }
-      renderAll();
+      rerenderBacklinkOnly();
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -2164,7 +2164,7 @@
       activeWordKey = null;
       jtExpandedSpans.clear();
       jtDetailKey = null;
-      renderAll();
+      rerenderBacklinkOnly();
     }
 
     // ==================== Jaeger-style Word Trace ====================
@@ -2217,13 +2217,27 @@
 
     // 只重新渲染 word trace 區域，避免整頁閃爍
     function rerenderWordTraceOnly() {
-      if (!activeWordKey) { renderAll(); return; }
+      if (!activeWordKey) { rerenderBacklinkOnly(); return; }
       const area = document.getElementById('backlinkArea');
       if (!area) { renderAll(); return; }
       // 記住捲動位置
       const scroller = document.getElementById('quizPoolScroller') || document.getElementById('mainContent');
       const scrollTop = scroller ? scroller.scrollTop : 0;
       area.innerHTML = renderWordTrace(activeWordKey);
+      if (scroller) scroller.scrollTop = scrollTop;
+    }
+
+    // 只重新渲染 backlinkArea + sidebar 索引高亮，避免整頁閃爍
+    function rerenderBacklinkOnly() {
+      const area = document.getElementById('backlinkArea');
+      if (!area) { renderAll(); return; }
+      const scroller = document.getElementById('quizPoolScroller') || document.getElementById('mainContent');
+      const scrollTop = scroller ? scroller.scrollTop : 0;
+      renderBacklinkPanel();
+      renderWordIndex();
+      renderAnswerIndex();
+      renderOptionIndex();
+      renderExpIndex();
       if (scroller) scroller.scrollTop = scrollTop;
     }
 
@@ -2647,7 +2661,7 @@
         activeOptionKey = optText;
         activeAnswerKey = null; activeExpKey = null; activeWordKey = null;
       }
-      renderAll();
+      rerenderBacklinkOnly();
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -2794,7 +2808,7 @@
         activeWordKey = key;
         activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
       }
-      renderAll();
+      rerenderBacklinkOnly();
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -2808,7 +2822,7 @@
         activeWordKey = key;
         activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
       }
-      renderAll();
+      rerenderBacklinkOnly();
     }
 
     // 把文字中的德文單字變成可點擊連結（用於 Dashboard 等處）
