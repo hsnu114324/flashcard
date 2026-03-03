@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Flashcard v1.0</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -109,10 +110,35 @@
       font-size: 0.75rem; color: #aaa; text-align: center;
     }
 
-    /* ===== Google Sheets Sync UI ===== */
+    /* ===== Google Auth & Sheets Sync UI ===== */
     .google-auth-section {
       padding: 10px 14px; border-bottom: 1px solid #eef0f2;
     }
+    .g-login-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 9px 12px; border-radius: 10px;
+      background: #fff; border: 1.5px solid #dadce0;
+      font-size: 0.82rem; font-weight: 500; color: #3c4043;
+      cursor: pointer; transition: all 0.15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .g-login-btn:hover { background: #f8f9fa; border-color: #c0c3c7; box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+    .g-user-bar {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    }
+    .g-user-bar img {
+      width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid #e2e6ea;
+    }
+    .g-user-bar .g-name {
+      flex: 1; min-width: 0; font-size: 0.76rem; font-weight: 600; color: #333;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .g-logout-btn {
+      font-size: 0.63rem; padding: 2px 7px; border-radius: 5px;
+      background: #f3f4f6; border: 1px solid #e5e7eb; cursor: pointer;
+      color: #888; transition: all 0.15s; flex-shrink: 0;
+    }
+    .g-logout-btn:hover { background: #ffe4e6; color: #ef4444; border-color: #fca5a5; }
     .gs-sync-bar {
       display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: #888; margin-bottom: 6px;
     }
@@ -4536,44 +4562,122 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
       swipeStartX = null;
     }, { passive: true });
 
-    // ==================== Google Sheets 整合（Apps Script 版） ====================
-    // ⚠️ 請將你部署的 Apps Script 網址貼在這裡
-    // 步驟：開啟你的 Google Sheet → 延伸功能 → Apps Script → 貼上 apps_script_code.js 的內容
-    //       → 部署 → 新增部署 → 類型：網頁應用程式 → 執行身分：我 → 存取權：所有人 → 部署
-    //       → 複製產生的網址貼到下方
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm9_wdIwf2RdXgj2TOfxGlw1eOaIYfe-jUy8_4_89Pcb_DFu3NjpJwesR7IV4IRCWfYQ/exec';  // ← 貼上你的 Apps Script 部署網址
+    // ==================== Google 登入 + Sheets 同步（Apps Script 版） ====================
+    // ── 設定 ──
+    const GOOGLE_CLIENT_ID = '280426045341-s5tias2et5fgfkm6v4pasodaimi9usot.apps.googleusercontent.com';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm9_wdIwf2RdXgj2TOfxGlw1eOaIYfe-jUy8_4_89Pcb_DFu3NjpJwesR7IV4IRCWfYQ/exec';
 
-    let gSyncStatus = 'idle'; // 'idle' | 'syncing' | 'success' | 'error'
+    let gUser = JSON.parse(localStorage.getItem('flashcard_guser') || 'null'); // { name, email, picture }
+    let gSyncStatus = 'idle';
     let gLastSyncTime = null;
-    let gSyncTimer = null; // debounce timer
+    let gSyncTimer = null;
 
-    // ── Sync UI ──
-    function renderSyncUI() {
+    // ── Google Sign-In 初始化 ──
+    function initGoogleSignIn() {
+      if (typeof google === 'undefined' || !google.accounts) {
+        // 延遲重試
+        setTimeout(initGoogleSignIn, 500);
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleSignIn,
+        auto_select: true,   // 自動選擇已登入的帳號（靜默登入）
+        cancel_on_tap_outside: true,
+      });
+      // 如果之前已登入，嘗試靜默重新驗證
+      if (gUser) {
+        google.accounts.id.prompt(); // One Tap 靜默提示
+      }
+      renderAuthUI();
+    }
+
+    // ── 處理登入回調 ──
+    function handleGoogleSignIn(response) {
+      // response.credential 是 JWT ID token
+      const payload = parseJwt(response.credential);
+      gUser = {
+        name: payload.name || payload.email,
+        email: payload.email,
+        picture: payload.picture || ''
+      };
+      localStorage.setItem('flashcard_guser', JSON.stringify(gUser));
+      renderAuthUI();
+      // 登入後自動從 Sheet 載入
+      syncFromSheets();
+    }
+
+    // ── 解析 JWT（不需要驗證，僅解碼 payload） ──
+    function parseJwt(token) {
+      try {
+        const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(atob(base64));
+      } catch (e) {
+        return {};
+      }
+    }
+
+    // ── 登出 ──
+    function googleLogout() {
+      gUser = null;
+      localStorage.removeItem('flashcard_guser');
+      gSyncStatus = 'idle';
+      gLastSyncTime = null;
+      if (typeof google !== 'undefined' && google.accounts) {
+        google.accounts.id.disableAutoSelect();
+      }
+      renderAuthUI();
+    }
+
+    // ── 手動觸發登入 ──
+    function googleLogin() {
+      if (typeof google === 'undefined' || !google.accounts) {
+        alert('Google 登入服務載入中，請稍候再試');
+        return;
+      }
+      google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // One Tap 無法顯示（可能被瀏覽器擋了），改用彈出式登入
+          google.accounts.id.renderButton(
+            document.getElementById('googleSignInFallback'),
+            { theme: 'outline', size: 'large', width: '100%', text: 'signin_with' }
+          );
+          const fb = document.getElementById('googleSignInFallback');
+          if (fb) fb.style.display = 'block';
+        }
+      });
+    }
+
+    // ── Auth + Sync UI ──
+    function renderAuthUI() {
       const container = document.getElementById('googleAuthContent');
       if (!container) return;
 
-      const scriptUrl = APPS_SCRIPT_URL || localStorage.getItem('flashcard_apps_script_url') || '';
-
-      if (!scriptUrl) {
+      // 未登入狀態
+      if (!gUser) {
         container.innerHTML = `
-          <div style="font-size:0.72rem; color:#666; margin-bottom:6px; font-weight:600;">📡 Google Sheets 同步</div>
-          <div style="font-size:0.65rem; color:#999; margin-bottom:4px;">貼上 Apps Script 部署網址：</div>
-          <input type="text" id="appsScriptUrlInput" class="gs-url-input" placeholder="https://script.google.com/macros/s/...">
-          <button class="gs-connect-btn" onclick="connectAppsScript()">🔗 連結</button>
-          <div style="font-size:0.6rem; color:#bbb; margin-top:6px; line-height:1.4;">
-            💡 設定方式：開啟 Google Sheet → 延伸功能 → Apps Script → 部署為網頁應用程式
-          </div>`;
+          <button class="g-login-btn" onclick="googleLogin()">
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            使用 Google 登入
+          </button>
+          <div id="googleSignInFallback" style="display:none; margin-top:6px;"></div>
+          <div style="font-size:0.6rem; color:#bbb; margin-top:6px; text-align:center;">登入後自動同步學習進度</div>`;
         return;
       }
 
+      // 已登入狀態
       const syncDot = gSyncStatus;
-      const syncText = gSyncStatus === 'idle' ? '已連結'
+      const syncText = gSyncStatus === 'idle' ? '已連線'
         : gSyncStatus === 'syncing' ? '同步中…'
         : gSyncStatus === 'success' ? `✓ ${gLastSyncTime || '已同步'}`
         : '✗ 同步失敗';
 
       container.innerHTML = `
-        <div style="font-size:0.72rem; color:#666; margin-bottom:6px; font-weight:600;">📡 Google Sheets 同步</div>
+        <div class="g-user-bar">
+          ${gUser.picture ? `<img src="${gUser.picture}" referrerpolicy="no-referrer">` : '<div style="width:26px;height:26px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:0.65rem;">👤</div>'}
+          <span class="g-name" title="${gUser.email}">${gUser.name}</span>
+          <button class="g-logout-btn" onclick="googleLogout()">登出</button>
+        </div>
         <div class="gs-sync-bar">
           <span class="sync-dot ${syncDot}"></span>
           <span class="sync-text">${syncText}</span>
@@ -4581,47 +4685,24 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
         <div class="gs-sync-actions">
           <button class="gs-sync-btn" onclick="syncFromSheets()" title="從 Google Sheet 載入">⬇ 載入</button>
           <button class="gs-sync-btn primary" onclick="syncToSheets()" title="儲存至 Google Sheet">⬆ 儲存</button>
-        </div>
-        <div class="gs-sheet-link" style="margin-top:6px; font-size:0.62rem; color:#bbb; cursor:pointer;" onclick="disconnectAppsScript()" title="解除連結">🔗 解除連結</div>`;
+        </div>`;
     }
 
     function getAppsScriptUrl() {
       return APPS_SCRIPT_URL || localStorage.getItem('flashcard_apps_script_url') || '';
     }
 
-    function connectAppsScript() {
-      const input = document.getElementById('appsScriptUrlInput');
-      if (!input) return;
-      let url = input.value.trim();
-      if (!url) { alert('請輸入 Apps Script 部署網址'); return; }
-      if (!url.startsWith('https://script.google.com/')) {
-        alert('網址格式不正確，應該以 https://script.google.com/ 開頭');
-        return;
-      }
-      localStorage.setItem('flashcard_apps_script_url', url);
-      renderSyncUI();
-      // 自動載入
-      syncFromSheets();
-    }
-
-    function disconnectAppsScript() {
-      if (!confirm('確定要解除連結？（不會刪除 Sheet 資料）')) return;
-      localStorage.removeItem('flashcard_apps_script_url');
-      gSyncStatus = 'idle';
-      gLastSyncTime = null;
-      renderSyncUI();
-    }
-
     function updateSyncStatus(status) {
       gSyncStatus = status;
       if (status === 'success') gLastSyncTime = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-      renderSyncUI();
+      renderAuthUI();
     }
 
     // ── 從 Apps Script 載入 ──
     async function syncFromSheets() {
+      if (!gUser) { alert('請先登入 Google'); return; }
       const url = getAppsScriptUrl();
-      if (!url) { alert('請先設定 Apps Script 網址'); return; }
+      if (!url) { alert('尚未設定 Apps Script 網址'); return; }
       updateSyncStatus('syncing');
       try {
         const resp = await fetch(url + '?action=getAll');
@@ -4651,8 +4732,9 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
 
     // ── 儲存至 Apps Script ──
     async function syncToSheets() {
+      if (!gUser) return; // 未登入不儲存
       const url = getAppsScriptUrl();
-      if (!url) { alert('請先設定 Apps Script 網址'); return; }
+      if (!url) return;
       updateSyncStatus('syncing');
       try {
         const payload = {
@@ -4667,7 +4749,7 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
         };
         const resp = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },  // Apps Script 需要 text/plain 來避免 CORS preflight
+          headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify(payload)
         });
         const data = await resp.json();
@@ -4676,7 +4758,6 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
       } catch (err) {
         console.error('Save error:', err);
         updateSyncStatus('error');
-        alert('儲存失敗：' + err.message);
       }
     }
 
@@ -4718,21 +4799,23 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
 
     // ── 防抖自動儲存（改動後 5 秒自動同步） ──
     function scheduleSyncToSheets() {
-      if (!getAppsScriptUrl()) return;
+      if (!gUser || !getAppsScriptUrl()) return;
       if (gSyncTimer) clearTimeout(gSyncTimer);
       gSyncTimer = setTimeout(() => syncToSheets(), 5000);
     }
 
     // ==================== 啟動 ====================
-    // 初始進入 quiz 模式
+    // 初始進入 quiz 模式（先用本地題庫）
     if (questions.length >= 4) {
       startQuiz();
     } else {
       viewMode = 'single';
       renderAll();
     }
-    // 渲染 Sync UI
-    renderSyncUI();
+
+    // 初始化 Google Sign-In
+    renderAuthUI();
+    window.addEventListener('load', initGoogleSignIn);
   </script>
 </body>
 </html>
