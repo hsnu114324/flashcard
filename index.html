@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Flashcard v8.0</title>
+  <title>Flashcard v9.0</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -37,7 +37,7 @@
     }
     .sidebar-logo .logo-icon {
       width: 28px; height: 28px; border-radius: 8px;
-      background: linear-gradient(135deg, #059669, #34d399);
+      background: linear-gradient(135deg, #4a7c59, #7fa886);
       display: flex; align-items: center; justify-content: center;
       color: #fff; font-size: 0.85rem; font-weight: 700;
     }
@@ -50,7 +50,7 @@
       font-size: 0.85rem; color: #555; background: #f8f9fb;
       outline: none; transition: border-color 0.2s;
     }
-    .sidebar-search input:focus { border-color: #34d399; }
+    .sidebar-search input:focus { border-color: #7fa886; }
     .sidebar-search .search-icon {
       position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
       font-size: 0.85rem; opacity: 0.4;
@@ -71,7 +71,7 @@
       font-size: 0.88rem; font-weight: 500; color: #444;
     }
     .folder-item:hover { background: #f3f0ff; }
-    .folder-item.active { background: #d1fae5; color: #059669; font-weight: 600; }
+    .folder-item.active { background: #dce6de; color: #4a7c59; font-weight: 600; }
     .folder-item .folder-icon { font-size: 1rem; flex-shrink: 0; width: 22px; text-align: center; }
     .folder-item .folder-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .folder-item .folder-arrow {
@@ -93,15 +93,15 @@
       font-size: 0.82rem; color: #666; transition: background 0.15s;
       margin-bottom: 1px;
     }
-    .file-item:hover { background: #ecfdf5; }
-    .file-item.active { background: #d1fae5; color: #059669; font-weight: 600; }
+    .file-item:hover { background: #f0f4f1; }
+    .file-item.active { background: #dce6de; color: #4a7c59; font-weight: 600; }
     .file-item .file-icon { font-size: 0.85rem; flex-shrink: 0; width: 20px; text-align: center; }
     .file-item .file-status {
       width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
       background: #e0e0e0; transition: background 0.3s;
     }
     .file-item .file-status.solved { background: #4cd964; }
-    .file-item .file-status.exp-done { background: #34d399; }
+    .file-item .file-status.exp-done { background: #7fa886; }
 
     .sidebar-footer {
       margin-top: auto; padding: 14px 18px;
@@ -149,7 +149,7 @@
     }
     .header h1 {
       font-size: 1.6rem; font-weight: 800;
-      background: linear-gradient(135deg, #059669, #34d399);
+      background: linear-gradient(135deg, #4a7c59, #7fa886);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .header .subtitle { font-size: 0.9rem; color: #999; margin-top: 4px; }
@@ -167,7 +167,7 @@
       transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.04);
       flex-shrink: 0;
     }
-    .nav-btn:hover { background: #ecfdf5; border-color: #34d399; color: #059669; }
+    .nav-btn:hover { background: #f0f4f1; border-color: #7fa886; color: #4a7c59; }
     .nav-btn:active { transform: scale(0.92); }
     .nav-btn.disabled { opacity: 0.3; pointer-events: none; }
     .nav-indicator {
@@ -187,12 +187,12 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
     .question-card.drag-over-answer {
-      border-color: #34d399;
-      box-shadow: 0 0 0 3px rgba(52,211,153,0.15), 0 4px 16px rgba(0,0,0,0.06);
+      border-color: #7fa886;
+      box-shadow: 0 0 0 3px rgba(127,168,134,0.15), 0 4px 16px rgba(0,0,0,0.06);
     }
     .question-card.drag-over-exp {
-      border-color: #059669;
-      box-shadow: 0 0 0 3px rgba(5,150,105,0.15), 0 4px 16px rgba(0,0,0,0.06);
+      border-color: #4a7c59;
+      box-shadow: 0 0 0 3px rgba(74,124,89,0.15), 0 4px 16px rgba(0,0,0,0.06);
     }
     .question-card.solved {
       border-color: #4cd964;
@@ -206,7 +206,7 @@
 
     .q-number {
       display: inline-block;
-      background: linear-gradient(135deg, #059669, #34d399);
+      background: linear-gradient(135deg, #4a7c59, #7fa886);
       color: #fff; font-weight: 700; font-size: 0.82rem;
       padding: 4px 14px; border-radius: 12px;
       margin-bottom: 14px; align-self: flex-start;
@@ -230,7 +230,7 @@
       margin-top: 12px; display: flex; align-items: center; gap: 5px;
       transition: color 0.2s;
     }
-    .q-chinese-toggle:hover { color: #059669; }
+    .q-chinese-toggle:hover { color: #4a7c59; }
     .q-chinese-toggle .arrow { transition: transform 0.3s; display: inline-block; }
     .q-chinese-toggle.open .arrow { transform: rotate(90deg); }
     .q-chinese {
@@ -249,11 +249,11 @@
       transition: all 0.2s; background: #fafbfc;
     }
     .question-card.drag-over-answer .q-drop-zone {
-      border-color: #34d399; background: #f0fdf4; color: #059669;
+      border-color: #7fa886; background: #f4f7f4; color: #4a7c59;
     }
     .question-card.solved .q-drop-zone {
       border-style: solid; border-color: #4cd964;
-      background: #f0fdf4; color: #16a34a;
+      background: #f4f7f4; color: #16a34a;
       font-weight: 600; font-size: 1.05rem;
     }
 
@@ -265,21 +265,21 @@
       transition: all 0.3s; background: #fafbfc;
     }
     .exp-zone-label {
-      font-size: 0.82rem; font-weight: 700; color: #059669;
+      font-size: 0.82rem; font-weight: 700; color: #4a7c59;
       margin-bottom: 8px;
     }
     .question-card.drag-over-exp .exp-zone {
-      border-color: #059669; background: #ecfdf5;
+      border-color: #4a7c59; background: #f0f4f1;
     }
     .exp-zone.completed {
-      border-style: solid; border-color: #34d399;
-      background: #ecfdf5;
-      box-shadow: 0 0 0 3px rgba(52,211,153,0.2), 0 4px 16px rgba(52,211,153,0.08);
+      border-style: solid; border-color: #7fa886;
+      background: #f0f4f1;
+      box-shadow: 0 0 0 3px rgba(127,168,134,0.2), 0 4px 16px rgba(127,168,134,0.08);
       animation: expGlow 2.5s ease-in-out infinite;
     }
     @keyframes expGlow {
-      0%, 100% { box-shadow: 0 0 0 3px rgba(52,211,153,0.2), 0 4px 16px rgba(52,211,153,0.08); }
-      50%      { box-shadow: 0 0 0 5px rgba(52,211,153,0.3), 0 4px 24px rgba(52,211,153,0.12); }
+      0%, 100% { box-shadow: 0 0 0 3px rgba(127,168,134,0.2), 0 4px 16px rgba(127,168,134,0.08); }
+      50%      { box-shadow: 0 0 0 5px rgba(127,168,134,0.3), 0 4px 24px rgba(127,168,134,0.12); }
     }
 
     .exp-slot {
@@ -291,16 +291,16 @@
       transition: all 0.3s ease; background: #fff;
     }
     .exp-slot.filled {
-      border-style: solid; border-color: #a7f3d0;
-      background: #f0fdf4; color: #444;
+      border-style: solid; border-color: #b8cebc;
+      background: #f4f7f4; color: #444;
       cursor: grab; touch-action: none; position: relative;
       animation: slotFill 0.4s ease;
       padding-right: 34px;
     }
     .exp-slot.filled:active { cursor: grabbing; }
     .exp-slot.filled.reorder-source { opacity: 0.3; }
-    .exp-slot.insert-above { border-top: 2.5px solid #059669 !important; }
-    .exp-slot.insert-below { border-bottom: 2.5px solid #059669 !important; }
+    .exp-slot.insert-above { border-top: 2.5px solid #4a7c59 !important; }
+    .exp-slot.insert-below { border-bottom: 2.5px solid #4a7c59 !important; }
     @keyframes slotFill {
       from { transform: scale(0.97); opacity: 0; }
       to   { transform: scale(1); opacity: 1; }
@@ -339,14 +339,14 @@
     @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
 
     .exp-slot.drop-ready {
-      border-color: #34d399 !important; background: #f0fdf4 !important;
+      border-color: #7fa886 !important; background: #f4f7f4 !important;
       border-style: dashed !important;
       animation: pulseSlot 1s ease-in-out infinite;
     }
-    .exp-slot.drop-ready span { color: #34d399 !important; opacity: 1 !important; }
+    .exp-slot.drop-ready span { color: #7fa886 !important; opacity: 1 !important; }
     @keyframes pulseSlot {
-      0%, 100% { border-color: #a7f3d0; }
-      50% { border-color: #34d399; }
+      0%, 100% { border-color: #b8cebc; }
+      50% { border-color: #7fa886; }
     }
 
     .exp-slot-remove {
@@ -362,10 +362,10 @@
     .check-order-btn {
       margin-top: 10px; padding: 9px 16px; border-radius: 10px; width: 100%;
       font-size: 0.82rem; font-weight: 600; cursor: pointer;
-      background: #ecfdf5; color: #059669; border: 1.5px solid #a7f3d0;
+      background: #f0f4f1; color: #4a7c59; border: 1.5px solid #b8cebc;
       transition: all 0.2s; display: flex; align-items: center; gap: 6px; justify-content: center;
     }
-    .check-order-btn:hover { background: #d1fae5; border-color: #34d399; }
+    .check-order-btn:hover { background: #dce6de; border-color: #7fa886; }
 
     .order-result {
       margin-top: 6px; padding: 8px 12px; border-radius: 8px;
@@ -394,7 +394,7 @@
       transition: background 0.2s;
     }
     .sidebar-resizer:hover, .sidebar-resizer.active {
-      background: #a7f3d0;
+      background: #b8cebc;
     }
     @media (max-width: 768px) {
       .sidebar-resizer { display: none; }
@@ -447,17 +447,17 @@
       border: 1.5px dashed #ddd; background: #fafbfc;
       font-size: 0.72rem; transition: all 0.3s;
     }
-    .quiz-exp-mini.has-items { border-style: solid; border-color: #a7f3d0; background: #f0fdf4; }
+    .quiz-exp-mini.has-items { border-style: solid; border-color: #b8cebc; background: #f4f7f4; }
     .quiz-exp-mini.exp-done {
-      border-color: #34d399; background: #ecfdf5;
-      box-shadow: 0 0 0 2px rgba(52,211,153,0.2);
+      border-color: #7fa886; background: #f0f4f1;
+      box-shadow: 0 0 0 2px rgba(127,168,134,0.2);
     }
     .question-card.drag-over-exp .quiz-exp-mini:not(.exp-done) {
-      border-color: #34d399; background: #d1fae5;
-      box-shadow: 0 0 0 2px rgba(52,211,153,0.3);
+      border-color: #7fa886; background: #dce6de;
+      box-shadow: 0 0 0 2px rgba(127,168,134,0.3);
     }
     .quiz-exp-mini-label {
-      font-weight: 600; color: #059669; margin-bottom: 4px;
+      font-weight: 600; color: #4a7c59; margin-bottom: 4px;
       display: flex; align-items: center; gap: 4px;
     }
     .quiz-exp-mini-latest {
@@ -487,14 +487,14 @@
       display: flex; align-items: center; gap: 5px;
     }
     .quiz-stats-bar .qs-val {
-      font-weight: 700; color: #059669; font-size: 0.88rem;
+      font-weight: 700; color: #4a7c59; font-size: 0.88rem;
     }
     .quiz-stats-bar .qs-val.green { color: #16a34a; }
     .quiz-stats-bar .qs-val.amber { color: #d97706; }
     .quiz-stats-bar .qs-new-btn {
       padding: 5px 14px; border-radius: 8px; font-size: 0.78rem;
       font-weight: 600; cursor: pointer; border: none;
-      background: linear-gradient(135deg, #059669, #34d399);
+      background: linear-gradient(135deg, #4a7c59, #7fa886);
       color: #fff; transition: all 0.15s;
     }
     .quiz-stats-bar .qs-new-btn:hover { transform: scale(1.03); }
@@ -633,9 +633,9 @@
       border-bottom: 2.5px solid transparent; transition: all 0.2s;
       white-space: nowrap;
     }
-    .mastery-tab:hover { color: #059669; }
+    .mastery-tab:hover { color: #4a7c59; }
     .mastery-tab.active {
-      color: #059669; border-bottom-color: #059669;
+      color: #4a7c59; border-bottom-color: #4a7c59;
     }
 
     /* Option / ExpPart mastery cards */
@@ -649,9 +649,9 @@
       padding: 12px 16px; background: #fafbfc; border-bottom: 1px solid #eee;
       cursor: pointer; transition: background 0.15s;
     }
-    .chip-mastery-group-header:hover { background: #ecfdf5; }
+    .chip-mastery-group-header:hover { background: #f0f4f1; }
     .chip-mastery-group-header .cmg-qid {
-      background: linear-gradient(135deg, #059669, #34d399);
+      background: linear-gradient(135deg, #4a7c59, #7fa886);
       color: #fff; font-weight: 700; font-size: 0.72rem;
       padding: 3px 10px; border-radius: 8px;
     }
@@ -720,7 +720,7 @@
       min-width: 22px; height: 22px; border-radius: 6px;
       display: flex; align-items: center; justify-content: center;
       font-size: 0.62rem; font-weight: 700; color: #fff;
-      background: #34d399; flex-shrink: 0;
+      background: #7fa886; flex-shrink: 0;
     }
 
     /* Option summary stats */
@@ -740,31 +740,31 @@
       display: flex; align-items: center; gap: 8px;
       padding: 10px 14px; margin: 4px 12px 8px;
       border-radius: 10px; cursor: pointer;
-      background: linear-gradient(135deg, #059669, #34d399);
+      background: linear-gradient(135deg, #4a7c59, #7fa886);
       color: #fff; font-weight: 600; font-size: 0.82rem;
       transition: all 0.2s; border: none; width: calc(100% - 24px);
-      box-shadow: 0 2px 8px rgba(5,150,105,0.2);
+      box-shadow: 0 2px 8px rgba(74,124,89,0.2);
     }
-    .quiz-sidebar-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(5,150,105,0.3); }
+    .quiz-sidebar-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(74,124,89,0.3); }
 
     .nav-row.quiz-hidden { display: none; }
 
-    /* ===== 返回按鈕 ===== */
-    .nav-back-btn {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      z-index: 200; display: none;
-      align-items: center; gap: 6px; padding: 10px 20px;
-      border-radius: 24px; border: none; cursor: pointer;
-      background: rgba(45,55,72,0.92); color: #fff;
-      font-size: 0.82rem; font-weight: 600;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      transition: all 0.2s; backdrop-filter: blur(8px);
+    /* ===== 頂部導航列 ===== */
+    .top-nav-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 4px 4px; min-height: 36px;
     }
-    .nav-back-btn:hover { background: rgba(45,55,72,1); transform: translateX(-50%) translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
-    .nav-back-btn:active { transform: translateX(-50%) scale(0.96); }
-    @media (max-width: 768px) {
-      .nav-back-btn { bottom: 16px; font-size: 0.78rem; padding: 8px 16px; }
+    .top-nav-btn {
+      display: none; /* 預設隱藏，有歷史或有頁面時才顯示 */
+      align-items: center; gap: 4px;
+      padding: 6px 14px; border-radius: 8px; border: 1.5px solid #dde3dd;
+      background: #fff; color: #5a6b5e; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
     }
+    .top-nav-btn:hover { background: #f0f4f1; border-color: #b8cebc; color: #4a7c59; }
+    .top-nav-btn:active { transform: scale(0.96); }
+    .top-nav-btn.visible { display: flex; }
+    .top-nav-spacer { flex: 1; }
 
     /* ===== Divider ===== */
     .divider {
@@ -800,22 +800,22 @@
       white-space: nowrap;
       box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     }
-    .answer-chip:hover { border-color: #34d399; background: #f0fdf4; box-shadow: 0 2px 8px rgba(52,211,153,0.1); }
+    .answer-chip:hover { border-color: #7fa886; background: #f4f7f4; box-shadow: 0 2px 8px rgba(127,168,134,0.1); }
     .answer-chip:active { cursor: grabbing; }
     .answer-chip.dragging-source { opacity: 0.3; transform: scale(0.95); }
     .answer-chip.placed { display: none; }
 
     .exp-chip {
       background: #fff;
-      border: 1.5px solid #a7f3d0;
+      border: 1.5px solid #b8cebc;
       border-radius: 12px; padding: 10px 16px;
       font-size: 0.9rem; font-weight: 500; color: #555;
       cursor: grab; touch-action: none;
       transition: all 0.2s;
       max-width: 100%; line-height: 1.55;
-      box-shadow: 0 1px 4px rgba(5,150,105,0.06);
+      box-shadow: 0 1px 4px rgba(74,124,89,0.06);
     }
-    .exp-chip:hover { border-color: #059669; background: #f0fdf4; }
+    .exp-chip:hover { border-color: #4a7c59; background: #f4f7f4; }
     .exp-chip:active { cursor: grabbing; }
     .exp-chip.dragging-source { opacity: 0.3; transform: scale(0.95); }
     .exp-chip.placed { display: none; }
@@ -850,11 +850,11 @@
       transition: none; max-width: 70vw; opacity: 0.92;
     }
     .drag-ghost.ghost-answer {
-      background: #fff; border: 2px solid #34d399; color: #444;
+      background: #fff; border: 2px solid #7fa886; color: #444;
       white-space: nowrap;
     }
     .drag-ghost.ghost-exp {
-      background: #fff; border: 2px solid #059669; color: #444;
+      background: #fff; border: 2px solid #4a7c59; color: #444;
       font-size: 0.88rem; white-space: normal; line-height: 1.45;
     }
 
@@ -867,17 +867,17 @@
     .completion-banner .emoji { font-size: 3.5rem; }
     .completion-banner h2 {
       font-size: 1.4rem; margin: 10px 0;
-      background: linear-gradient(135deg, #059669, #34d399);
+      background: linear-gradient(135deg, #4a7c59, #7fa886);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .restart-btn {
       margin-top: 16px; padding: 14px 36px; font-size: 1.05rem; font-weight: 600;
-      color: #fff; background: linear-gradient(135deg, #059669, #34d399);
+      color: #fff; background: linear-gradient(135deg, #4a7c59, #7fa886);
       border: none; border-radius: 14px; cursor: pointer;
       transition: transform 0.15s, box-shadow 0.2s;
-      box-shadow: 0 4px 12px rgba(5,150,105,0.25);
+      box-shadow: 0 4px 12px rgba(74,124,89,0.25);
     }
-    .restart-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(5,150,105,0.3); }
+    .restart-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(74,124,89,0.3); }
 
     .section-hidden { display: none; }
     .spacer { height: 60px; }
@@ -903,7 +903,7 @@
     }
     .import-header h2 {
       font-size: 1.2rem; font-weight: 700;
-      background: linear-gradient(135deg, #059669, #34d399);
+      background: linear-gradient(135deg, #4a7c59, #7fa886);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .import-close-btn {
@@ -923,14 +923,14 @@
       background: transparent; font-size: 0.82rem; font-weight: 600;
       color: #888; cursor: pointer; transition: all 0.2s; text-align: center;
     }
-    .import-tab.active { background: #fff; color: #059669; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .import-tab.active { background: #fff; color: #4a7c59; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
     .import-hint {
       font-size: 0.78rem; color: #aaa; line-height: 1.6; margin-bottom: 10px;
       background: #fafbfc; border-radius: 10px; padding: 10px 12px;
       border: 1px solid #eef0f2;
     }
     .import-hint code {
-      background: #d1fae5; color: #059669; padding: 1px 5px; border-radius: 4px;
+      background: #dce6de; color: #4a7c59; padding: 1px 5px; border-radius: 4px;
       font-size: 0.75rem;
     }
     .import-textarea {
@@ -941,7 +941,7 @@
       outline: none; transition: border-color 0.2s; line-height: 1.6;
       -webkit-user-select: text; user-select: text;
     }
-    .import-textarea:focus { border-color: #34d399; background: #fff; }
+    .import-textarea:focus { border-color: #7fa886; background: #fff; }
     .import-textarea::placeholder { color: #ccc; }
     .import-footer {
       padding: 14px 24px 20px; display: flex; gap: 10px; justify-content: flex-end;
@@ -954,10 +954,10 @@
     .import-btn.secondary { background: #f0f0f5; color: #666; }
     .import-btn.secondary:hover { background: #e8e8ee; }
     .import-btn.primary {
-      background: linear-gradient(135deg, #059669, #34d399); color: #fff;
-      box-shadow: 0 3px 10px rgba(5,150,105,0.25);
+      background: linear-gradient(135deg, #4a7c59, #7fa886); color: #fff;
+      box-shadow: 0 3px 10px rgba(74,124,89,0.25);
     }
-    .import-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(5,150,105,0.3); }
+    .import-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(74,124,89,0.3); }
     .import-btn.danger {
       background: #fff0f0; color: #ef4444; border: 1px solid #fecaca;
     }
@@ -966,18 +966,18 @@
       margin-top: 10px; padding: 10px 14px; border-radius: 10px;
       font-size: 0.82rem; line-height: 1.6; animation: fadeIn 0.3s ease;
     }
-    .import-result.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .import-result.success { background: #f4f7f4; color: #16a34a; border: 1px solid #bbf7d0; }
     .import-result.error { background: #fff0f0; color: #ef4444; border: 1px solid #fecaca; }
 
     /* Sidebar import button */
     .sidebar-import-btn {
       display: flex; align-items: center; gap: 8px;
       padding: 9px 10px; border-radius: 10px; cursor: pointer;
-      font-size: 0.85rem; font-weight: 500; color: #059669;
-      background: #ecfdf5; border: 1.5px dashed #a7f3d0;
+      font-size: 0.85rem; font-weight: 500; color: #4a7c59;
+      background: #f0f4f1; border: 1.5px dashed #b8cebc;
       margin: 6px 0 2px; transition: all 0.2s;
     }
-    .sidebar-import-btn:hover { background: #d1fae5; border-color: #34d399; }
+    .sidebar-import-btn:hover { background: #dce6de; border-color: #7fa886; }
     .sidebar-clear-btn {
       display: flex; align-items: center; gap: 8px;
       padding: 7px 10px; border-radius: 8px; cursor: pointer;
@@ -994,8 +994,8 @@
       font-size: 0.82rem; color: #666; transition: all 0.15s;
       margin-bottom: 1px;
     }
-    .answer-index-item:hover { background: #ecfdf5; }
-    .answer-index-item.active-answer { background: #d1fae5; color: #059669; font-weight: 600; }
+    .answer-index-item:hover { background: #f0f4f1; }
+    .answer-index-item.active-answer { background: #dce6de; color: #4a7c59; font-weight: 600; }
     .answer-index-item .ai-icon { font-size: 0.85rem; flex-shrink: 0; width: 20px; text-align: center; }
     .answer-index-item .ai-text { flex: 1; font-weight: 500; }
     .answer-index-item .ai-badge {
@@ -1003,7 +1003,7 @@
       border-radius: 8px; background: #f0f0f5; color: #999;
       min-width: 20px; text-align: center;
     }
-    .answer-index-item.active-answer .ai-badge { background: #d1fae5; color: #059669; }
+    .answer-index-item.active-answer .ai-badge { background: #dce6de; color: #4a7c59; }
 
     /* ===== Option Index in Sidebar ===== */
     .option-index-item {
@@ -1012,7 +1012,7 @@
       font-size: 0.82rem; color: #666; transition: all 0.15s;
       margin-bottom: 1px;
     }
-    .option-index-item:hover { background: #f0fdf4; }
+    .option-index-item:hover { background: #f4f7f4; }
     .option-index-item.active-option { background: #dcfce7; color: #16a34a; font-weight: 600; }
     .option-index-item .oi-icon { font-size: 0.85rem; flex-shrink: 0; width: 20px; text-align: center; }
     .option-index-item .oi-text { flex: 1; font-weight: 500; }
@@ -1026,9 +1026,9 @@
     /* Backlink panel variant for options */
     .backlink-panel.option-panel { border-color: #16a34a; }
     .backlink-panel.option-panel .backlink-title { color: #16a34a; }
-    .backlink-panel.option-panel .backlink-close { background: #f0fdf4; color: #16a34a; }
+    .backlink-panel.option-panel .backlink-close { background: #f4f7f4; color: #16a34a; }
     .backlink-panel.option-panel .backlink-close:hover { background: #dcfce7; }
-    .backlink-panel.option-panel .backlink-question { background: #f0fdf4; border-color: #bbf7d0; }
+    .backlink-panel.option-panel .backlink-question { background: #f4f7f4; border-color: #bbf7d0; }
     .backlink-panel.option-panel .backlink-question:hover { background: #dcfce7; border-color: #16a34a; }
     .backlink-panel.option-panel .backlink-question .bq-num { background: #16a34a; }
 
@@ -1398,7 +1398,7 @@
     <div class="sidebar-header">
       <div class="sidebar-logo">
         <div class="logo-icon">F</div>
-        Flashcard v8.0
+        Flashcard v9.0
       </div>
       <div class="sidebar-search">
         <span class="search-icon">🔍</span>
@@ -1470,7 +1470,7 @@
     </div>
 
     <div class="sidebar-footer">
-      Flashcard v8.0
+      Flashcard v9.0
     </div>
   </aside>
 
@@ -1481,6 +1481,11 @@
   <main class="main-content" id="mainContent">
     <!-- 頂部區：header + nav + 題目卡 -->
     <div id="quizFixedTop">
+      <div class="top-nav-bar">
+        <button class="top-nav-btn" id="navBackBtn" onclick="navBack()">← 返回</button>
+        <div class="top-nav-spacer"></div>
+        <button class="top-nav-btn" id="navForwardBtn" onclick="navForward()">下一步 →</button>
+      </div>
       <div class="header" id="mainHeader">
         <h1> Flashcard</h1>
         <div class="subtitle" id="headerSubtitle">把答案拖進正確的題目卡片中</div>
@@ -1514,9 +1519,6 @@
     <!-- 底部：quiz 模式統計條 -->
     <div class="quiz-stats-bar hidden" id="quizStatsBar"></div>
   </main>
-
-  <!-- ===== 返回按鈕 ===== -->
-  <button class="nav-back-btn" id="navBackBtn" onclick="navBack()">← 返回上一步</button>
 
   <!-- ===== 匯入 Modal ===== -->
   <div class="import-overlay hidden" id="importOverlay" onclick="if(event.target===this)closeImportModal()">
@@ -1790,41 +1792,41 @@
     let expCompletedSet = new Set();
     let orderCheckResults = new Map();
 
-    // 導航歷史（返回功能）
-    // 每個條目: { type: 'single'|'quiz'|'dashboard', page?: N, tab?: string, backlink?: {...} }
+    // 導航歷史（返回 / 前進功能）
     let navHistory = [];
+    let navForwardHistory = [];
 
-    function pushNavState() {
+    function buildNavState() {
       const state = { type: viewMode, page: currentPage };
       if (viewMode === 'single' && document.getElementById('cardArea').querySelector('.mastery-dashboard')) {
         state.type = 'dashboard';
         state.tab = dashboardTab;
       }
-      // 記錄反向連結狀態
       if (activeAnswerKey) state.backlink = { kind: 'answer', key: activeAnswerKey };
       else if (activeOptionKey) state.backlink = { kind: 'option', key: activeOptionKey };
       else if (activeExpKey) state.backlink = { kind: 'exp', key: activeExpKey };
       else if (activeWordKey) state.backlink = { kind: 'word', key: activeWordKey };
-      navHistory.push(state);
-      if (navHistory.length > 50) navHistory.shift(); // 限制長度
+      return state;
     }
 
-    function navBack() {
-      if (navHistory.length === 0) return;
-      const prev = navHistory.pop();
-      if (prev.type === 'dashboard') {
-        dashboardTab = prev.tab || 'questions';
-        showDashboard(null, true); // true = suppress push
-      } else if (prev.type === 'quiz') {
-        startQuiz(true); // suppress push
+    function pushNavState() {
+      navHistory.push(buildNavState());
+      navForwardHistory = []; // 新導航清除前進歷史
+      if (navHistory.length > 50) navHistory.shift();
+    }
+
+    function restoreNavState(state) {
+      if (state.type === 'dashboard') {
+        dashboardTab = state.tab || 'questions';
+        showDashboard(null, true);
+      } else if (state.type === 'quiz') {
+        startQuiz(true);
       } else {
-        // 回到 single 模式
         viewMode = 'single';
-        currentPage = prev.page || 0;
+        currentPage = state.page || 0;
         activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null;
-        // 恢復反向連結
-        if (prev.backlink) {
-          const bk = prev.backlink;
+        if (state.backlink) {
+          const bk = state.backlink;
           if (bk.kind === 'answer') activeAnswerKey = bk.key;
           else if (bk.kind === 'option') activeOptionKey = bk.key;
           else if (bk.kind === 'exp') activeExpKey = bk.key;
@@ -1834,15 +1836,32 @@
         renderAll();
         document.getElementById('mainContent').scrollTo(0, 0);
       }
-      updateBackButton();
     }
 
-    function updateBackButton() {
-      const btn = document.getElementById('navBackBtn');
-      if (btn) {
-        btn.style.display = navHistory.length > 0 ? 'flex' : 'none';
-      }
+    function navBack() {
+      if (navHistory.length === 0) return;
+      navForwardHistory.push(buildNavState());
+      const prev = navHistory.pop();
+      restoreNavState(prev);
+      updateNavButtons();
     }
+
+    function navForward() {
+      if (navForwardHistory.length === 0) return;
+      navHistory.push(buildNavState());
+      const next = navForwardHistory.pop();
+      restoreNavState(next);
+      updateNavButtons();
+    }
+
+    function updateNavButtons() {
+      const backBtn = document.getElementById('navBackBtn');
+      const fwdBtn = document.getElementById('navForwardBtn');
+      if (backBtn) backBtn.classList.toggle('visible', navHistory.length > 0);
+      if (fwdBtn) fwdBtn.classList.toggle('visible', navForwardHistory.length > 0);
+    }
+    // 相容舊名
+    function updateBackButton() { updateNavButtons(); }
 
     // Quiz 模式
     let viewMode = 'quiz'; // 'quiz' | 'single'
@@ -2049,7 +2068,7 @@
         const questionsHtml = matchedQuestions.map(q => {
           const preview = q.question.length > 40 ? q.question.slice(0, 40) + '…' : q.question;
           const idx = questions.indexOf(q);
-          const catTag = q.category ? `<span style="font-size:0.65rem;color:#999;background:#ecfdf5;padding:1px 5px;border-radius:4px;margin-left:4px;">${q.category}</span>` : '';
+          const catTag = q.category ? `<span style="font-size:0.65rem;color:#999;background:#f0f4f1;padding:1px 5px;border-radius:4px;margin-left:4px;">${q.category}</span>` : '';
           return `<div class="backlink-question" onclick="goToPageFromBacklink(${idx})">
             <span class="bq-num">第${q.id}題</span>
             <span class="bq-text">${preview}${catTag}</span>
@@ -2078,7 +2097,7 @@
           const preview = q.question.length > 40 ? q.question.slice(0, 40) + '…' : q.question;
           const idx = questions.indexOf(q);
           const label = q.labels[q.options.indexOf(activeOptionKey)] || '?';
-          const catTag = q.category ? `<span style="font-size:0.65rem;color:#999;background:#ecfdf5;padding:1px 5px;border-radius:4px;margin-left:4px;">${q.category}</span>` : '';
+          const catTag = q.category ? `<span style="font-size:0.65rem;color:#999;background:#f0f4f1;padding:1px 5px;border-radius:4px;margin-left:4px;">${q.category}</span>` : '';
           return `<div class="backlink-question" onclick="goToPageFromBacklink(${idx})">
             <span class="bq-num">第${q.id}題</span>
             <span class="bq-text">(${label}) ${preview}${catTag}</span>
@@ -2190,7 +2209,7 @@
         // 同時顯示 detail
         jtExpandedSpans.add(key + ':detail');
       }
-      renderAll();
+      rerenderWordTraceOnly();
     }
     function showJtDetail(key) {
       // 切換 detail 面板（獨立控制，不影響其他 span）
@@ -2200,11 +2219,23 @@
       } else {
         jtExpandedSpans.add(detailKey);
       }
-      renderAll();
+      rerenderWordTraceOnly();
     }
     function switchJtTab(tab) {
       jtDetailTab = tab;
-      renderAll();
+      rerenderWordTraceOnly();
+    }
+
+    // 只重新渲染 word trace 區域，避免整頁閃爍
+    function rerenderWordTraceOnly() {
+      if (!activeWordKey) { renderAll(); return; }
+      const area = document.getElementById('backlinkArea');
+      if (!area) { renderAll(); return; }
+      // 記住捲動位置
+      const scroller = document.getElementById('quizPoolScroller') || document.getElementById('mainContent');
+      const scrollTop = scroller ? scroller.scrollTop : 0;
+      area.innerHTML = renderWordTrace(activeWordKey);
+      if (scroller) scroller.scrollTop = scrollTop;
     }
 
     // 計算單字在文本中的相對位置（百分比）
@@ -2950,7 +2981,7 @@
         <div class="question-card ${isSolved ? 'solved' : ''}" data-qid="${q.id}">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;flex-wrap:wrap;">
             <span class="q-number">第 ${q.id} 題</span>
-            ${q.category ? `<span style="font-size:0.7rem;color:#999;background:#ecfdf5;padding:2px 8px;border-radius:6px;">${q.category}</span>` : ''}
+            ${q.category ? `<span style="font-size:0.7rem;color:#999;background:#f0f4f1;padding:2px 8px;border-radius:6px;">${q.category}</span>` : ''}
             ${masteryBadge}
           </div>
           <div class="q-text">${clickableQuestion}</div>
@@ -2992,7 +3023,7 @@
         <div class="question-card ${isSolved ? 'solved' : ''}" data-qid="${q.id}">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
             <span class="q-number">第 ${q.id} 題</span>
-            ${q.category ? `<span style="font-size:0.65rem;color:#999;background:#ecfdf5;padding:1px 6px;border-radius:5px;">${q.category}</span>` : ''}
+            ${q.category ? `<span style="font-size:0.65rem;color:#999;background:#f0f4f1;padding:1px 6px;border-radius:5px;">${q.category}</span>` : ''}
           </div>
           <div class="q-text">${clickableQuestion}</div>
           <div class="q-chinese-toggle" onclick="toggleCh(this, ${q.id})">
@@ -3803,7 +3834,7 @@
 
       const summaryHtml = `
         <div class="option-summary-bar">
-          <div class="option-summary-item"><div class="os-val" style="color:#059669;">${totalOpts}</div><div class="os-label">選項總數</div></div>
+          <div class="option-summary-item"><div class="os-val" style="color:#4a7c59;">${totalOpts}</div><div class="os-label">選項總數</div></div>
           <div class="option-summary-item"><div class="os-val" style="color:#0284c7;">${touchedOpts}</div><div class="os-label">已嘗試</div></div>
           <div class="option-summary-item"><div class="os-val" style="color:#16a34a;">${correctOpts}</div><div class="os-label">正確使用</div></div>
           <div class="option-summary-item"><div class="os-val" style="color:#dc2626;">${confusedOpts}</div><div class="os-label">曾放錯</div></div>
@@ -3865,7 +3896,7 @@
       }).join('');
 
       return `${summaryHtml}
-        <div style="font-size:0.82rem;font-weight:700;color:#059669;margin-bottom:10px;">🏷️ 各題選項操作紀錄</div>
+        <div style="font-size:0.82rem;font-weight:700;color:#4a7c59;margin-bottom:10px;">🏷️ 各題選項操作紀錄</div>
         ${groupsHtml}`;
     }
 
@@ -3894,7 +3925,7 @@
 
       const summaryHtml = `
         <div class="option-summary-bar">
-          <div class="option-summary-item"><div class="os-val" style="color:#059669;">${totalParts}</div><div class="os-label">詳解卡總數</div></div>
+          <div class="option-summary-item"><div class="os-val" style="color:#4a7c59;">${totalParts}</div><div class="os-label">詳解卡總數</div></div>
           <div class="option-summary-item"><div class="os-val" style="color:#0284c7;">${touchedParts}</div><div class="os-label">已嘗試</div></div>
           <div class="option-summary-item"><div class="os-val" style="color:#16a34a;">${correctParts}</div><div class="os-label">正確歸位</div></div>
           <div class="option-summary-item"><div class="os-val" style="color:#dc2626;">${wrongParts}</div><div class="os-label">曾放錯</div></div>
@@ -3956,13 +3987,13 @@
       }).join('');
 
       return `${summaryHtml}
-        <div style="font-size:0.82rem;font-weight:700;color:#34d399;margin-bottom:10px;">📝 各題詳解小卡狀態</div>
+        <div style="font-size:0.82rem;font-weight:700;color:#7fa886;margin-bottom:10px;">📝 各題詳解小卡狀態</div>
         ${groupsHtml}`;
     }
 
     function restart() {
       solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear(); orderCheckResults.clear();
-      quizAttempts.clear(); navHistory = [];
+      quizAttempts.clear(); navHistory = []; navForwardHistory = [];
       currentPage = 0;
       shuffle(answerChips); buildExpChips();
       document.getElementById('completionArea').innerHTML = '';
@@ -4208,7 +4239,7 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
       solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear(); orderCheckResults.clear();
       quizAttempts.clear(); quizIndices = []; questionStats.clear();
       optionAttempts.clear(); expPartAttempts.clear();
-      navHistory = [];
+      navHistory = []; navForwardHistory = [];
       answerChips = []; expChips = [];
       viewMode = 'single';
       currentPage = 0;
