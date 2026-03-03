@@ -2216,12 +2216,24 @@
       rerenderWordTraceOnly();
     }
 
-    // 只重新渲染 word trace 區域，避免整頁閃爍
+    // 只重新渲染 word trace 的 span rows，避免整頁閃爍
     function rerenderWordTraceOnly() {
       if (!activeWordKey) { rerenderBacklinkOnly(); return; }
+      // 嘗試只更新 span rows 區域（不動 header/stats/legend/minimap/co-words）
+      const spanContainer = document.getElementById('jtSpanRows');
+      if (spanContainer) {
+        const data = collectWordTraceData(activeWordKey);
+        if (data) {
+          const scroller = document.getElementById('quizPoolScroller') || document.getElementById('mainContent');
+          const scrollTop = scroller ? scroller.scrollTop : 0;
+          spanContainer.innerHTML = buildJtSpanRowsHtml(data.qEntries, activeWordKey, data.hlWord, data.srcColors);
+          if (scroller) scroller.scrollTop = scrollTop;
+          return;
+        }
+      }
+      // fallback：整個 trace 重建（首次開啟或容器不存在時）
       const area = document.getElementById('backlinkArea');
       if (!area) { renderAll(); return; }
-      // 記住捲動位置
       const scroller = document.getElementById('quizPoolScroller') || document.getElementById('mainContent');
       const scrollTop = scroller ? scroller.scrollTop : 0;
       area.innerHTML = renderWordTrace(activeWordKey);
@@ -2265,18 +2277,112 @@
       return { left: minLeft, width: Math.max(3, maxRight - minLeft) };
     }
 
-    function renderWordTrace(wordKey) {
+    // 產生 span rows HTML（獨立函式，可局部更新）
+    function buildJtSpanRowsHtml(qEntries, wordKey, hlWord, srcColors) {
+      let html = '';
+      qEntries.forEach((qEntry, qi) => {
+        const q = qEntry.question;
+        const idx = questions.indexOf(q);
+        const color = jtColor(qi);
+        const cat = String(q.category || '');
+
+        const sourceGroups = {};
+        qEntry.contexts.forEach(c => {
+          if (!sourceGroups[c.source]) sourceGroups[c.source] = [];
+          sourceGroups[c.source].push(c);
+        });
+
+        const parentKey = `${q.id}-all`;
+        const isParentExpanded = jtExpandedSpans.has(parentKey);
+        const parentRange = findSpanRange(qEntry.contexts, wordKey);
+        const preview = q.question.length > 25 ? q.question.slice(0, 25) + '…' : q.question;
+
+        html += `
+          <div class="jt-span-row jt-depth-0 ${isParentExpanded ? 'jt-expanded' : ''}" onclick="toggleJtSpan('${parentKey}')">
+            <div class="jt-span-service">
+              <span class="jt-span-toggle ${isParentExpanded ? 'open' : ''}">▶</span>
+              <span class="jt-span-svc-dot" style="background:${color}"></span>
+              <span class="jt-span-svc-name">Q${q.id} ${cat}</span>
+              <span class="jt-span-op-name">${qEntry.contexts.length} spans</span>
+            </div>
+            <div class="jt-span-timeline">
+              <div class="jt-span-bar" style="left:${parentRange.left}%;width:${parentRange.width}%;background:${color};">
+                <span class="jt-span-bar-label">${preview}</span>
+              </div>
+            </div>
+          </div>`;
+
+        if (jtExpandedSpans.has(parentKey + ':detail')) {
+          html += renderJtDetail(q, idx, qEntry.contexts, wordKey, hlWord, color, cat);
+        }
+
+        if (isParentExpanded) {
+          Object.entries(sourceGroups).forEach(([src, ctxs]) => {
+            const childKey = `${q.id}-${src}`;
+            const isChildExpanded = jtExpandedSpans.has(childKey);
+            const srcColor = srcColors[src] || color;
+            const childRange = findSpanRange(ctxs, wordKey);
+
+            html += `
+              <div class="jt-span-row jt-depth-1 ${isChildExpanded ? 'jt-expanded' : ''}" onclick="event.stopPropagation();toggleJtSpan('${childKey}')">
+                <div class="jt-span-service">
+                  <span class="jt-span-toggle ${isChildExpanded ? 'open' : ''}">▶</span>
+                  <span class="jt-span-svc-dot" style="background:${srcColor}"></span>
+                  <span class="jt-span-svc-name">${src}</span>
+                  <span class="jt-span-op-name">×${ctxs.length}</span>
+                </div>
+                <div class="jt-span-timeline">
+                  <div class="jt-span-bar" style="left:${childRange.left}%;width:${childRange.width}%;background:${srcColor};opacity:0.75;">
+                    <span class="jt-span-bar-label">${src} (${ctxs.length})</span>
+                  </div>
+                </div>
+              </div>`;
+
+            if (jtExpandedSpans.has(childKey + ':detail')) {
+              html += renderJtDetail(q, idx, ctxs, wordKey, hlWord, srcColor, src);
+            }
+
+            if (isChildExpanded) {
+              ctxs.forEach((c, ci) => {
+                const leafKey = `${q.id}-${src}-${ci}`;
+                const isLeafExpanded = jtExpandedSpans.has(leafKey) || jtExpandedSpans.has(leafKey + ':detail');
+                const leafPos = findWordPos(c.context, wordKey);
+                const ctxPreview = c.context.length > 30 ? c.context.slice(0, 30) + '…' : c.context;
+
+                html += `
+                  <div class="jt-span-row jt-depth-2 ${isLeafExpanded ? 'jt-expanded' : ''}" onclick="event.stopPropagation();toggleJtSpan('${leafKey}')">
+                    <div class="jt-span-service">
+                      <span class="jt-span-svc-dot" style="background:${srcColor};opacity:0.6"></span>
+                      <span class="jt-span-op-name" style="color:#718096;">${ctxPreview}</span>
+                    </div>
+                    <div class="jt-span-timeline">
+                      <div class="jt-span-bar" style="left:${leafPos.left}%;width:${leafPos.width}%;background:${srcColor};opacity:0.5;">
+                      </div>
+                    </div>
+                  </div>`;
+
+                if (isLeafExpanded) {
+                  html += renderJtLeafDetail(q, idx, c, wordKey, hlWord, srcColor);
+                }
+              });
+            }
+          });
+        }
+      });
+      return html;
+    }
+
+    // 收集 word trace 的共用資料
+    function collectWordTraceData(wordKey) {
       const wordIndex = buildWordIndex();
       const entry = wordIndex.get(wordKey);
-      if (!entry || entry.sources.length === 0) return '';
+      if (!entry || entry.sources.length === 0) return null;
 
-      // ── 1. 收集所有 spans ──
       const qMap = new Map();
       entry.sources.forEach(s => {
         if (!qMap.has(s.question.id)) qMap.set(s.question.id, { question: s.question, contexts: [] });
         qMap.get(s.question.id).contexts.push(s);
       });
-      // 也搜尋詳解
       questions.forEach(q => {
         q.expParts.forEach((part) => {
           if (part.toLowerCase().includes(wordKey)) {
@@ -2290,12 +2396,18 @@
         });
       });
       const qEntries = [...qMap.values()].sort((a, b) => a.question.id - b.question.id);
-
-      // 高亮
       const hlWord = (text) => {
         const re = new RegExp(`(${wordKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
         return text.replace(re, '<span class="word-highlight">$1</span>');
       };
+      const srcColors = { '題目': '#4299e1', '選項': '#9f7aea', '詳解': '#48bb78' };
+      return { entry, qEntries, hlWord, srcColors, wordIndex };
+    }
+
+    function renderWordTrace(wordKey) {
+      const data = collectWordTraceData(wordKey);
+      if (!data) return '';
+      const { entry, qEntries, hlWord, srcColors, wordIndex } = data;
 
       // 統計
       const totalSpans = qEntries.reduce((sum, e) => sum + e.contexts.length, 0);
@@ -2335,7 +2447,6 @@
         </div>`;
 
       // ── 4. Legend ──
-      const srcColors = { '題目': '#4299e1', '選項': '#9f7aea', '詳解': '#48bb78' };
       const legendHtml = `
         <div class="jt-legend">
           ${qEntries.map((e, i) => `
@@ -2374,100 +2485,7 @@
         </div>`;
 
       // ── 7. Span Rows ──
-      let spanRowsHtml = '';
-      qEntries.forEach((qEntry, qi) => {
-        const q = qEntry.question;
-        const idx = questions.indexOf(q);
-        const color = jtColor(qi);
-        const cat = String(q.category || '');
-
-        // 按 source 分類
-        const sourceGroups = {};
-        qEntry.contexts.forEach(c => {
-          if (!sourceGroups[c.source]) sourceGroups[c.source] = [];
-          sourceGroups[c.source].push(c);
-        });
-
-        // Depth-0: 父 span — 範圍 = 所有 contexts 的位置跨度
-        const parentKey = `${q.id}-all`;
-        const isParentExpanded = jtExpandedSpans.has(parentKey);
-        const parentRange = findSpanRange(qEntry.contexts, wordKey);
-        const preview = q.question.length > 25 ? q.question.slice(0, 25) + '…' : q.question;
-
-        spanRowsHtml += `
-          <div class="jt-span-row jt-depth-0 ${isParentExpanded ? 'jt-expanded' : ''}" onclick="toggleJtSpan('${parentKey}')">
-            <div class="jt-span-service">
-              <span class="jt-span-toggle ${isParentExpanded ? 'open' : ''}">▶</span>
-              <span class="jt-span-svc-dot" style="background:${color}"></span>
-              <span class="jt-span-svc-name">Q${q.id} ${cat}</span>
-              <span class="jt-span-op-name">${qEntry.contexts.length} spans</span>
-            </div>
-            <div class="jt-span-timeline">
-              <div class="jt-span-bar" style="left:${parentRange.left}%;width:${parentRange.width}%;background:${color};">
-                <span class="jt-span-bar-label">${preview}</span>
-              </div>
-            </div>
-          </div>`;
-
-        if (jtExpandedSpans.has(parentKey + ':detail')) {
-          spanRowsHtml += renderJtDetail(q, idx, qEntry.contexts, wordKey, hlWord, color, cat);
-        }
-
-        // Depth-1: 來源類型 — 範圍 = 該類型所有 contexts 的位置跨度
-        if (isParentExpanded) {
-          Object.entries(sourceGroups).forEach(([src, ctxs]) => {
-            const childKey = `${q.id}-${src}`;
-            const isChildExpanded = jtExpandedSpans.has(childKey);
-            const srcColor = srcColors[src] || color;
-            const childRange = findSpanRange(ctxs, wordKey);
-
-            spanRowsHtml += `
-              <div class="jt-span-row jt-depth-1 ${isChildExpanded ? 'jt-expanded' : ''}" onclick="event.stopPropagation();toggleJtSpan('${childKey}')">
-                <div class="jt-span-service">
-                  <span class="jt-span-toggle ${isChildExpanded ? 'open' : ''}">▶</span>
-                  <span class="jt-span-svc-dot" style="background:${srcColor}"></span>
-                  <span class="jt-span-svc-name">${src}</span>
-                  <span class="jt-span-op-name">×${ctxs.length}</span>
-                </div>
-                <div class="jt-span-timeline">
-                  <div class="jt-span-bar" style="left:${childRange.left}%;width:${childRange.width}%;background:${srcColor};opacity:0.75;">
-                    <span class="jt-span-bar-label">${src} (${ctxs.length})</span>
-                  </div>
-                </div>
-              </div>`;
-
-            if (jtExpandedSpans.has(childKey + ':detail')) {
-              spanRowsHtml += renderJtDetail(q, idx, ctxs, wordKey, hlWord, srcColor, src);
-            }
-
-            // Depth-2: 個別上下文 — 精確位置
-            if (isChildExpanded) {
-              ctxs.forEach((c, ci) => {
-                const leafKey = `${q.id}-${src}-${ci}`;
-                const isLeafExpanded = jtExpandedSpans.has(leafKey) || jtExpandedSpans.has(leafKey + ':detail');
-                const leafPos = findWordPos(c.context, wordKey);
-                const ctxPreview = c.context.length > 30 ? c.context.slice(0, 30) + '…' : c.context;
-
-                spanRowsHtml += `
-                  <div class="jt-span-row jt-depth-2 ${isLeafExpanded ? 'jt-expanded' : ''}" onclick="event.stopPropagation();toggleJtSpan('${leafKey}')">
-                    <div class="jt-span-service">
-                      <span class="jt-span-svc-dot" style="background:${srcColor};opacity:0.6"></span>
-                      <span class="jt-span-op-name" style="color:#718096;">${ctxPreview}</span>
-                    </div>
-                    <div class="jt-span-timeline">
-                      <div class="jt-span-bar" style="left:${leafPos.left}%;width:${leafPos.width}%;background:${srcColor};opacity:0.5;">
-                      </div>
-                    </div>
-                  </div>`;
-
-                if (isLeafExpanded) {
-                  spanRowsHtml += renderJtLeafDetail(q, idx, c, wordKey, hlWord, srcColor);
-                }
-              });
-            }
-          });
-        }
-      });
+      const spanRowsHtml = buildJtSpanRowsHtml(qEntries, wordKey, hlWord, srcColors);
 
       // ── 8. Co-occurring Words (也用句中相對位置) ──
       const coWordMap = new Map();
@@ -2536,7 +2554,7 @@
           ${legendHtml}
           ${minimapHtml}
           ${timelineHeaderHtml}
-          ${spanRowsHtml}
+          <div id="jtSpanRows">${spanRowsHtml}</div>
           ${coWordsHtml}
         </div>`;
     }
