@@ -513,6 +513,116 @@
     .qs-mastery-dot.mastery-weak { background: #fee2e2; color: #dc2626; }
     .qs-mastery-dot.mastery-none { background: #fecaca; color: #b91c1c; }
 
+    /* ===== Mastery Dashboard ===== */
+    .dashboard-sidebar-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; margin: 4px 12px 4px;
+      border-radius: 10px; cursor: pointer;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      color: #fff; font-weight: 600; font-size: 0.82rem;
+      transition: all 0.2s; border: none; width: calc(100% - 24px);
+      box-shadow: 0 2px 8px rgba(245,158,11,0.2);
+    }
+    .dashboard-sidebar-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(245,158,11,0.3); }
+
+    .mastery-dashboard {
+      animation: fadeIn 0.3s ease;
+    }
+    .mastery-dashboard-header {
+      text-align: center; padding: 8px 0 14px;
+    }
+    .mastery-dashboard-header h2 {
+      font-size: 1.2rem; font-weight: 700;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .mastery-dashboard-header .subtitle { font-size: 0.82rem; color: #999; margin-top: 4px; }
+
+    .mastery-summary {
+      display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .mastery-summary-card {
+      background: #fff; border-radius: 14px; padding: 14px 18px;
+      border: 1.5px solid #eee; text-align: center; min-width: 90px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    .mastery-summary-card .ms-val { font-size: 1.8rem; font-weight: 800; }
+    .mastery-summary-card .ms-val.green { color: #16a34a; }
+    .mastery-summary-card .ms-val.amber { color: #d97706; }
+    .mastery-summary-card .ms-val.red { color: #dc2626; }
+    .mastery-summary-card .ms-val.blue { color: #0284c7; }
+    .mastery-summary-card .ms-label { font-size: 0.7rem; color: #999; margin-top: 2px; }
+
+    .mastery-heatmap {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 8px; margin-bottom: 18px;
+    }
+    .mastery-cell {
+      aspect-ratio: 1; border-radius: 12px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: 0.72rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+      border: 2px solid transparent;
+      position: relative;
+    }
+    .mastery-cell:hover { transform: scale(1.08); box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+    .mastery-cell .mc-id { font-size: 0.88rem; font-weight: 800; }
+    .mastery-cell .mc-score { font-size: 0.65rem; margin-top: 2px; opacity: 0.8; }
+    .mastery-cell .mc-bar {
+      position: absolute; bottom: 4px; left: 10%; width: 80%; height: 4px;
+      border-radius: 2px; background: rgba(255,255,255,0.4); overflow: hidden;
+    }
+    .mastery-cell .mc-bar-fill { height: 100%; border-radius: 2px; background: rgba(255,255,255,0.8); }
+    .mastery-cell.lvl-perfect { background: #16a34a; color: #fff; }
+    .mastery-cell.lvl-good { background: #4ade80; color: #fff; }
+    .mastery-cell.lvl-mid { background: #fbbf24; color: #fff; }
+    .mastery-cell.lvl-low { background: #f87171; color: #fff; }
+    .mastery-cell.lvl-none { background: #e5e7eb; color: #999; }
+
+    .mastery-ranking {
+      background: #fff; border-radius: 14px; padding: 14px 16px;
+      border: 1.5px solid #eee; box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    .mastery-ranking-title {
+      font-size: 0.88rem; font-weight: 700; color: #d97706;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .mastery-rank-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 10px;
+      transition: background 0.15s; cursor: pointer;
+    }
+    .mastery-rank-row:hover { background: #fef9c3; }
+    .mastery-rank-num {
+      font-size: 0.78rem; font-weight: 800; color: #999;
+      min-width: 24px; text-align: center;
+    }
+    .mastery-rank-bar-wrap {
+      flex: 1; height: 20px; background: #f3f4f6; border-radius: 6px;
+      overflow: hidden; position: relative;
+    }
+    .mastery-rank-bar {
+      height: 100%; border-radius: 6px; transition: width 0.5s ease;
+    }
+    .mastery-rank-bar.green { background: linear-gradient(90deg, #4ade80, #16a34a); }
+    .mastery-rank-bar.amber { background: linear-gradient(90deg, #fbbf24, #d97706); }
+    .mastery-rank-bar.red { background: linear-gradient(90deg, #fca5a5, #ef4444); }
+    .mastery-rank-bar.gray { background: #d1d5db; }
+    .mastery-rank-label {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      font-size: 0.65rem; font-weight: 700; color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .mastery-rank-text {
+      font-size: 0.72rem; color: #666; max-width: 160px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .mastery-rank-detail {
+      font-size: 0.65rem; color: #aaa; white-space: nowrap;
+    }
+
     .quiz-sidebar-btn {
       display: flex; align-items: center; gap: 8px;
       padding: 10px 14px; margin: 4px 12px 8px;
@@ -1174,6 +1284,7 @@
       </div>
 
       <button class="quiz-sidebar-btn" onclick="startQuiz()">🎲 隨機四題測驗</button>
+      <button class="dashboard-sidebar-btn" onclick="showDashboard()">📊 掌握度總覽</button>
 
       <div class="sidebar-import-btn" onclick="openImportModal()">
         <span>📥</span> 匯入新題目
@@ -3318,6 +3429,145 @@
         <div class="qs-item">📖 <span class="qs-val">${quizExpDone}/${total}</span></div>
         <div class="qs-item">📊 <span class="qs-val ${overallCls}">${overallPct}%</span> 掌握</div>
         <button class="qs-new-btn" onclick="startQuiz()">🎲 再來四題</button>`;
+    }
+
+    // ==================== 掌握度 Dashboard ====================
+    function showDashboard() {
+      viewMode = 'single'; // 用 single 框架但顯示 dashboard
+      activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null;
+      jtExpandedSpans.clear(); jtDetailKey = null;
+
+      const mainEl = document.getElementById('mainContent');
+      mainEl.classList.remove('quiz-active');
+      document.getElementById('quizStatsBar').classList.add('hidden');
+      document.querySelector('.nav-row').classList.add('quiz-hidden');
+
+      // 渲染 dashboard 到 cardArea，清除其他區域
+      document.getElementById('cardArea').innerHTML = renderMasteryDashboard();
+      document.getElementById('backlinkArea').innerHTML = '';
+      document.getElementById('answerPool').innerHTML = '';
+      document.getElementById('expPool').innerHTML = '';
+      document.getElementById('answerDivider').classList.add('section-hidden');
+      document.getElementById('expDivider').classList.add('section-hidden');
+      document.getElementById('completionArea').innerHTML = '';
+      document.getElementById('reverseTip').classList.remove('show');
+      renderSidebar();
+      renderAnswerIndex();
+      renderOptionIndex();
+      renderExpIndex();
+      renderWordIndex();
+
+      document.getElementById('mainContent').scrollTo(0, 0);
+      if (window.innerWidth <= 768) toggleSidebar();
+    }
+
+    function renderMasteryDashboard() {
+      if (questions.length === 0) {
+        return `<div style="text-align:center; padding:60px 20px; color:#bbb;">
+          <div style="font-size:3rem; margin-bottom:12px;">📊</div>
+          <div style="font-size:1rem;">還沒有題目</div>
+        </div>`;
+      }
+
+      // 統計數據
+      const total = questions.length;
+      const answered = questions.filter(q => getQStats(q.id).rounds > 0).length;
+      const scores = questions.map(q => getMasteryScore(q.id));
+      const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / total);
+      const perfectCount = scores.filter(s => s >= 80).length;
+      const weakCount = scores.filter(s => s > 0 && s < 40).length;
+      const newCount = scores.filter(s => s === 0).length;
+
+      const avgCls = avgScore >= 70 ? 'green' : avgScore >= 40 ? 'amber' : 'red';
+
+      // Summary cards
+      const summaryHtml = `
+        <div class="mastery-summary">
+          <div class="mastery-summary-card">
+            <div class="ms-val ${avgCls}">${avgScore}%</div>
+            <div class="ms-label">平均掌握度</div>
+          </div>
+          <div class="mastery-summary-card">
+            <div class="ms-val green">${perfectCount}</div>
+            <div class="ms-label">已掌握 (≥80%)</div>
+          </div>
+          <div class="mastery-summary-card">
+            <div class="ms-val amber">${answered - perfectCount - weakCount}</div>
+            <div class="ms-label">學習中 (40-79%)</div>
+          </div>
+          <div class="mastery-summary-card">
+            <div class="ms-val red">${weakCount}</div>
+            <div class="ms-label">需加強 (<40%)</div>
+          </div>
+          <div class="mastery-summary-card">
+            <div class="ms-val blue">${newCount}</div>
+            <div class="ms-label">🆕 未作答</div>
+          </div>
+        </div>`;
+
+      // Heatmap grid
+      const heatmapHtml = questions.map((q, idx) => {
+        const score = getMasteryScore(q.id);
+        const stats = getQStats(q.id);
+        let lvl = 'lvl-none';
+        if (stats.rounds === 0) lvl = 'lvl-none';
+        else if (score >= 80) lvl = 'lvl-perfect';
+        else if (score >= 50) lvl = 'lvl-good';
+        else if (score >= 20) lvl = 'lvl-mid';
+        else lvl = 'lvl-low';
+
+        const detail = stats.rounds > 0
+          ? `${stats.rounds}輪・正確${stats.firstTry}次`
+          : '尚未作答';
+
+        return `<div class="mastery-cell ${lvl}" onclick="goToPage(${idx})" title="Q${q.id} ${detail}">
+          <div class="mc-id">Q${q.id}</div>
+          <div class="mc-score">${stats.rounds > 0 ? score + '%' : '—'}</div>
+          <div class="mc-bar"><div class="mc-bar-fill" style="width:${score}%"></div></div>
+        </div>`;
+      }).join('');
+
+      // Ranking list (by mastery, low first for review priority)
+      const sorted = questions.map((q, idx) => ({ q, idx, score: getMasteryScore(q.id), stats: getQStats(q.id) }))
+        .sort((a, b) => a.score - b.score);
+
+      const rankingHtml = sorted.map((item, rank) => {
+        const { q, idx, score, stats } = item;
+        const preview = q.question.length > 30 ? q.question.slice(0, 30) + '…' : q.question;
+        const barCls = score >= 80 ? 'green' : score >= 40 ? 'amber' : score > 0 ? 'red' : 'gray';
+        const detail = stats.rounds > 0
+          ? `${stats.rounds}輪・${stats.firstTry}/${stats.rounds}正確`
+          : '未作答';
+
+        return `<div class="mastery-rank-row" onclick="goToPage(${idx})">
+          <div class="mastery-rank-num">${rank + 1}</div>
+          <div style="min-width:36px;font-size:0.78rem;font-weight:700;color:#888;">Q${q.id}</div>
+          <div class="mastery-rank-bar-wrap">
+            <div class="mastery-rank-bar ${barCls}" style="width:${Math.max(score, 3)}%"></div>
+            <div class="mastery-rank-label">${score}%</div>
+          </div>
+          <div class="mastery-rank-text" title="${q.question}">${preview}</div>
+          <div class="mastery-rank-detail">${detail}</div>
+        </div>`;
+      }).join('');
+
+      return `
+        <div class="mastery-dashboard">
+          <div class="mastery-dashboard-header">
+            <h2>📊 掌握度總覽</h2>
+            <div class="subtitle">按掌握度排列所有題目 · 點擊可跳轉</div>
+          </div>
+
+          ${summaryHtml}
+
+          <div style="font-size:0.82rem;font-weight:700;color:#d97706;margin-bottom:8px;">🗺️ 掌握度熱力圖</div>
+          <div class="mastery-heatmap">${heatmapHtml}</div>
+
+          <div class="mastery-ranking">
+            <div class="mastery-ranking-title">📋 複習優先順序（掌握度低 → 高）</div>
+            ${rankingHtml}
+          </div>
+        </div>`;
     }
 
     function restart() {
