@@ -736,6 +736,24 @@
     .option-summary-item .os-val { font-size: 1.4rem; font-weight: 800; }
     .option-summary-item .os-label { font-size: 0.68rem; color: #999; margin-top: 2px; }
 
+    /* Dashboard Jaeger Trace */
+    .dt-trace-section {
+      margin-top: 16px; margin-bottom: 18px;
+      border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    }
+    .dt-trace-title {
+      font-size: 0.82rem; font-weight: 700; color: #2d3748;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .dt-trace-title .dt-badge {
+      font-size: 0.6rem; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+      background: #2d3748; color: #cbd5e0;
+    }
+    /* Make depth-0 spans in dashboard slightly thicker */
+    .dt-trace-section .jt-span-row.jt-depth-0 { min-height: 32px; }
+    .dt-trace-section .jt-span-bar { min-width: 8px; }
+
     .quiz-sidebar-btn {
       display: flex; align-items: center; gap: 8px;
       padding: 10px 14px; margin: 4px 12px 8px;
@@ -2176,6 +2194,40 @@
       jtExpandedSpans.clear();
       jtDetailKey = null;
       renderAll();
+    }
+
+    // ==================== Dashboard Jaeger Trace ====================
+    let dtExpandedSpans = new Set(); // dashboard trace 展開的 span keys
+    let dtDetailTab = 'tags'; // 'tags' | 'context'
+
+    function toggleDtSpan(key) {
+      if (dtExpandedSpans.has(key)) {
+        const prefix = key + '-';
+        [...dtExpandedSpans].forEach(k => {
+          if (k === key || k === key + ':detail' || k.startsWith(prefix)) dtExpandedSpans.delete(k);
+        });
+      } else {
+        dtExpandedSpans.add(key);
+        dtExpandedSpans.add(key + ':detail');
+      }
+      rerenderDashboardOnly();
+    }
+    function showDtDetail(key) {
+      const dk = key + ':detail';
+      if (dtExpandedSpans.has(dk)) dtExpandedSpans.delete(dk); else dtExpandedSpans.add(dk);
+      rerenderDashboardOnly();
+    }
+    function switchDtTab(tab) {
+      dtDetailTab = tab;
+      rerenderDashboardOnly();
+    }
+    function rerenderDashboardOnly() {
+      const area = document.getElementById('cardArea');
+      if (!area || !area.querySelector('.mastery-dashboard')) return;
+      const scroller = document.getElementById('mainContent');
+      const scrollTop = scroller ? scroller.scrollTop : 0;
+      area.innerHTML = renderMasteryDashboard();
+      if (scroller) scroller.scrollTop = scrollTop;
     }
 
     // ==================== Jaeger-style Word Trace ====================
@@ -3681,6 +3733,7 @@
       viewMode = 'single'; // 用 single 框架但顯示 dashboard
       activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null;
       jtExpandedSpans.clear(); jtDetailKey = null;
+      dtExpandedSpans.clear(); dtDetailTab = 'tags';
 
       const mainEl = document.getElementById('mainContent');
       mainEl.classList.remove('quiz-active');
@@ -3709,6 +3762,7 @@
 
     function switchDashboardTab(tab) {
       dashboardTab = tab;
+      dtExpandedSpans.clear(); dtDetailTab = 'tags';
       document.getElementById('cardArea').innerHTML = renderMasteryDashboard();
     }
 
@@ -3769,6 +3823,9 @@
           <div class="mastery-summary-card"><div class="ms-val blue">${newCount}</div><div class="ms-label">🆕 未作答</div></div>
         </div>`;
 
+      // ── Jaeger Trace 視覺化 ──
+      const traceHtml = renderDtQuestionsTrace();
+
       const heatmapHtml = questions.map((q, idx) => {
         const score = getMasteryScore(q.id);
         const stats = getQStats(q.id);
@@ -3807,12 +3864,251 @@
       }).join('');
 
       return `${summaryHtml}
+        ${traceHtml}
         <div style="font-size:0.82rem;font-weight:700;color:#d97706;margin-bottom:8px;">🗺️ 掌握度熱力圖</div>
         <div class="mastery-heatmap">${heatmapHtml}</div>
         <div class="mastery-ranking">
           <div class="mastery-ranking-title">📋 複習優先順序（掌握度低 → 高）</div>
           ${rankingHtml}
         </div>`;
+    }
+
+    // ── Questions Tab: Jaeger Trace ──
+    function renderDtQuestionsTrace() {
+      const sorted = questions.map((q, idx) => ({
+        q, idx, score: getMasteryScore(q.id), stats: getQStats(q.id)
+      })).sort((a, b) => b.score - a.score);
+
+      const totalSpans = sorted.reduce((s, item) => s + (item.stats.rounds > 0 ? 2 : 1), 0);
+
+      // Header
+      let html = `<div class="dt-trace-section"><div class="jaeger-trace">`;
+      html += `<div class="jt-header">
+        <div class="jt-header-left">
+          <span class="jt-header-word">Question Mastery</span>
+          <span class="jt-header-badge">${questions.length} Questions · ${totalSpans} Spans</span>
+        </div>
+      </div>`;
+
+      // Stats
+      const avgScore = questions.length > 0 ? Math.round(questions.map(q => getMasteryScore(q.id)).reduce((a, b) => a + b, 0) / questions.length) : 0;
+      html += `<div class="jt-stats">
+        <div class="jt-stat">Services: <span class="jt-stat-val">${questions.length}</span></div>
+        <div class="jt-stat">Avg Mastery: <span class="jt-stat-val">${avgScore}%</span></div>
+        <div class="jt-stat">Answered: <span class="jt-stat-val">${sorted.filter(i => i.stats.rounds > 0).length}</span></div>
+        <div class="jt-stat">New: <span class="jt-stat-val">${sorted.filter(i => i.stats.rounds === 0).length}</span></div>
+      </div>`;
+
+      // Legend
+      html += `<div class="jt-legend">
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#16a34a"></div>已掌握 ≥80%</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#4ade80"></div>學習中 50-79%</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#fbbf24"></div>需加強 20-49%</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#f87171"></div>薄弱 <20%</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#d1d5db"></div>未作答</div>
+      </div>`;
+
+      // Minimap
+      html += `<div class="jt-minimap">`;
+      sorted.forEach((item, i) => {
+        const color = dtQColor(item.score, item.stats.rounds);
+        html += `<div class="jt-minimap-bar" style="left:0%;width:${Math.max(2, item.score)}%;background:${color};top:${4 + (i % 3) * 6}px;height:6px;"></div>`;
+      });
+      html += `</div>`;
+
+      // Timeline header (0% → 100% mastery)
+      html += `<div class="jt-timeline-header">
+        <div class="jt-th-service">Question · Category</div>
+        <div class="jt-th-timeline">
+          ${[0, 25, 50, 75, 100].map(p => `<div class="jt-th-tick" style="left:${p}%">${p}%</div>`).join('')}
+        </div>
+      </div>`;
+
+      // Span rows
+      sorted.forEach((item, qi) => {
+        const { q, idx, score, stats } = item;
+        const color = dtQColor(score, stats.rounds);
+        const cat = q.category || '';
+        const preview = q.question.length > 20 ? q.question.slice(0, 20) + '…' : q.question;
+        const parentKey = `dq-${q.id}`;
+        const isExpanded = dtExpandedSpans.has(parentKey);
+
+        // 答題正確率
+        const ansAccuracy = stats.rounds > 0 ? Math.round(stats.firstTry / stats.rounds * 100) : 0;
+        // 詳解完成度
+        const expPlaced = getExpPlaced(q.id).length;
+        const expTotal = q.expParts.length;
+        const expPct = expTotal > 0 ? Math.round(expPlaced / expTotal * 100) : 0;
+
+        html += `<div class="jt-span-row jt-depth-0 ${isExpanded ? 'jt-expanded' : ''}" onclick="toggleDtSpan('${parentKey}')">
+          <div class="jt-span-service">
+            <span class="jt-span-toggle ${isExpanded ? 'open' : ''}">▶</span>
+            <span class="jt-span-svc-dot" style="background:${color}"></span>
+            <span class="jt-span-svc-name">Q${q.id} ${cat}</span>
+            <span class="jt-span-op-name">${stats.rounds > 0 ? stats.rounds + '輪' : '未作答'}</span>
+          </div>
+          <div class="jt-span-timeline">
+            <div class="jt-span-bar" style="left:0%;width:${Math.max(3, score)}%;background:${color};">
+              <span class="jt-span-bar-label">${score}% ${preview}</span>
+            </div>
+          </div>
+        </div>`;
+
+        // Detail panel
+        if (dtExpandedSpans.has(parentKey + ':detail')) {
+          html += renderDtQuestionDetail(q, idx, stats, score, ansAccuracy, expPct, color);
+        }
+
+        // Expanded children: 答題 + 詳解
+        if (isExpanded) {
+          // Child 1: 答題表現
+          const ansColor = ansAccuracy >= 80 ? '#16a34a' : ansAccuracy >= 50 ? '#fbbf24' : ansAccuracy > 0 ? '#f87171' : '#d1d5db';
+          const ansKey = `dq-${q.id}-ans`;
+          html += `<div class="jt-span-row jt-depth-1" onclick="event.stopPropagation();showDtDetail('${ansKey}')">
+            <div class="jt-span-service">
+              <span class="jt-span-svc-dot" style="background:${ansColor}"></span>
+              <span class="jt-span-svc-name">答題</span>
+              <span class="jt-span-op-name">${stats.rounds > 0 ? stats.firstTry + '/' + stats.rounds + ' 一次正確' : '—'}</span>
+            </div>
+            <div class="jt-span-timeline">
+              <div class="jt-span-bar" style="left:0%;width:${Math.max(3, ansAccuracy)}%;background:${ansColor};opacity:0.75;">
+                <span class="jt-span-bar-label">${ansAccuracy}%</span>
+              </div>
+            </div>
+          </div>`;
+          if (dtExpandedSpans.has(ansKey + ':detail')) {
+            html += `<div class="jt-detail" onclick="event.stopPropagation()"><div class="jt-detail-inner">
+              <div class="jt-detail-sidebar">
+                <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:6px;">Answer Stats</div>
+                <div style="font-size:0.68rem;color:#718096;line-height:1.6;">
+                  答題輪次: ${stats.rounds}<br>一次正確: ${stats.firstTry}<br>累計錯誤: ${stats.totalWrong}
+                </div>
+              </div>
+              <div class="jt-detail-main">
+                <table class="jt-tag-table">
+                  <tr><td class="jt-tag-key">question.id</td><td class="jt-tag-val"><a onclick="goToPageFromBacklink(${idx})">Q${q.id} (跳轉)</a></td></tr>
+                  <tr><td class="jt-tag-key">rounds</td><td class="jt-tag-val">${stats.rounds}</td></tr>
+                  <tr><td class="jt-tag-key">first_try</td><td class="jt-tag-val">${stats.firstTry}</td></tr>
+                  <tr><td class="jt-tag-key">total_wrong</td><td class="jt-tag-val">${stats.totalWrong}</td></tr>
+                  <tr><td class="jt-tag-key">accuracy</td><td class="jt-tag-val">${ansAccuracy}%</td></tr>
+                  <tr><td class="jt-tag-key">correct_answer</td><td class="jt-tag-val">${q.options[q.correctIndex]}</td></tr>
+                </table>
+              </div>
+            </div></div>`;
+          }
+
+          // Child 2: 詳解完成度
+          const expColor = expPct >= 100 ? '#16a34a' : expPct >= 50 ? '#fbbf24' : expPct > 0 ? '#f87171' : '#d1d5db';
+          const expKey = `dq-${q.id}-exp`;
+          html += `<div class="jt-span-row jt-depth-1" onclick="event.stopPropagation();showDtDetail('${expKey}')">
+            <div class="jt-span-service">
+              <span class="jt-span-svc-dot" style="background:${expColor}"></span>
+              <span class="jt-span-svc-name">詳解</span>
+              <span class="jt-span-op-name">${expPlaced}/${expTotal} 已歸位</span>
+            </div>
+            <div class="jt-span-timeline">
+              <div class="jt-span-bar" style="left:0%;width:${Math.max(3, expPct)}%;background:${expColor};opacity:0.75;">
+                <span class="jt-span-bar-label">${expPct}%</span>
+              </div>
+            </div>
+          </div>`;
+          if (dtExpandedSpans.has(expKey + ':detail')) {
+            const placedArr = getExpPlaced(q.id);
+            html += `<div class="jt-detail" onclick="event.stopPropagation()"><div class="jt-detail-inner">
+              <div class="jt-detail-sidebar">
+                <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:6px;">Explanation Stats</div>
+                <div style="font-size:0.68rem;color:#718096;line-height:1.6;">
+                  總計: ${expTotal} 張<br>已歸位: ${expPlaced}<br>完成度: ${expPct}%
+                  ${expCompletedSet.has(q.id) ? '<br><span style="color:#16a34a;font-weight:600;">✓ 全部完成</span>' : ''}
+                </div>
+              </div>
+              <div class="jt-detail-main">
+                <table class="jt-tag-table">
+                  <tr><td class="jt-tag-key">question.id</td><td class="jt-tag-val"><a onclick="goToPageFromBacklink(${idx})">Q${q.id} (跳轉)</a></td></tr>
+                  <tr><td class="jt-tag-key">exp_parts</td><td class="jt-tag-val">${expTotal}</td></tr>
+                  <tr><td class="jt-tag-key">placed</td><td class="jt-tag-val">${expPlaced}</td></tr>
+                  <tr><td class="jt-tag-key">completion</td><td class="jt-tag-val">${expPct}%</td></tr>
+                  ${q.expParts.map((part, pi) => {
+                    const chipId = 'exp-q' + q.id + '-' + pi;
+                    const isPlaced = placedArr.includes(chipId);
+                    return '<tr><td class="jt-tag-key">part_' + (pi + 1) + '</td><td class="jt-tag-val">' + (isPlaced ? '✅ ' : '⬜ ') + (part.length > 50 ? part.slice(0, 50) + '…' : part) + '</td></tr>';
+                  }).join('')}
+                </table>
+              </div>
+            </div></div>`;
+          }
+        }
+      });
+
+      html += `</div></div>`;
+      return html;
+    }
+
+    function dtQColor(score, rounds) {
+      if (rounds === 0) return '#d1d5db';
+      if (score >= 80) return '#16a34a';
+      if (score >= 50) return '#4ade80';
+      if (score >= 20) return '#fbbf24';
+      return '#f87171';
+    }
+
+    function renderDtQuestionDetail(q, idx, stats, score, ansAcc, expPct, color) {
+      const tagsActive = dtDetailTab === 'tags' ? 'active' : '';
+      const ctxActive = dtDetailTab === 'context' ? 'active' : '';
+
+      let bodyHtml = '';
+      if (dtDetailTab === 'tags') {
+        bodyHtml = `<table class="jt-tag-table">
+          <tr><td class="jt-tag-key">question.id</td><td class="jt-tag-val"><a onclick="goToPageFromBacklink(${idx})">Q${q.id} (跳轉)</a></td></tr>
+          <tr><td class="jt-tag-key">category</td><td class="jt-tag-val">${q.category || '—'}</td></tr>
+          <tr><td class="jt-tag-key">mastery</td><td class="jt-tag-val" style="font-weight:700;">${score}%</td></tr>
+          <tr><td class="jt-tag-key">rounds</td><td class="jt-tag-val">${stats.rounds}</td></tr>
+          <tr><td class="jt-tag-key">first_try</td><td class="jt-tag-val">${stats.firstTry}</td></tr>
+          <tr><td class="jt-tag-key">total_wrong</td><td class="jt-tag-val">${stats.totalWrong}</td></tr>
+          <tr><td class="jt-tag-key">answer_accuracy</td><td class="jt-tag-val">${ansAcc}%</td></tr>
+          <tr><td class="jt-tag-key">exp_completion</td><td class="jt-tag-val">${expPct}%</td></tr>
+          <tr><td class="jt-tag-key">correct_answer</td><td class="jt-tag-val">${q.options[q.correctIndex]}</td></tr>
+          <tr><td class="jt-tag-key">options</td><td class="jt-tag-val">${q.options.length}</td></tr>
+          <tr><td class="jt-tag-key">exp_parts</td><td class="jt-tag-val">${q.expParts.length}</td></tr>
+        </table>`;
+      } else {
+        bodyHtml = `<div class="jt-context-block">
+          <div style="font-size:0.65rem;color:#a0aec0;margin-bottom:4px;">Question</div>
+          ${q.question}
+        </div>
+        ${q.chinese ? `<div class="jt-context-block" style="margin-top:6px;">
+          <div style="font-size:0.65rem;color:#a0aec0;margin-bottom:4px;">Chinese</div>
+          ${q.chinese}
+        </div>` : ''}
+        <div class="jt-context-block" style="margin-top:6px;">
+          <div style="font-size:0.65rem;color:#a0aec0;margin-bottom:4px;">Options</div>
+          ${q.options.map((opt, i) => `<div style="${i === q.correctIndex ? 'color:#16a34a;font-weight:700;' : ''}">(${q.labels[i]}) ${opt} ${i === q.correctIndex ? '✓' : ''}</div>`).join('')}
+        </div>`;
+      }
+
+      return `<div class="jt-detail" onclick="event.stopPropagation()">
+        <div class="jt-detail-inner">
+          <div class="jt-detail-sidebar">
+            <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:6px;">Process</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+              <div style="width:10px;height:10px;border-radius:2px;background:${color};"></div>
+              <span style="font-size:0.78rem;font-weight:600;color:#2d3748;">Q${q.id}</span>
+            </div>
+            <div style="font-size:0.68rem;color:#718096;line-height:1.5;">
+              ${q.category ? q.category + '<br>' : ''}
+              Mastery: ${score}%<br>
+              ${stats.rounds} rounds
+            </div>
+          </div>
+          <div class="jt-detail-main">
+            <div class="jt-detail-tabs">
+              <button class="jt-detail-tab ${tagsActive}" onclick="event.stopPropagation();switchDtTab('tags')">Tags</button>
+              <button class="jt-detail-tab ${ctxActive}" onclick="event.stopPropagation();switchDtTab('context')">Context</button>
+            </div>
+            ${bodyHtml}
+          </div>
+        </div>
+      </div>`;
     }
 
     // ===== 選項分析 Tab =====
@@ -3839,6 +4135,9 @@
           <div class="option-summary-item"><div class="os-val" style="color:#16a34a;">${correctOpts}</div><div class="os-label">正確使用</div></div>
           <div class="option-summary-item"><div class="os-val" style="color:#dc2626;">${confusedOpts}</div><div class="os-label">曾放錯</div></div>
         </div>`;
+
+      // ── Jaeger Trace 視覺化 ──
+      const traceHtml = renderDtOptionsTrace();
 
       // 按題目分組
       const groupsHtml = questions.map((q, qIdx) => {
@@ -3896,8 +4195,196 @@
       }).join('');
 
       return `${summaryHtml}
+        ${traceHtml}
         <div style="font-size:0.82rem;font-weight:700;color:#4a7c59;margin-bottom:10px;">🏷️ 各題選項操作紀錄</div>
         ${groupsHtml}`;
+    }
+
+    // ── Options Tab: Jaeger Trace ──
+    function renderDtOptionsTrace() {
+      // 每題作為 service，每個選項作為 span
+      const totalSpans = questions.reduce((s, q) => s + q.options.length, 0);
+
+      let html = `<div class="dt-trace-section"><div class="jaeger-trace">`;
+      html += `<div class="jt-header">
+        <div class="jt-header-left">
+          <span class="jt-header-word">Option Accuracy Trace</span>
+          <span class="jt-header-badge">${questions.length} Services · ${totalSpans} Spans</span>
+        </div>
+      </div>`;
+
+      // Stats
+      html += `<div class="jt-stats">
+        <div class="jt-stat">Questions: <span class="jt-stat-val">${questions.length}</span></div>
+        <div class="jt-stat">Total Options: <span class="jt-stat-val">${totalSpans}</span></div>
+        <div class="jt-stat">Touched: <span class="jt-stat-val">${[...optionAttempts.values()].filter(a => a.correct + a.wrong > 0).length}</span></div>
+        <div class="jt-stat">With Errors: <span class="jt-stat-val">${[...optionAttempts.values()].filter(a => a.wrong > 0).length}</span></div>
+      </div>`;
+
+      // Legend
+      html += `<div class="jt-legend">
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#16a34a"></div>正確 ≥80%</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#fbbf24"></div>中等 50-79%</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#f87171"></div>易錯 <50%</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#3b82f6"></div>✓ 正解選項</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#d1d5db"></div>未嘗試</div>
+      </div>`;
+
+      // Timeline header (0% → 100% accuracy)
+      html += `<div class="jt-timeline-header">
+        <div class="jt-th-service">Question · Option</div>
+        <div class="jt-th-timeline">
+          ${[0, 25, 50, 75, 100].map(p => `<div class="jt-th-tick" style="left:${p}%">${p}%</div>`).join('')}
+        </div>
+      </div>`;
+
+      // Span rows
+      questions.forEach((q, qIdx) => {
+        const parentKey = `do-${q.id}`;
+        const isExpanded = dtExpandedSpans.has(parentKey);
+        const cat = q.category || '';
+        const preview = q.question.length > 18 ? q.question.slice(0, 18) + '…' : q.question;
+
+        // 計算此題所有選項的平均正確率
+        let qTotalAtt = 0, qCorrectAtt = 0;
+        q.options.forEach((_, i) => {
+          const att = optionAttempts.get(`ans-q${q.id}-${i}`);
+          if (att) { qTotalAtt += att.correct + att.wrong; qCorrectAtt += att.correct; }
+        });
+        const qAccPct = qTotalAtt > 0 ? Math.round(qCorrectAtt / qTotalAtt * 100) : 0;
+        const qColor = jtColor(qIdx);
+
+        html += `<div class="jt-span-row jt-depth-0 ${isExpanded ? 'jt-expanded' : ''}" onclick="toggleDtSpan('${parentKey}')">
+          <div class="jt-span-service">
+            <span class="jt-span-toggle ${isExpanded ? 'open' : ''}">▶</span>
+            <span class="jt-span-svc-dot" style="background:${qColor}"></span>
+            <span class="jt-span-svc-name">Q${q.id} ${cat}</span>
+            <span class="jt-span-op-name">${q.options.length} opts</span>
+          </div>
+          <div class="jt-span-timeline">
+            <div class="jt-span-bar" style="left:0%;width:${Math.max(3, qAccPct)}%;background:${qColor};">
+              <span class="jt-span-bar-label">${qAccPct > 0 ? qAccPct + '% ' : ''}${preview}</span>
+            </div>
+          </div>
+        </div>`;
+
+        if (dtExpandedSpans.has(parentKey + ':detail')) {
+          html += renderDtOptionServiceDetail(q, qIdx, qColor);
+        }
+
+        // Children: each option
+        if (isExpanded) {
+          q.options.forEach((opt, i) => {
+            const chipId = `ans-q${q.id}-${i}`;
+            const isCorrect = i === q.correctIndex;
+            const att = optionAttempts.get(chipId) || { correct: 0, wrong: 0, wrongTargets: [] };
+            const totalAtt = att.correct + att.wrong;
+            const accPct = totalAtt > 0 ? Math.round(att.correct / totalAtt * 100) : 0;
+            const optColor = isCorrect ? '#3b82f6' : (totalAtt === 0 ? '#d1d5db' : accPct >= 80 ? '#16a34a' : accPct >= 50 ? '#fbbf24' : '#f87171');
+            const optPreview = opt.length > 22 ? opt.slice(0, 22) + '…' : opt;
+            const optKey = `do-${q.id}-opt${i}`;
+
+            html += `<div class="jt-span-row jt-depth-1 ${dtExpandedSpans.has(optKey + ':detail') ? 'jt-expanded' : ''}" onclick="event.stopPropagation();showDtDetail('${optKey}')">
+              <div class="jt-span-service">
+                <span class="jt-span-svc-dot" style="background:${optColor}"></span>
+                <span class="jt-span-svc-name">(${q.labels[i]}) ${isCorrect ? '✓' : '✗'}</span>
+                <span class="jt-span-op-name">${optPreview}</span>
+              </div>
+              <div class="jt-span-timeline">
+                <div class="jt-span-bar" style="left:0%;width:${Math.max(3, totalAtt > 0 ? accPct : 2)}%;background:${optColor};opacity:${totalAtt > 0 ? 0.8 : 0.3};">
+                  <span class="jt-span-bar-label">${totalAtt > 0 ? accPct + '%' : '—'}</span>
+                </div>
+              </div>
+            </div>`;
+
+            if (dtExpandedSpans.has(optKey + ':detail')) {
+              let confusionInfo = '';
+              if (att.wrong > 0 && att.wrongTargets.length > 0) {
+                const targets = [...new Set(att.wrongTargets)].map(tid => `Q${tid}`).join(', ');
+                confusionInfo = `<tr><td class="jt-tag-key">confused_with</td><td class="jt-tag-val" style="color:#ef4444;">${targets}</td></tr>`;
+              }
+              html += `<div class="jt-detail" onclick="event.stopPropagation()"><div class="jt-detail-inner">
+                <div class="jt-detail-sidebar">
+                  <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:4px;">Option Info</div>
+                  <div style="font-size:0.68rem;color:#718096;line-height:1.6;">
+                    Q${q.id} · (${q.labels[i]})<br>
+                    ${isCorrect ? '<span style="color:#16a34a;font-weight:600;">✓ 正確答案</span>' : '<span style="color:#999;">誘答選項</span>'}<br>
+                    <a style="color:#3182ce;cursor:pointer;text-decoration:underline;" onclick="goToPageFromBacklink(${qIdx})">跳到此題 →</a>
+                  </div>
+                </div>
+                <div class="jt-detail-main">
+                  <table class="jt-tag-table">
+                    <tr><td class="jt-tag-key">option</td><td class="jt-tag-val" style="font-weight:600;">${opt}</td></tr>
+                    <tr><td class="jt-tag-key">label</td><td class="jt-tag-val">(${q.labels[i]})</td></tr>
+                    <tr><td class="jt-tag-key">is_correct</td><td class="jt-tag-val">${isCorrect ? '<span style="color:#16a34a">true</span>' : '<span style="color:#999">false</span>'}</td></tr>
+                    <tr><td class="jt-tag-key">correct_drops</td><td class="jt-tag-val">${att.correct}</td></tr>
+                    <tr><td class="jt-tag-key">wrong_drops</td><td class="jt-tag-val">${att.wrong}</td></tr>
+                    <tr><td class="jt-tag-key">accuracy</td><td class="jt-tag-val">${totalAtt > 0 ? accPct + '%' : '—'}</td></tr>
+                    ${confusionInfo}
+                  </table>
+                </div>
+              </div></div>`;
+            }
+          });
+        }
+      });
+
+      html += `</div></div>`;
+      return html;
+    }
+
+    function renderDtOptionServiceDetail(q, idx, color) {
+      const tagsActive = dtDetailTab === 'tags' ? 'active' : '';
+      const ctxActive = dtDetailTab === 'context' ? 'active' : '';
+      let bodyHtml = '';
+      if (dtDetailTab === 'tags') {
+        let totalAtt = 0, correctAtt = 0;
+        q.options.forEach((_, i) => {
+          const att = optionAttempts.get(`ans-q${q.id}-${i}`);
+          if (att) { totalAtt += att.correct + att.wrong; correctAtt += att.correct; }
+        });
+        bodyHtml = `<table class="jt-tag-table">
+          <tr><td class="jt-tag-key">question.id</td><td class="jt-tag-val"><a onclick="goToPageFromBacklink(${idx})">Q${q.id} (跳轉)</a></td></tr>
+          <tr><td class="jt-tag-key">category</td><td class="jt-tag-val">${q.category || '—'}</td></tr>
+          <tr><td class="jt-tag-key">options</td><td class="jt-tag-val">${q.options.length}</td></tr>
+          <tr><td class="jt-tag-key">total_attempts</td><td class="jt-tag-val">${totalAtt}</td></tr>
+          <tr><td class="jt-tag-key">correct_attempts</td><td class="jt-tag-val">${correctAtt}</td></tr>
+          <tr><td class="jt-tag-key">accuracy</td><td class="jt-tag-val">${totalAtt > 0 ? Math.round(correctAtt / totalAtt * 100) + '%' : '—'}</td></tr>
+          <tr><td class="jt-tag-key">correct_answer</td><td class="jt-tag-val">(${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}</td></tr>
+        </table>`;
+      } else {
+        bodyHtml = `<div class="jt-context-block">
+          <div style="font-size:0.65rem;color:#a0aec0;margin-bottom:4px;">Question</div>
+          ${q.question}
+        </div>
+        <div class="jt-context-block" style="margin-top:6px;">
+          <div style="font-size:0.65rem;color:#a0aec0;margin-bottom:4px;">All Options</div>
+          ${q.options.map((opt, i) => {
+            const att = optionAttempts.get('ans-q' + q.id + '-' + i) || { correct: 0, wrong: 0 };
+            return '<div style="' + (i === q.correctIndex ? 'color:#16a34a;font-weight:700;' : '') + '">('+q.labels[i]+') '+opt+' · ✓'+att.correct+' ✗'+att.wrong+'</div>';
+          }).join('')}
+        </div>`;
+      }
+      return `<div class="jt-detail" onclick="event.stopPropagation()"><div class="jt-detail-inner">
+        <div class="jt-detail-sidebar">
+          <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:6px;">Service</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <div style="width:10px;height:10px;border-radius:2px;background:${color};"></div>
+            <span style="font-size:0.78rem;font-weight:600;color:#2d3748;">Q${q.id}</span>
+          </div>
+          <div style="font-size:0.68rem;color:#718096;line-height:1.5;">
+            ${q.category ? q.category + '<br>' : ''}
+            ${q.options.length} options
+          </div>
+        </div>
+        <div class="jt-detail-main">
+          <div class="jt-detail-tabs">
+            <button class="jt-detail-tab ${tagsActive}" onclick="event.stopPropagation();switchDtTab('tags')">Tags</button>
+            <button class="jt-detail-tab ${ctxActive}" onclick="event.stopPropagation();switchDtTab('context')">Context</button>
+          </div>
+          ${bodyHtml}
+        </div>
+      </div></div>`;
     }
 
     // ===== 詳解小卡分析 Tab =====
@@ -3931,6 +4418,9 @@
           <div class="option-summary-item"><div class="os-val" style="color:#dc2626;">${wrongParts}</div><div class="os-label">曾放錯</div></div>
           <div class="option-summary-item"><div class="os-val" style="color:#f59e0b;">${fullyPlacedCount}/${questions.length}</div><div class="os-label">完成全部詳解</div></div>
         </div>`;
+
+      // ── Jaeger Trace 視覺化 ──
+      const traceHtml = renderDtExpPartsTrace();
 
       // 按題目分組
       const groupsHtml = questions.map((q, qIdx) => {
@@ -3987,8 +4477,184 @@
       }).join('');
 
       return `${summaryHtml}
+        ${traceHtml}
         <div style="font-size:0.82rem;font-weight:700;color:#7fa886;margin-bottom:10px;">📝 各題詳解小卡狀態</div>
         ${groupsHtml}`;
+    }
+
+    // ── Exp Parts Tab: Jaeger Trace ──
+    function renderDtExpPartsTrace() {
+      const totalSpans = questions.reduce((s, q) => s + q.expParts.length, 0);
+      const completedCount = questions.filter(q => expCompletedSet.has(q.id)).length;
+
+      let html = `<div class="dt-trace-section"><div class="jaeger-trace">`;
+      html += `<div class="jt-header">
+        <div class="jt-header-left">
+          <span class="jt-header-word">Explanation Parts Trace</span>
+          <span class="jt-header-badge">${questions.length} Services · ${totalSpans} Spans</span>
+        </div>
+      </div>`;
+
+      // Stats
+      html += `<div class="jt-stats">
+        <div class="jt-stat">Questions: <span class="jt-stat-val">${questions.length}</span></div>
+        <div class="jt-stat">Total Parts: <span class="jt-stat-val">${totalSpans}</span></div>
+        <div class="jt-stat">Touched: <span class="jt-stat-val">${[...expPartAttempts.values()].filter(a => a.correct + a.wrong > 0).length}</span></div>
+        <div class="jt-stat">Completed: <span class="jt-stat-val">${completedCount}/${questions.length}</span></div>
+      </div>`;
+
+      // Legend
+      html += `<div class="jt-legend">
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#16a34a"></div>全部歸位 100%</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#4ade80"></div>部分歸位 ≥50%</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#fbbf24"></div>部分歸位 <50%</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#d1d5db"></div>未歸位</div>
+        <div class="jt-legend-item"><div class="jt-legend-dot" style="background:#f87171"></div>曾放錯</div>
+      </div>`;
+
+      // Timeline header
+      html += `<div class="jt-timeline-header">
+        <div class="jt-th-service">Question · Part</div>
+        <div class="jt-th-timeline">
+          ${[0, 25, 50, 75, 100].map(p => `<div class="jt-th-tick" style="left:${p}%">${p}%</div>`).join('')}
+        </div>
+      </div>`;
+
+      // Span rows
+      questions.forEach((q, qIdx) => {
+        if (q.expParts.length === 0) return;
+        const parentKey = `de-${q.id}`;
+        const isExpanded = dtExpandedSpans.has(parentKey);
+        const cat = q.category || '';
+        const preview = q.question.length > 18 ? q.question.slice(0, 18) + '…' : q.question;
+        const placedArr = getExpPlaced(q.id);
+        const placePct = q.expParts.length > 0 ? Math.round(placedArr.length / q.expParts.length * 100) : 0;
+        const isCompleted = expCompletedSet.has(q.id);
+        const qColor = jtColor(qIdx);
+        const parentColor = isCompleted ? '#16a34a' : placePct >= 50 ? '#4ade80' : placePct > 0 ? '#fbbf24' : '#d1d5db';
+
+        html += `<div class="jt-span-row jt-depth-0 ${isExpanded ? 'jt-expanded' : ''}" onclick="toggleDtSpan('${parentKey}')">
+          <div class="jt-span-service">
+            <span class="jt-span-toggle ${isExpanded ? 'open' : ''}">▶</span>
+            <span class="jt-span-svc-dot" style="background:${qColor}"></span>
+            <span class="jt-span-svc-name">Q${q.id} ${cat}</span>
+            <span class="jt-span-op-name">${placedArr.length}/${q.expParts.length}${isCompleted ? ' ✓' : ''}</span>
+          </div>
+          <div class="jt-span-timeline">
+            <div class="jt-span-bar" style="left:0%;width:${Math.max(3, placePct)}%;background:${parentColor};">
+              <span class="jt-span-bar-label">${placePct}% ${preview}</span>
+            </div>
+          </div>
+        </div>`;
+
+        if (dtExpandedSpans.has(parentKey + ':detail')) {
+          html += renderDtExpServiceDetail(q, qIdx, qColor, placedArr, placePct, isCompleted);
+        }
+
+        // Children: each exp part
+        if (isExpanded) {
+          q.expParts.forEach((part, i) => {
+            const chipId = `exp-q${q.id}-${i}`;
+            const att = expPartAttempts.get(chipId) || { correct: 0, wrong: 0 };
+            const totalAtt = att.correct + att.wrong;
+            const accPct = totalAtt > 0 ? Math.round(att.correct / totalAtt * 100) : 0;
+            const isPlaced = placedArr.includes(chipId);
+            const partColor = isPlaced ? '#16a34a' : (att.wrong > 0 ? '#f87171' : (totalAtt > 0 ? '#fbbf24' : '#d1d5db'));
+            const barWidth = isPlaced ? 100 : (totalAtt > 0 ? Math.max(3, accPct) : 2);
+            const partPreview = part.length > 22 ? part.slice(0, 22) + '…' : part;
+            const partKey = `de-${q.id}-p${i}`;
+
+            html += `<div class="jt-span-row jt-depth-1 ${dtExpandedSpans.has(partKey + ':detail') ? 'jt-expanded' : ''}" onclick="event.stopPropagation();showDtDetail('${partKey}')">
+              <div class="jt-span-service">
+                <span class="jt-span-svc-dot" style="background:${partColor}"></span>
+                <span class="jt-span-svc-name">#${i + 1} ${isPlaced ? '✓' : '⬜'}</span>
+                <span class="jt-span-op-name">${partPreview}</span>
+              </div>
+              <div class="jt-span-timeline">
+                <div class="jt-span-bar" style="left:0%;width:${barWidth}%;background:${partColor};opacity:${isPlaced ? 0.8 : 0.4};">
+                  <span class="jt-span-bar-label">${isPlaced ? '已歸位' : (totalAtt > 0 ? accPct + '%' : '—')}</span>
+                </div>
+              </div>
+            </div>`;
+
+            if (dtExpandedSpans.has(partKey + ':detail')) {
+              html += `<div class="jt-detail" onclick="event.stopPropagation()"><div class="jt-detail-inner">
+                <div class="jt-detail-sidebar">
+                  <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:4px;">Part Info</div>
+                  <div style="font-size:0.68rem;color:#718096;line-height:1.6;">
+                    Q${q.id} · Part #${i + 1}<br>
+                    ${isPlaced ? '<span style="color:#16a34a;font-weight:600;">✓ 已歸位</span>' : '<span style="color:#999;">未放入</span>'}<br>
+                    <a style="color:#3182ce;cursor:pointer;text-decoration:underline;" onclick="goToPageFromBacklink(${qIdx})">跳到此題 →</a>
+                  </div>
+                </div>
+                <div class="jt-detail-main">
+                  <table class="jt-tag-table">
+                    <tr><td class="jt-tag-key">part_index</td><td class="jt-tag-val">#${i + 1}</td></tr>
+                    <tr><td class="jt-tag-key">placed</td><td class="jt-tag-val">${isPlaced ? '<span style="color:#16a34a">true</span>' : '<span style="color:#999">false</span>'}</td></tr>
+                    <tr><td class="jt-tag-key">correct_drops</td><td class="jt-tag-val">${att.correct}</td></tr>
+                    <tr><td class="jt-tag-key">wrong_drops</td><td class="jt-tag-val">${att.wrong}</td></tr>
+                    <tr><td class="jt-tag-key">accuracy</td><td class="jt-tag-val">${totalAtt > 0 ? accPct + '%' : '—'}</td></tr>
+                    <tr><td class="jt-tag-key">content</td><td class="jt-tag-val" style="line-height:1.5;">${part}</td></tr>
+                  </table>
+                </div>
+              </div></div>`;
+            }
+          });
+        }
+      });
+
+      html += `</div></div>`;
+      return html;
+    }
+
+    function renderDtExpServiceDetail(q, idx, color, placedArr, placePct, isCompleted) {
+      const tagsActive = dtDetailTab === 'tags' ? 'active' : '';
+      const ctxActive = dtDetailTab === 'context' ? 'active' : '';
+      let bodyHtml = '';
+      if (dtDetailTab === 'tags') {
+        bodyHtml = `<table class="jt-tag-table">
+          <tr><td class="jt-tag-key">question.id</td><td class="jt-tag-val"><a onclick="goToPageFromBacklink(${idx})">Q${q.id} (跳轉)</a></td></tr>
+          <tr><td class="jt-tag-key">category</td><td class="jt-tag-val">${q.category || '—'}</td></tr>
+          <tr><td class="jt-tag-key">total_parts</td><td class="jt-tag-val">${q.expParts.length}</td></tr>
+          <tr><td class="jt-tag-key">placed</td><td class="jt-tag-val">${placedArr.length}</td></tr>
+          <tr><td class="jt-tag-key">completion</td><td class="jt-tag-val">${placePct}%</td></tr>
+          <tr><td class="jt-tag-key">status</td><td class="jt-tag-val">${isCompleted ? '<span style="color:#16a34a;font-weight:600;">全部完成 ✓</span>' : '<span style="color:#ca8a04;">進行中</span>'}</td></tr>
+        </table>`;
+      } else {
+        bodyHtml = `<div class="jt-context-block">
+          <div style="font-size:0.65rem;color:#a0aec0;margin-bottom:4px;">Question</div>
+          ${q.question}
+        </div>
+        <div class="jt-context-block" style="margin-top:6px;">
+          <div style="font-size:0.65rem;color:#a0aec0;margin-bottom:4px;">All Explanation Parts</div>
+          ${q.expParts.map((part, pi) => {
+            const chipId = 'exp-q' + q.id + '-' + pi;
+            const placed = placedArr.includes(chipId);
+            return '<div style="margin-bottom:4px;' + (placed ? 'color:#16a34a;' : 'color:#888;') + '">' + (placed ? '✅' : '⬜') + ' #' + (pi + 1) + ': ' + (part.length > 80 ? part.slice(0, 80) + '…' : part) + '</div>';
+          }).join('')}
+        </div>`;
+      }
+      return `<div class="jt-detail" onclick="event.stopPropagation()"><div class="jt-detail-inner">
+        <div class="jt-detail-sidebar">
+          <div style="font-size:0.7rem;color:#276749;font-weight:600;margin-bottom:6px;">Service</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <div style="width:10px;height:10px;border-radius:2px;background:${color};"></div>
+            <span style="font-size:0.78rem;font-weight:600;color:#2d3748;">Q${q.id}</span>
+          </div>
+          <div style="font-size:0.68rem;color:#718096;line-height:1.5;">
+            ${q.category ? q.category + '<br>' : ''}
+            ${q.expParts.length} parts<br>
+            ${placePct}% done
+          </div>
+        </div>
+        <div class="jt-detail-main">
+          <div class="jt-detail-tabs">
+            <button class="jt-detail-tab ${tagsActive}" onclick="event.stopPropagation();switchDtTab('tags')">Tags</button>
+            <button class="jt-detail-tab ${ctxActive}" onclick="event.stopPropagation();switchDtTab('context')">Context</button>
+          </div>
+          ${bodyHtml}
+        </div>
+      </div></div>`;
     }
 
     function restart() {
