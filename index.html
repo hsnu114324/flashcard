@@ -1419,6 +1419,46 @@
       font-size: 0.85rem; color: #666; flex: 1;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    .backlink-question .bq-jump {
+      font-size: 0.65rem; color: #a0aec0; background: #f0f4f1; border: 1px solid #e2e8f0;
+      padding: 2px 8px; border-radius: 6px; flex-shrink: 0; cursor: pointer; transition: all 0.15s;
+    }
+    .backlink-question .bq-jump:hover { background: #e2e8f0; color: #4a5568; }
+    /* 反向連結中的內嵌題目詳情 */
+    .backlink-inline-detail {
+      margin: 0 0 8px 0; padding: 12px 14px; border-radius: 10px;
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      animation: bkDetailIn 0.2s ease;
+    }
+    @keyframes bkDetailIn { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 600px; } }
+    .backlink-inline-detail .bkd-q {
+      font-size: 0.88rem; font-weight: 600; color: #2d3748; margin-bottom: 8px; line-height: 1.5;
+    }
+    .backlink-inline-detail .bkd-options {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
+    }
+    .backlink-inline-detail .bkd-opt {
+      font-size: 0.78rem; padding: 4px 10px; border-radius: 8px;
+      background: #fff; border: 1px solid #e2e8f0; color: #4a5568;
+    }
+    .backlink-inline-detail .bkd-opt.correct {
+      background: #dcfce7; border-color: #86efac; color: #166534; font-weight: 600;
+    }
+    .backlink-inline-detail .bkd-exp {
+      margin-top: 6px; padding: 8px 10px; border-radius: 8px;
+      background: #fff; border: 1px solid #e9ecef; font-size: 0.76rem; color: #718096; line-height: 1.6;
+    }
+    .backlink-inline-detail .bkd-exp-title {
+      font-size: 0.72rem; font-weight: 600; color: #9ca3af; margin-bottom: 4px;
+    }
+    .backlink-inline-detail .bkd-footer {
+      margin-top: 8px; display: flex; gap: 8px; align-items: center;
+    }
+    .backlink-inline-detail .bkd-goto {
+      font-size: 0.72rem; color: #3182ce; cursor: pointer; text-decoration: underline;
+    }
+    .backlink-inline-detail .bkd-goto:hover { color: #2b6cb0; }
+    .backlink-question.bq-expanded { background: #edf2f7; border-color: #a0aec0; }
   </style>
 </head>
 <body>
@@ -1790,6 +1830,15 @@
       if (viewMode === 'single' && document.getElementById('cardArea').querySelector('.mastery-dashboard')) {
         state.type = 'dashboard';
         state.tab = dashboardTab;
+        // 記錄 Dashboard 內的展開狀態
+        if (inlineTraceWord) state.inlineTraceWord = inlineTraceWord;
+        // 記錄展開的 chip groups
+        const expandedGroups = [];
+        document.querySelectorAll('.chip-mastery-group.expanded').forEach(el => {
+          const header = el.querySelector('.chip-mastery-group-header');
+          if (header) expandedGroups.push(header.textContent.trim());
+        });
+        if (expandedGroups.length) state.expandedGroups = expandedGroups;
       }
       if (activeAnswerKey) state.backlink = { kind: 'answer', key: activeAnswerKey };
       else if (activeOptionKey) state.backlink = { kind: 'option', key: activeOptionKey };
@@ -1811,13 +1860,36 @@
       if (state.type === 'dashboard') {
         dashboardTab = state.tab || 'questions';
         showDashboard(null, true);
-        // 恢復捲動位置（setTimeout 確保 DOM 已更新）
-        if (state.scrollTop != null) {
-          setTimeout(() => {
+        // 恢復 Dashboard 內的展開狀態
+        setTimeout(() => {
+          // 恢復展開的 chip groups
+          if (state.expandedGroups && state.expandedGroups.length) {
+            document.querySelectorAll('.chip-mastery-group').forEach(el => {
+              const header = el.querySelector('.chip-mastery-group-header');
+              if (header && state.expandedGroups.includes(header.textContent.trim())) {
+                el.classList.add('expanded');
+              }
+            });
+          }
+          // 恢復 inline trace
+          if (state.inlineTraceWord) {
+            inlineTraceWord = null; // 先重設，讓 toggleInlineTrace 重新觸發
+            const targetWord = state.inlineTraceWord;
+            // 找到匹配的可點擊文字並觸發
+            const wordEls = document.querySelectorAll('.clickable-word');
+            for (const el of wordEls) {
+              if (el.textContent.toLowerCase() === targetWord) {
+                toggleInlineTrace(el.textContent, el);
+                break;
+              }
+            }
+          }
+          // 恢復捲動位置
+          if (state.scrollTop != null) {
             const mc = document.getElementById('mainContent');
             if (mc) mc.scrollTop = state.scrollTop;
-          }, 0);
-        }
+          }
+        }, 0);
       } else if (state.type === 'quiz') {
         startQuiz(true);
       } else {
@@ -2085,9 +2157,10 @@
           const preview = q.question.length > 40 ? q.question.slice(0, 40) + '…' : q.question;
           const idx = questions.indexOf(q);
           const catTag = q.category ? `<span style="font-size:0.65rem;color:#999;background:#f0f4f1;padding:1px 5px;border-radius:4px;margin-left:4px;">${q.category}</span>` : '';
-          return `<div class="backlink-question" onclick="goToPageFromBacklink(${idx})">
+          return `<div class="backlink-question" onclick="toggleBacklinkDetail(${idx}, this)">
             <span class="bq-num">第${q.id}題</span>
             <span class="bq-text">${preview}${catTag}</span>
+            <span class="bq-jump" onclick="event.stopPropagation();goToPageFromBacklink(${idx})">跳轉</span>
           </div>`;
         }).join('');
         area.innerHTML = `
@@ -2114,9 +2187,10 @@
           const idx = questions.indexOf(q);
           const label = q.labels[q.options.indexOf(activeOptionKey)] || '?';
           const catTag = q.category ? `<span style="font-size:0.65rem;color:#999;background:#f0f4f1;padding:1px 5px;border-radius:4px;margin-left:4px;">${q.category}</span>` : '';
-          return `<div class="backlink-question" onclick="goToPageFromBacklink(${idx})">
+          return `<div class="backlink-question" onclick="toggleBacklinkDetail(${idx}, this)">
             <span class="bq-num">第${q.id}題</span>
             <span class="bq-text">(${label}) ${preview}${catTag}</span>
+            <span class="bq-jump" onclick="event.stopPropagation();goToPageFromBacklink(${idx})">跳轉</span>
           </div>`;
         }).join('');
         area.innerHTML = `
@@ -2147,9 +2221,10 @@
             sameExpQuestions.map(sq => {
               const sp = sq.question.length > 40 ? sq.question.slice(0, 40) + '…' : sq.question;
               const si = questions.indexOf(sq);
-              return `<div class="backlink-question" onclick="goToPageFromBacklink(${si})">
+              return `<div class="backlink-question" onclick="toggleBacklinkDetail(${si}, this)">
                 <span class="bq-num">第${sq.id}題</span>
                 <span class="bq-text">${sp}</span>
+                <span class="bq-jump" onclick="event.stopPropagation();goToPageFromBacklink(${si})">跳轉</span>
               </div>`;
             }).join('');
         }
@@ -2159,9 +2234,10 @@
               <div class="backlink-title">📖 詳解卡片 — 第${qid}題 (第${partIdx + 1}張)</div>
               <button class="backlink-close" onclick="clearBacklink()">✕</button>
             </div>
-            <div class="backlink-question" onclick="goToPageFromBacklink(${questions.indexOf(q)})">
+            <div class="backlink-question" onclick="toggleBacklinkDetail(${questions.indexOf(q)}, this)">
               <span class="bq-num">第${q.id}題</span>
               <span class="bq-text">${preview}</span>
+              <span class="bq-jump" onclick="event.stopPropagation();goToPageFromBacklink(${questions.indexOf(q)})">跳轉</span>
             </div>
             <div class="backlink-exp-full">${fullText}</div>
             ${relatedHtml}
@@ -2182,6 +2258,54 @@
       pushNavState();
       switchToSingle(idx);
       updateBackButton();
+    }
+
+    // 反向連結面板中，點擊題目在原位展開詳情（不離開頁面）
+    function toggleBacklinkDetail(idx, el) {
+      const q = questions[idx];
+      if (!q) return;
+      const parentRow = el.closest('.backlink-question');
+      if (!parentRow) return;
+
+      // 如果已展開，收合
+      const existing = parentRow.nextElementSibling;
+      if (existing && existing.classList.contains('backlink-inline-detail')) {
+        existing.remove();
+        parentRow.classList.remove('bq-expanded');
+        return;
+      }
+
+      // 收合同層其他已展開的
+      const panel = parentRow.closest('.backlink-panel');
+      if (panel) {
+        panel.querySelectorAll('.backlink-inline-detail').forEach(d => d.remove());
+        panel.querySelectorAll('.backlink-question.bq-expanded').forEach(d => d.classList.remove('bq-expanded'));
+      }
+
+      parentRow.classList.add('bq-expanded');
+
+      // 構建詳情 HTML
+      const optionsHtml = q.options.map((opt, i) => {
+        const label = q.labels[i] || String.fromCharCode(65 + i);
+        const isCorrect = i === q.correctIndex;
+        return `<span class="bkd-opt${isCorrect ? ' correct' : ''}">(${label}) ${opt}</span>`;
+      }).join('');
+
+      const expHtml = q.expParts.length > 0
+        ? `<div class="bkd-exp"><div class="bkd-exp-title">📖 詳解</div>${q.expParts.map(p => `<div style="margin-bottom:4px;">• ${p}</div>`).join('')}</div>`
+        : '';
+
+      const detailDiv = document.createElement('div');
+      detailDiv.className = 'backlink-inline-detail';
+      detailDiv.innerHTML = `
+        <div class="bkd-q">${q.question}</div>
+        <div class="bkd-options">${optionsHtml}</div>
+        ${expHtml}
+        <div class="bkd-footer">
+          <span class="bkd-goto" onclick="goToPageFromBacklink(${idx})">📄 跳轉到此題 →</span>
+        </div>
+      `;
+      parentRow.after(detailDiv);
     }
 
     function clearBacklink() {
