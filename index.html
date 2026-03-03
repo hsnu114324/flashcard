@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Flashcard v1.0</title>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js" async defer></script>
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -111,68 +109,53 @@
       font-size: 0.75rem; color: #aaa; text-align: center;
     }
 
-    /* ===== Google Auth & Sync UI ===== */
+    /* ===== Google Sheets Sync UI ===== */
     .google-auth-section {
       padding: 10px 14px; border-bottom: 1px solid #eef0f2;
     }
-    .google-login-btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 9px 12px; border-radius: 10px;
-      background: #fff; border: 1.5px solid #dadce0;
-      font-size: 0.82rem; font-weight: 500; color: #3c4043;
-      cursor: pointer; transition: all 0.15s;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    .gs-sync-bar {
+      display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: #888; margin-bottom: 6px;
     }
-    .google-login-btn:hover { background: #f8f9fa; border-color: #c0c3c7; box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
-    .google-login-btn img { width: 18px; height: 18px; }
-    .google-user-info {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-    }
-    .google-avatar {
-      width: 28px; height: 28px; border-radius: 50%;
-      border: 1.5px solid #e2e6ea;
-    }
-    .google-user-name {
-      flex: 1; min-width: 0; font-size: 0.78rem; font-weight: 600; color: #333;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .google-logout-btn {
-      font-size: 0.65rem; padding: 3px 8px; border-radius: 6px;
-      background: #f3f4f6; border: 1px solid #e5e7eb; cursor: pointer;
-      color: #666; transition: all 0.15s; flex-shrink: 0;
-    }
-    .google-logout-btn:hover { background: #ffe4e6; color: #ef4444; border-color: #fca5a5; }
-    .google-sync-bar {
-      display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: #888;
-    }
-    .google-sync-bar .sync-dot {
+    .gs-sync-bar .sync-dot {
       width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
     }
-    .google-sync-bar .sync-dot.idle { background: #d1d5db; }
-    .google-sync-bar .sync-dot.syncing { background: #fbbf24; animation: syncPulse 1s infinite; }
-    .google-sync-bar .sync-dot.success { background: #34d399; }
-    .google-sync-bar .sync-dot.error { background: #f87171; }
+    .gs-sync-bar .sync-dot.idle { background: #d1d5db; }
+    .gs-sync-bar .sync-dot.syncing { background: #fbbf24; animation: syncPulse 1s infinite; }
+    .gs-sync-bar .sync-dot.success { background: #34d399; }
+    .gs-sync-bar .sync-dot.error { background: #f87171; }
     @keyframes syncPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .google-sync-bar .sync-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .google-sync-actions {
+    .gs-sync-bar .sync-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .gs-sync-actions {
       display: flex; gap: 4px; margin-top: 6px;
     }
-    .google-sync-btn {
+    .gs-sync-btn {
       flex: 1; padding: 5px 8px; border-radius: 6px; font-size: 0.7rem;
       font-weight: 600; cursor: pointer; border: 1px solid #e5e7eb;
       background: #f8f9fb; color: #555; transition: all 0.15s;
       display: flex; align-items: center; justify-content: center; gap: 4px;
     }
-    .google-sync-btn:hover { background: #e8f5e9; border-color: #4a7c59; color: #4a7c59; }
-    .google-sync-btn.primary {
+    .gs-sync-btn:hover { background: #e8f5e9; border-color: #4a7c59; color: #4a7c59; }
+    .gs-sync-btn.primary {
       background: linear-gradient(135deg, #4a7c59, #7fa886); color: #fff; border-color: #4a7c59;
     }
-    .google-sync-btn.primary:hover { transform: scale(1.02); }
-    .google-sheet-link {
+    .gs-sync-btn.primary:hover { transform: scale(1.02); }
+    .gs-sheet-link {
       display: flex; align-items: center; gap: 4px; margin-top: 6px;
       font-size: 0.68rem; color: #4a7c59; cursor: pointer; transition: color 0.15s;
     }
-    .google-sheet-link:hover { color: #2d5a3a; text-decoration: underline; }
+    .gs-sheet-link:hover { color: #2d5a3a; text-decoration: underline; }
+    .gs-url-input {
+      width: 100%; padding: 5px 8px; border: 1px solid #ddd; border-radius: 6px;
+      font-size: 0.7rem; margin-top: 4px; box-sizing: border-box;
+    }
+    .gs-url-input:focus { outline: none; border-color: #4a7c59; }
+    .gs-connect-btn {
+      width: 100%; margin-top: 4px; padding: 6px; border-radius: 6px;
+      background: linear-gradient(135deg, #4a7c59, #7fa886); color: #fff;
+      border: none; font-size: 0.72rem; font-weight: 600; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .gs-connect-btn:hover { transform: scale(1.02); opacity: 0.95; }
 
     /* ===== Mobile sidebar toggle ===== */
     .sidebar-toggle {
@@ -4553,331 +4536,153 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
       swipeStartX = null;
     }, { passive: true });
 
-    // ==================== Google Sheets 整合 ====================
-    // ── 設定區：請填入你的 Google OAuth Client ID 和 Google Sheet ID ──
-    const GOOGLE_CLIENT_ID = '280426045341-s5tias2et5fgfkm6v4pasodaimi9usot.apps.googleusercontent.com';
-    // ⚠️ 將你手動建立的 Google Sheet 網址中的 ID 填入下方
-    // 網址格式：https://docs.google.com/spreadsheets/d/【這段就是 SHEET_ID】/edit
-    const HARDCODED_SHEET_ID = 'https://docs.google.com/spreadsheets/d/17fgih9Z0spge4St9fsxbI5HC3LLi0oTof_nCh28z8TQ/edit';  // ← 貼上你的 Google Sheet ID
-    const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
-    const SHEET_NAME_QUESTIONS = '題庫';
-    const SHEET_NAME_STATS = '學習進度';
+    // ==================== Google Sheets 整合（Apps Script 版） ====================
+    // ⚠️ 請將你部署的 Apps Script 網址貼在這裡
+    // 步驟：開啟你的 Google Sheet → 延伸功能 → Apps Script → 貼上 apps_script_code.js 的內容
+    //       → 部署 → 新增部署 → 類型：網頁應用程式 → 執行身分：我 → 存取權：所有人 → 部署
+    //       → 複製產生的網址貼到下方
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm9_wdIwf2RdXgj2TOfxGlw1eOaIYfe-jUy8_4_89Pcb_DFu3NjpJwesR7IV4IRCWfYQ/exec';  // ← 貼上你的 Apps Script 部署網址
 
-    let googleAccessToken = null;
-    let googleUserProfile = null;  // { name, email, picture }
-    let gSpreadsheetId = HARDCODED_SHEET_ID || localStorage.getItem('flashcard_gsheet_id') || null;
     let gSyncStatus = 'idle'; // 'idle' | 'syncing' | 'success' | 'error'
     let gLastSyncTime = null;
     let gSyncTimer = null; // debounce timer
-    let gTokenClient = null;
-    let gapiInited = false;
-    let gisInited = false;
 
-    // ── 初始化 Google API ──
-    function initGapi() {
-      gapi.load('client', async () => {
-        await gapi.client.init({});
-        await gapi.client.load('sheets', 'v4');
-        gapiInited = true;
-        maybeEnableAuth();
-      });
-    }
-    function initGis() {
-      gTokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: GOOGLE_SCOPES,
-        callback: handleTokenResponse,
-      });
-      gisInited = true;
-      maybeEnableAuth();
-    }
-    function maybeEnableAuth() {
-      if (gapiInited && gisInited) {
-        renderGoogleAuthUI();
-      }
-    }
-
-    // 這兩個函式會在外部 script 載入後自動呼叫
-    window.addEventListener('load', () => {
-      if (typeof gapi !== 'undefined') initGapi();
-      if (typeof google !== 'undefined' && google.accounts) initGis();
-      // 備用：延遲重試
-      setTimeout(() => {
-        if (!gapiInited && typeof gapi !== 'undefined') initGapi();
-        if (!gisInited && typeof google !== 'undefined' && google.accounts) initGis();
-      }, 1500);
-    });
-
-    // ── Token 回調 ──
-    function handleTokenResponse(resp) {
-      if (resp.error) {
-        console.error('Google Auth Error:', resp);
-        updateSyncStatus('error', '登入失敗');
-        return;
-      }
-      googleAccessToken = resp.access_token;
-      // 取得使用者資訊
-      fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: { Authorization: 'Bearer ' + googleAccessToken }
-      }).then(r => r.json()).then(info => {
-        googleUserProfile = {
-          name: info.name || info.email,
-          email: info.email,
-          picture: info.picture || ''
-        };
-        localStorage.setItem('flashcard_guser', JSON.stringify(googleUserProfile));
-        renderGoogleAuthUI();
-        // 登入後自動載入
-        autoSyncOnLogin();
-      }).catch(() => {
-        googleUserProfile = { name: '使用者', email: '', picture: '' };
-        renderGoogleAuthUI();
-        autoSyncOnLogin();
-      });
-    }
-
-    function googleLogin() {
-      if (!gTokenClient) { alert('Google API 尚未載入，請稍候再試'); return; }
-      gTokenClient.requestAccessToken({ prompt: 'consent' });
-    }
-    function googleLogout() {
-      if (googleAccessToken) {
-        google.accounts.oauth2.revoke(googleAccessToken, () => {});
-      }
-      googleAccessToken = null;
-      googleUserProfile = null;
-      localStorage.removeItem('flashcard_guser');
-      renderGoogleAuthUI();
-    }
-
-    // ── Auth UI ──
-    function renderGoogleAuthUI() {
+    // ── Sync UI ──
+    function renderSyncUI() {
       const container = document.getElementById('googleAuthContent');
       if (!container) return;
 
-      if (!gapiInited || !gisInited) {
-        container.innerHTML = `<div style="font-size:0.72rem;color:#bbb;text-align:center;padding:4px;">Google API 載入中…</div>`;
-        return;
-      }
+      const scriptUrl = APPS_SCRIPT_URL || localStorage.getItem('flashcard_apps_script_url') || '';
 
-      if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_CLIENT_ID.apps.googleusercontent.com') {
-        container.innerHTML = `<div style="font-size:0.68rem;color:#d97706;text-align:center;padding:4px;line-height:1.5;">
-          ⚠️ 請在程式碼中設定<br>GOOGLE_CLIENT_ID
-        </div>`;
-        return;
-      }
-
-      if (!googleAccessToken) {
+      if (!scriptUrl) {
         container.innerHTML = `
-          <button class="google-login-btn" onclick="googleLogin()">
-            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-            使用 Google 登入
-          </button>`;
+          <div style="font-size:0.72rem; color:#666; margin-bottom:6px; font-weight:600;">📡 Google Sheets 同步</div>
+          <div style="font-size:0.65rem; color:#999; margin-bottom:4px;">貼上 Apps Script 部署網址：</div>
+          <input type="text" id="appsScriptUrlInput" class="gs-url-input" placeholder="https://script.google.com/macros/s/...">
+          <button class="gs-connect-btn" onclick="connectAppsScript()">🔗 連結</button>
+          <div style="font-size:0.6rem; color:#bbb; margin-top:6px; line-height:1.4;">
+            💡 設定方式：開啟 Google Sheet → 延伸功能 → Apps Script → 部署為網頁應用程式
+          </div>`;
         return;
       }
 
-      const profile = googleUserProfile || { name: '使用者', email: '', picture: '' };
       const syncDot = gSyncStatus;
-      const syncText = gSyncStatus === 'idle' ? (gSpreadsheetId ? '尚未同步' : '請設定 Sheet ID')
+      const syncText = gSyncStatus === 'idle' ? '已連結'
         : gSyncStatus === 'syncing' ? '同步中…'
         : gSyncStatus === 'success' ? `✓ ${gLastSyncTime || '已同步'}`
         : '✗ 同步失敗';
 
-      let sheetIdInput = '';
-      if (!gSpreadsheetId) {
-        sheetIdInput = `
-          <div style="margin-top:6px;">
-            <div style="font-size:0.65rem; color:#999; margin-bottom:3px;">貼上 Google Sheet 網址或 ID：</div>
-            <div style="display:flex; gap:4px;">
-              <input type="text" id="sheetIdInput" placeholder="Sheet 網址或 ID" style="flex:1; min-width:0; padding:5px 8px; border:1px solid #ddd; border-radius:6px; font-size:0.7rem;">
-              <button onclick="applySheetId()" style="padding:5px 10px; border-radius:6px; background:#4a7c59; color:#fff; border:none; font-size:0.68rem; font-weight:600; cursor:pointer; white-space:nowrap;">連結</button>
-            </div>
-          </div>`;
-      }
-
-      let sheetLink = '';
-      if (gSpreadsheetId) {
-        sheetLink = `<div class="google-sheet-link" onclick="window.open('https://docs.google.com/spreadsheets/d/${gSpreadsheetId}','_blank')">📊 開啟 Google Sheet →</div>
-        <div style="margin-top:3px;font-size:0.62rem;color:#bbb;cursor:pointer;" onclick="unlinkSheet()" title="取消連結此 Sheet">🔗 解除連結</div>`;
-      }
-
       container.innerHTML = `
-        <div class="google-user-info">
-          ${profile.picture ? `<img class="google-avatar" src="${profile.picture}" referrerpolicy="no-referrer">` : '<div class="google-avatar" style="background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:0.7rem;">👤</div>'}
-          <span class="google-user-name" title="${profile.email}">${profile.name}</span>
-          <button class="google-logout-btn" onclick="googleLogout()">登出</button>
-        </div>
-        ${sheetIdInput}
-        <div class="google-sync-bar" style="${gSpreadsheetId ? '' : 'display:none;'}">
+        <div style="font-size:0.72rem; color:#666; margin-bottom:6px; font-weight:600;">📡 Google Sheets 同步</div>
+        <div class="gs-sync-bar">
           <span class="sync-dot ${syncDot}"></span>
           <span class="sync-text">${syncText}</span>
         </div>
-        <div class="google-sync-actions" style="${gSpreadsheetId ? '' : 'display:none;'}">
-          <button class="google-sync-btn" onclick="syncFromSheets()" title="從 Google Sheet 載入">⬇ 載入</button>
-          <button class="google-sync-btn primary" onclick="syncToSheets()" title="儲存至 Google Sheet">⬆ 儲存</button>
+        <div class="gs-sync-actions">
+          <button class="gs-sync-btn" onclick="syncFromSheets()" title="從 Google Sheet 載入">⬇ 載入</button>
+          <button class="gs-sync-btn primary" onclick="syncToSheets()" title="儲存至 Google Sheet">⬆ 儲存</button>
         </div>
-        ${sheetLink}`;
+        <div class="gs-sheet-link" style="margin-top:6px; font-size:0.62rem; color:#bbb; cursor:pointer;" onclick="disconnectAppsScript()" title="解除連結">🔗 解除連結</div>`;
     }
 
-    function updateSyncStatus(status, msg) {
-      gSyncStatus = status;
-      if (status === 'success') gLastSyncTime = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-      renderGoogleAuthUI();
+    function getAppsScriptUrl() {
+      return APPS_SCRIPT_URL || localStorage.getItem('flashcard_apps_script_url') || '';
     }
 
-    // ── 連結 / 解除 Sheet ──
-    function applySheetId() {
-      const input = document.getElementById('sheetIdInput');
+    function connectAppsScript() {
+      const input = document.getElementById('appsScriptUrlInput');
       if (!input) return;
-      let val = input.value.trim();
-      if (!val) { alert('請輸入 Google Sheet 網址或 ID'); return; }
-      // 從網址中提取 Sheet ID
-      const urlMatch = val.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-      if (urlMatch) val = urlMatch[1];
-      // 驗證格式
-      if (!/^[a-zA-Z0-9_-]{10,}$/.test(val)) {
-        alert('Sheet ID 格式不正確，請確認');
+      let url = input.value.trim();
+      if (!url) { alert('請輸入 Apps Script 部署網址'); return; }
+      if (!url.startsWith('https://script.google.com/')) {
+        alert('網址格式不正確，應該以 https://script.google.com/ 開頭');
         return;
       }
-      gSpreadsheetId = val;
-      localStorage.setItem('flashcard_gsheet_id', val);
-      renderGoogleAuthUI();
+      localStorage.setItem('flashcard_apps_script_url', url);
+      renderSyncUI();
       // 自動載入
-      autoSyncOnLogin();
+      syncFromSheets();
     }
-    function unlinkSheet() {
-      if (!confirm('確定要解除與此 Google Sheet 的連結？（不會刪除 Sheet 資料）')) return;
-      gSpreadsheetId = HARDCODED_SHEET_ID || null; // 回到預設
-      localStorage.removeItem('flashcard_gsheet_id');
+
+    function disconnectAppsScript() {
+      if (!confirm('確定要解除連結？（不會刪除 Sheet 資料）')) return;
+      localStorage.removeItem('flashcard_apps_script_url');
       gSyncStatus = 'idle';
       gLastSyncTime = null;
-      renderGoogleAuthUI();
+      renderSyncUI();
     }
 
-    // ── 自動同步（登入後） ──
-    async function autoSyncOnLogin() {
-      if (!googleAccessToken) return;
-      if (!gSpreadsheetId) {
-        updateSyncStatus('idle');
-        console.log('尚未設定 Sheet ID，請在 HARDCODED_SHEET_ID 填入你的 Google Sheet ID');
-        return;
-      }
-      updateSyncStatus('syncing');
-      try {
-        await loadFromSheets();
-        updateSyncStatus('success');
-      } catch (err) {
-        console.error('Auto sync error:', err);
-        // 如果載入失敗（可能 Sheet 是空的），改為儲存目前資料上去
-        try {
-          await ensureSheetHeaders();
-          await saveAllToSheets();
-          updateSyncStatus('success');
-        } catch (err2) {
-          console.error('Fallback save also failed:', err2);
-          updateSyncStatus('error', err2.message);
-        }
-      }
+    function updateSyncStatus(status) {
+      gSyncStatus = status;
+      if (status === 'success') gLastSyncTime = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+      renderSyncUI();
     }
 
-    // ── 確認表頭存在（用於第一次儲存到手動建立的 Sheet） ──
-    async function ensureSheetHeaders() {
-      try {
-        const resp = await gapi.client.sheets.spreadsheets.values.get({
-          spreadsheetId: gSpreadsheetId,
-          range: `${SHEET_NAME_QUESTIONS}!A1:I1`
-        });
-        if (resp.result.values && resp.result.values.length > 0) return; // 已有表頭
-      } catch (e) {
-        // Sheet 或 tab 不存在，嘗試寫入
-      }
-      await gapi.client.sheets.spreadsheets.values.batchUpdate({
-        spreadsheetId: gSpreadsheetId,
-        resource: {
-          valueInputOption: 'RAW',
-          data: [
-            {
-              range: `${SHEET_NAME_QUESTIONS}!A1:I1`,
-              values: [['id', 'category', 'question', 'chinese', 'options (JSON)', 'labels (JSON)', 'correctIndex', 'expParts (JSON)', 'lastModified']]
-            },
-            {
-              range: `${SHEET_NAME_STATS}!A1:A1`,
-              values: [['progressJson']]
-            }
-          ]
-        }
-      });
-    }
-
-    // ── 儲存全部 ──
-    async function saveAllToSheets() {
-      await saveQuestionsToSheet();
-      await saveStatsToSheet();
-    }
-
-    async function syncToSheets() {
-      if (!googleAccessToken) { alert('請先登入 Google'); return; }
-      if (!gSpreadsheetId) { alert('請先設定 Google Sheet ID（在程式碼的 HARDCODED_SHEET_ID 或在側邊欄輸入）'); return; }
-      updateSyncStatus('syncing');
-      try {
-        await ensureSheetHeaders();
-        await saveAllToSheets();
-        updateSyncStatus('success');
-      } catch (err) {
-        console.error('Save error:', err);
-        updateSyncStatus('error');
-        alert('儲存失敗：' + (err.result?.error?.message || err.message || '未知錯誤'));
-      }
-    }
-
+    // ── 從 Apps Script 載入 ──
     async function syncFromSheets() {
-      if (!googleAccessToken) { alert('請先登入 Google'); return; }
-      if (!gSpreadsheetId) {
-        alert('請先設定 Google Sheet ID');
-        return;
-      }
+      const url = getAppsScriptUrl();
+      if (!url) { alert('請先設定 Apps Script 網址'); return; }
       updateSyncStatus('syncing');
       try {
-        await loadFromSheets();
+        const resp = await fetch(url + '?action=getAll');
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        // 載入題目
+        if (data.questions && data.questions.length > 0) {
+          questions.length = 0;
+          questions.push(...data.questions);
+        }
+
+        // 載入進度
+        if (data.stats) {
+          restoreProgress(data.stats);
+        }
+
+        // 重建 UI
+        rebuildAfterImport();
         updateSyncStatus('success');
       } catch (err) {
         console.error('Load error:', err);
         updateSyncStatus('error');
-        alert('載入失敗：' + (err.result?.error?.message || err.message || '未知錯誤'));
+        alert('載入失敗：' + err.message);
       }
     }
 
-    // ── 儲存題目 ──
-    async function saveQuestionsToSheet() {
-      const rows = questions.map(q => [
-        q.id,
-        q.category || '',
-        q.question,
-        q.chinese || '',
-        JSON.stringify(q.options),
-        JSON.stringify(q.labels),
-        q.correctIndex,
-        JSON.stringify(q.expParts),
-        new Date().toISOString()
-      ]);
-      // 先清除再寫入（避免舊資料殘留）
-      await gapi.client.sheets.spreadsheets.values.clear({
-        spreadsheetId: gSpreadsheetId,
-        range: `${SHEET_NAME_QUESTIONS}!A2:I99999`
-      });
-      if (rows.length > 0) {
-        await gapi.client.sheets.spreadsheets.values.update({
-          spreadsheetId: gSpreadsheetId,
-          range: `${SHEET_NAME_QUESTIONS}!A2`,
-          valueInputOption: 'RAW',
-          resource: { values: rows }
+    // ── 儲存至 Apps Script ──
+    async function syncToSheets() {
+      const url = getAppsScriptUrl();
+      if (!url) { alert('請先設定 Apps Script 網址'); return; }
+      updateSyncStatus('syncing');
+      try {
+        const payload = {
+          action: 'saveAll',
+          questions: questions.map(q => ({
+            id: q.id, category: q.category || '', question: q.question,
+            chinese: q.chinese || '', options: q.options,
+            labels: q.labels || ['A','B','C','D'],
+            correctIndex: q.correctIndex, expParts: q.expParts || []
+          })),
+          stats: buildProgressJson()
+        };
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },  // Apps Script 需要 text/plain 來避免 CORS preflight
+          body: JSON.stringify(payload)
         });
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        updateSyncStatus('success');
+      } catch (err) {
+        console.error('Save error:', err);
+        updateSyncStatus('error');
+        alert('儲存失敗：' + err.message);
       }
     }
 
-    // ── 儲存進度 ──
-    async function saveStatsToSheet() {
-      const progress = {
+    // ── 進度序列化 / 還原 ──
+    function buildProgressJson() {
+      return {
         questionStats: [...questionStats.entries()].map(([k, v]) => [k, v]),
         optionAttempts: [...optionAttempts.entries()].map(([k, v]) => [k, v]),
         expPartAttempts: [...expPartAttempts.entries()].map(([k, v]) => [k, v]),
@@ -4887,108 +4692,35 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
         orderCheckResults: [...orderCheckResults.entries()].map(([k, v]) => [k, v]),
         savedAt: new Date().toISOString()
       };
-      const json = JSON.stringify(progress);
-      await gapi.client.sheets.spreadsheets.values.update({
-        spreadsheetId: gSpreadsheetId,
-        range: `${SHEET_NAME_STATS}!A2`,
-        valueInputOption: 'RAW',
-        resource: { values: [[json]] }
-      });
     }
 
-    // ── 載入 ──
-    async function loadFromSheets() {
-      // 載入題目
-      const qResp = await gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: gSpreadsheetId,
-        range: `${SHEET_NAME_QUESTIONS}!A2:I99999`
-      });
-      const qRows = qResp.result.values || [];
-      if (qRows.length > 0) {
-        const loaded = qRows.map(row => ({
-          id: parseInt(row[0]) || 0,
-          category: row[1] || '',
-          question: row[2] || '',
-          chinese: row[3] || '',
-          options: JSON.parse(row[4] || '[]'),
-          labels: JSON.parse(row[5] || '["A","B","C","D"]'),
-          correctIndex: parseInt(row[6]) || 0,
-          expParts: JSON.parse(row[7] || '[]')
-        })).filter(q => q.question && q.options.length > 0);
-
-        if (loaded.length > 0) {
-          questions.length = 0;
-          questions.push(...loaded);
-        }
+    function restoreProgress(progress) {
+      if (!progress) return;
+      try {
+        questionStats.clear();
+        if (progress.questionStats) progress.questionStats.forEach(([k, v]) => questionStats.set(k, v));
+        optionAttempts.clear();
+        if (progress.optionAttempts) progress.optionAttempts.forEach(([k, v]) => optionAttempts.set(k, v));
+        expPartAttempts.clear();
+        if (progress.expPartAttempts) progress.expPartAttempts.forEach(([k, v]) => expPartAttempts.set(k, v));
+        solvedSet.clear();
+        if (progress.solvedSet) progress.solvedSet.forEach(id => solvedSet.add(id));
+        expPlacedMap.clear();
+        if (progress.expPlacedMap) progress.expPlacedMap.forEach(([k, v]) => expPlacedMap.set(k, v));
+        expCompletedSet.clear();
+        if (progress.expCompletedSet) progress.expCompletedSet.forEach(id => expCompletedSet.add(id));
+        orderCheckResults.clear();
+        if (progress.orderCheckResults) progress.orderCheckResults.forEach(([k, v]) => orderCheckResults.set(k, v));
+      } catch (e) {
+        console.warn('Failed to restore progress:', e);
       }
-
-      // 載入進度
-      const sResp = await gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: gSpreadsheetId,
-        range: `${SHEET_NAME_STATS}!A2`
-      });
-      const sRows = sResp.result.values || [];
-      if (sRows.length > 0 && sRows[0][0]) {
-        try {
-          const progress = JSON.parse(sRows[0][0]);
-          // 還原 questionStats
-          questionStats.clear();
-          if (progress.questionStats) {
-            progress.questionStats.forEach(([k, v]) => questionStats.set(k, v));
-          }
-          // 還原 optionAttempts
-          optionAttempts.clear();
-          if (progress.optionAttempts) {
-            progress.optionAttempts.forEach(([k, v]) => optionAttempts.set(k, v));
-          }
-          // 還原 expPartAttempts
-          expPartAttempts.clear();
-          if (progress.expPartAttempts) {
-            progress.expPartAttempts.forEach(([k, v]) => expPartAttempts.set(k, v));
-          }
-          // 還原 solvedSet
-          solvedSet.clear();
-          if (progress.solvedSet) {
-            progress.solvedSet.forEach(id => solvedSet.add(id));
-          }
-          // 還原 expPlacedMap
-          expPlacedMap.clear();
-          if (progress.expPlacedMap) {
-            progress.expPlacedMap.forEach(([k, v]) => expPlacedMap.set(k, v));
-          }
-          // 還原 expCompletedSet
-          expCompletedSet.clear();
-          if (progress.expCompletedSet) {
-            progress.expCompletedSet.forEach(id => expCompletedSet.add(id));
-          }
-          // 還原 orderCheckResults
-          orderCheckResults.clear();
-          if (progress.orderCheckResults) {
-            progress.orderCheckResults.forEach(([k, v]) => orderCheckResults.set(k, v));
-          }
-        } catch (e) {
-          console.warn('Failed to parse progress JSON:', e);
-        }
-      }
-
-      // 重建 UI
-      rebuildAfterImport();
     }
 
     // ── 防抖自動儲存（改動後 5 秒自動同步） ──
     function scheduleSyncToSheets() {
-      if (!googleAccessToken || !gSpreadsheetId) return;
+      if (!getAppsScriptUrl()) return;
       if (gSyncTimer) clearTimeout(gSyncTimer);
-      gSyncTimer = setTimeout(async () => {
-        updateSyncStatus('syncing');
-        try {
-          await saveAllToSheets();
-          updateSyncStatus('success');
-        } catch (err) {
-          console.error('Auto-save error:', err);
-          updateSyncStatus('error');
-        }
-      }, 5000);
+      gSyncTimer = setTimeout(() => syncToSheets(), 5000);
     }
 
     // ==================== 啟動 ====================
@@ -4999,8 +4731,8 @@ fahren 是強變化動詞，但 wir 的變位等同原形。
       viewMode = 'single';
       renderAll();
     }
-    // 渲染 Google Auth UI
-    renderGoogleAuthUI();
+    // 渲染 Sync UI
+    renderSyncUI();
   </script>
 </body>
 </html>
