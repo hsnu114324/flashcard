@@ -1348,6 +1348,69 @@
       border-bottom-color: #ea580c;
     }
 
+    /* Inline Word Trace (Dashboard 內嵌) */
+    .inline-word-trace {
+      margin: 6px 0 8px;
+      border: 1.5px solid #fed7aa;
+      border-radius: 10px;
+      background: #fffbf5;
+      overflow: hidden;
+      animation: fadeIn 0.25s ease;
+      box-shadow: 0 1px 6px rgba(245,158,11,0.08);
+    }
+    .inline-word-trace .iwt-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, #fff7ed, #fef3c7);
+      border-bottom: 1px solid #fde68a;
+    }
+    .inline-word-trace .iwt-header-left {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .inline-word-trace .iwt-word {
+      font-size: 0.85rem; font-weight: 700; color: #ea580c;
+      font-family: Georgia, serif; font-style: italic;
+    }
+    .inline-word-trace .iwt-badge {
+      font-size: 0.6rem; background: #ea580c; color: #fff;
+      padding: 2px 6px; border-radius: 4px; font-weight: 600;
+    }
+    .inline-word-trace .iwt-close {
+      width: 22px; height: 22px; border-radius: 6px;
+      background: transparent; border: none; cursor: pointer;
+      font-size: 0.75rem; color: #ea580c; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .inline-word-trace .iwt-close:hover { background: #ffedd5; }
+    .inline-word-trace .iwt-body { padding: 8px 12px; }
+    .inline-word-trace .iwt-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 5px 0; border-bottom: 1px solid #fef3c7;
+      font-size: 0.75rem; line-height: 1.5;
+    }
+    .inline-word-trace .iwt-item:last-child { border-bottom: none; }
+    .inline-word-trace .iwt-qid {
+      min-width: 30px; font-weight: 700; color: #ea580c;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .inline-word-trace .iwt-qid:hover { text-decoration: underline; }
+    .inline-word-trace .iwt-src {
+      font-size: 0.6rem; padding: 1px 5px; border-radius: 3px;
+      font-weight: 600; flex-shrink: 0; min-width: 28px; text-align: center;
+    }
+    .inline-word-trace .iwt-src.src-q { background: #dbeafe; color: #2563eb; }
+    .inline-word-trace .iwt-src.src-o { background: #ede9fe; color: #7c3aed; }
+    .inline-word-trace .iwt-src.src-e { background: #dcfce7; color: #16a34a; }
+    .inline-word-trace .iwt-ctx { color: #555; flex: 1; min-width: 0; }
+    .inline-word-trace .iwt-ctx .word-highlight {
+      background: #ffedd5; color: #ea580c; font-weight: 700; border-radius: 2px; padding: 0 2px;
+    }
+    .inline-word-trace .iwt-expand {
+      padding: 6px 12px; text-align: center; font-size: 0.72rem;
+      color: #ea580c; cursor: pointer; border-top: 1px solid #fde68a;
+      transition: background 0.15s;
+    }
+    .inline-word-trace .iwt-expand:hover { background: #fff7ed; }
 
     /* Backlink panel in main content */
     .backlink-panel {
@@ -2823,12 +2886,131 @@
     }
 
     // 把文字中的德文單字變成可點擊連結（用於 Dashboard 等處）
+    // 在 Dashboard 中使用 inline trace（不離開頁面）
     function makeClickableText(text) {
       return text.replace(GERMAN_WORD_RE, (match) => {
         if (match.length < 2 || STOP_WORDS.has(match.toLowerCase()) || match === '______') return match;
         const isActive = activeWordKey === match.toLowerCase();
-        return `<span class="clickable-word${isActive ? ' word-active' : ''}" onclick="event.stopPropagation();clickWord('${match.replace(/'/g, "\\'")}')">${match}</span>`;
+        return `<span class="clickable-word${isActive ? ' word-active' : ''}" onclick="event.stopPropagation();toggleInlineTrace('${match.replace(/'/g, "\\'")}', this)">${match}</span>`;
       });
+    }
+
+    // 在 Dashboard 中內嵌 Word Trace（出現在被點擊文字的父容器下方）
+    let inlineTraceWord = null; // 當前展開的 inline trace word key
+
+    function toggleInlineTrace(word, el) {
+      const key = word.toLowerCase();
+      if (key.length < 1) return;
+
+      // 移除任何已有的 inline trace
+      document.querySelectorAll('.inline-word-trace').forEach(e => e.remove());
+
+      // 如果點擊的是同一個字，就收合
+      if (inlineTraceWord === key) {
+        inlineTraceWord = null;
+        // 清除 active 狀態
+        document.querySelectorAll('.clickable-word.word-active').forEach(e => e.classList.remove('word-active'));
+        return;
+      }
+
+      inlineTraceWord = key;
+
+      // 更新所有同單字的 active 狀態
+      document.querySelectorAll('.clickable-word.word-active').forEach(e => e.classList.remove('word-active'));
+      document.querySelectorAll('.clickable-word').forEach(e => {
+        if (e.textContent.toLowerCase() === key) e.classList.add('word-active');
+      });
+
+      // 找到最近的容器行（option row / part row / rank row / group header）
+      const parentRow = el.closest('.iwt-row') || el.closest('.mastery-rank-row') || el.closest('.chip-mastery-group-header') || el.parentElement;
+      if (!parentRow) return;
+
+      // 建立 inline trace HTML
+      const html = renderInlineWordTrace(key);
+      if (!html) return;
+
+      const traceDiv = document.createElement('div');
+      traceDiv.className = 'inline-word-trace';
+      traceDiv.innerHTML = html;
+      traceDiv.onclick = (e) => e.stopPropagation(); // 防止冒泡
+
+      // 插入到父容器之後
+      parentRow.insertAdjacentElement('afterend', traceDiv);
+
+      // 滾動到可見區域
+      setTimeout(() => traceDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+    }
+
+    function renderInlineWordTrace(wordKey) {
+      const wordIndex = buildWordIndex();
+      const entry = wordIndex.get(wordKey);
+      if (!entry || entry.sources.length === 0) return '';
+
+      // 收集所有出處
+      const qMap = new Map();
+      entry.sources.forEach(s => {
+        if (!qMap.has(s.question.id)) qMap.set(s.question.id, { question: s.question, contexts: [] });
+        qMap.get(s.question.id).contexts.push(s);
+      });
+      // 也搜尋詳解
+      questions.forEach(q => {
+        q.expParts.forEach(part => {
+          if (part.toLowerCase().includes(wordKey)) {
+            if (!qMap.has(q.id)) qMap.set(q.id, { question: q, contexts: [] });
+            qMap.get(q.id).contexts.push({
+              question: q,
+              context: part.length > 60 ? part.slice(0, 60) + '…' : part,
+              source: '詳解'
+            });
+          }
+        });
+      });
+
+      const qEntries = [...qMap.values()].sort((a, b) => a.question.id - b.question.id);
+      if (qEntries.length === 0) return '';
+
+      // 高亮
+      const hlWord = (text) => {
+        const re = new RegExp(`(${wordKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(re, '<span class="word-highlight">$1</span>');
+      };
+
+      const totalSpans = qEntries.reduce((sum, e) => sum + e.contexts.length, 0);
+
+      // 只顯示前 8 筆，多餘的可展開完整 trace
+      const MAX_ITEMS = 8;
+      let allItems = [];
+      qEntries.forEach(e => {
+        const idx = questions.indexOf(e.question);
+        e.contexts.forEach(c => {
+          const srcCls = c.source === '題目' ? 'src-q' : c.source === '選項' ? 'src-o' : 'src-e';
+          const srcLabel = c.source === '題目' ? '題' : c.source === '選項' ? '選' : '解';
+          const ctxText = c.context.length > 55 ? c.context.slice(0, 55) + '…' : c.context;
+          allItems.push(`<div class="iwt-item">
+            <span class="iwt-qid" onclick="goToPageFromBacklink(${idx})">Q${e.question.id}</span>
+            <span class="iwt-src ${srcCls}">${srcLabel}</span>
+            <span class="iwt-ctx">${hlWord(ctxText)}</span>
+          </div>`);
+        });
+      });
+
+      const visibleItems = allItems.slice(0, MAX_ITEMS).join('');
+      const hasMore = allItems.length > MAX_ITEMS;
+
+      const expandBtn = hasMore
+        ? `<div class="iwt-expand" onclick="event.stopPropagation();clickWord('${entry.original.replace(/'/g, "\\'")}')">🔍 查看完整 Trace（共 ${totalSpans} 筆出處）→</div>`
+        : `<div class="iwt-expand" onclick="event.stopPropagation();clickWord('${entry.original.replace(/'/g, "\\'")}')">🔍 開啟完整 Word Trace →</div>`;
+
+      return `
+        <div class="iwt-header">
+          <div class="iwt-header-left">
+            <span class="iwt-word">${entry.original}</span>
+            <span class="iwt-badge">${qEntries.length} 題 · ${totalSpans} 出處</span>
+          </div>
+          <button class="iwt-close" onclick="event.stopPropagation();toggleInlineTrace('${entry.original.replace(/'/g, "\\'")}', this)">✕</button>
+        </div>
+        <div class="iwt-body">${visibleItems}</div>
+        ${expandBtn}`;
     }
 
     // ==================== Quiz 模式 ====================
@@ -3718,6 +3900,7 @@
 
     function switchDashboardTab(tab) {
       dashboardTab = tab;
+      inlineTraceWord = null;
       document.getElementById('cardArea').innerHTML = renderMasteryDashboard();
     }
 
@@ -3867,7 +4050,7 @@
             const targets = [...new Set(att.wrongTargets)].map(tid => `Q${tid}`).join(', ');
             confusedHtml = `<span style="font-size:0.6rem;color:#dc2626;margin-left:6px;">混淆: ${targets}</span>`;
           }
-          return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid #f0f0f0;${isCorrect ? 'background:#f0fdf4;' : ''}">
+          return `<div class="iwt-row" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid #f0f0f0;${isCorrect ? 'background:#f0fdf4;' : ''}">
             <div style="min-width:28px;font-size:0.72rem;font-weight:700;color:${isCorrect ? '#16a34a' : '#999'};">(${q.labels[i]})</div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:0.78rem;line-height:1.4;">${clickableOpt} ${isCorrect ? '<span style="color:#16a34a;font-weight:700;">✓</span>' : ''}</div>
@@ -3943,7 +4126,7 @@
           const isPlaced = placedArr.includes(chipId);
           const barColor = isPlaced ? '#4a7c59' : (att.wrong > 0 ? '#f87171' : (totalAtt > 0 ? '#fbbf24' : '#e5e7eb'));
           const clickablePart = makeClickableText(part.length > 50 ? part.slice(0, 50) + '…' : part);
-          return `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 10px;border-bottom:1px solid #f0f0f0;${isPlaced ? 'background:#f0fdf4;' : ''}">
+          return `<div class="iwt-row" style="display:flex;align-items:flex-start;gap:8px;padding:6px 10px;border-bottom:1px solid #f0f0f0;${isPlaced ? 'background:#f0fdf4;' : ''}">
             <div style="min-width:28px;font-size:0.72rem;font-weight:700;color:${isPlaced ? '#16a34a' : '#999'};">#${i + 1}</div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:0.75rem;line-height:1.4;">${clickablePart} ${isPlaced ? '<span style="color:#16a34a;font-weight:700;">✓</span>' : ''}</div>
