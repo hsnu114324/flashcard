@@ -1821,7 +1821,7 @@
           else if (bk.kind === 'exp') activeExpKey = bk.key;
           else if (bk.kind === 'word') activeWordKey = bk.key;
         }
-        jtExpandedSpans.clear(); jtDetailKey = null;
+        jtExpandedSpans.clear(); jtDetailTabMap.clear(); jtDetailKey = null;
         renderAll();
         document.getElementById('mainContent').scrollTo(0, 0);
       }
@@ -2033,6 +2033,12 @@
       }).join('');
     }
 
+    // 判斷目前是否正在顯示 Dashboard
+    function isDashboardVisible() {
+      const ca = document.getElementById('cardArea');
+      return ca && ca.querySelector('.mastery-dashboard');
+    }
+
     function selectAnswerIndex(ansText) {
       if (activeAnswerKey === ansText) {
         activeAnswerKey = null;
@@ -2040,7 +2046,7 @@
         activeAnswerKey = ansText;
         activeOptionKey = null; activeExpKey = null; activeWordKey = null;
       }
-      rerenderBacklinkOnly();
+      if (isDashboardVisible()) { renderAll(); } else { rerenderBacklinkOnly(); }
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -2164,6 +2170,7 @@
       activeExpKey = null;
       activeWordKey = null;
       jtExpandedSpans.clear();
+      jtDetailTabMap.clear();
       jtDetailKey = null;
       rerenderBacklinkOnly();
     }
@@ -2171,7 +2178,7 @@
     // ==================== Jaeger-style Word Trace ====================
     let jtExpandedSpans = new Set(); // 同時展開多個 span key
     let jtDetailKey = null; // 當前顯示 detail 的 span key
-    let jtDetailTab = 'tags'; // 'tags' | 'context'
+    let jtDetailTabMap = new Map(); // spanKey → 'tags' | 'context'（per-span tab 狀態）
 
     // 色盤 — 每個題目(service)分配不同顏色，類似 Jaeger
     const JT_COLORS = [
@@ -2211,8 +2218,8 @@
       }
       rerenderWordTraceOnly();
     }
-    function switchJtTab(tab) {
-      jtDetailTab = tab;
+    function switchJtTab(spanKey, tab) {
+      jtDetailTabMap.set(spanKey, tab);
       rerenderWordTraceOnly();
     }
 
@@ -2313,7 +2320,7 @@
           </div>`;
 
         if (jtExpandedSpans.has(parentKey + ':detail')) {
-          html += renderJtDetail(q, idx, qEntry.contexts, wordKey, hlWord, color, cat);
+          html += renderJtDetail(q, idx, qEntry.contexts, wordKey, hlWord, color, cat, parentKey);
         }
 
         if (isParentExpanded) {
@@ -2339,7 +2346,7 @@
               </div>`;
 
             if (jtExpandedSpans.has(childKey + ':detail')) {
-              html += renderJtDetail(q, idx, ctxs, wordKey, hlWord, srcColor, src);
+              html += renderJtDetail(q, idx, ctxs, wordKey, hlWord, srcColor, src, childKey);
             }
 
             if (isChildExpanded) {
@@ -2560,9 +2567,10 @@
     }
 
     // ── Jaeger Span Detail Panel (parent/source level) ──
-    function renderJtDetail(q, idx, contexts, wordKey, hlWord, color, label) {
-      const tagsActive = jtDetailTab === 'tags' ? 'active' : '';
-      const ctxActive = jtDetailTab === 'context' ? 'active' : '';
+    function renderJtDetail(q, idx, contexts, wordKey, hlWord, color, label, spanKey) {
+      const curTab = jtDetailTabMap.get(spanKey) || 'tags';
+      const tagsActive = curTab === 'tags' ? 'active' : '';
+      const ctxActive = curTab === 'context' ? 'active' : '';
 
       // 計算位置資訊
       const posInfo = contexts.map(c => {
@@ -2572,7 +2580,7 @@
       const posRange = findSpanRange(contexts, wordKey);
 
       let bodyHtml = '';
-      if (jtDetailTab === 'tags') {
+      if (curTab === 'tags') {
         bodyHtml = `<table class="jt-tag-table">
           <tr><td class="jt-tag-key">question.id</td><td class="jt-tag-val"><a onclick="goToPageFromBacklink(${idx})">Q${q.id} (點擊跳轉)</a></td></tr>
           <tr><td class="jt-tag-key">category</td><td class="jt-tag-val">${q.category || '—'}</td></tr>
@@ -2609,8 +2617,8 @@
           </div>
           <div class="jt-detail-main">
             <div class="jt-detail-tabs">
-              <button class="jt-detail-tab ${tagsActive}" onclick="event.stopPropagation();switchJtTab('tags')">Tags</button>
-              <button class="jt-detail-tab ${ctxActive}" onclick="event.stopPropagation();switchJtTab('context')">Context</button>
+              <button class="jt-detail-tab ${tagsActive}" onclick="event.stopPropagation();switchJtTab('${spanKey}','tags')">Tags</button>
+              <button class="jt-detail-tab ${ctxActive}" onclick="event.stopPropagation();switchJtTab('${spanKey}','context')">Context</button>
             </div>
             ${bodyHtml}
           </div>
@@ -2680,7 +2688,7 @@
         activeOptionKey = optText;
         activeAnswerKey = null; activeExpKey = null; activeWordKey = null;
       }
-      rerenderBacklinkOnly();
+      if (isDashboardVisible()) { renderAll(); } else { rerenderBacklinkOnly(); }
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -2827,7 +2835,7 @@
         activeWordKey = key;
         activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
       }
-      rerenderBacklinkOnly();
+      if (isDashboardVisible()) { renderAll(); } else { rerenderBacklinkOnly(); }
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -2841,7 +2849,7 @@
         activeWordKey = key;
         activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
       }
-      rerenderBacklinkOnly();
+      if (isDashboardVisible()) { renderAll(); } else { rerenderBacklinkOnly(); }
     }
 
     // 把文字中的德文單字變成可點擊連結（用於 Dashboard 等處）
@@ -2994,7 +3002,7 @@
       });
       // 清除反向連結狀態
       activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null;
-      jtExpandedSpans.clear(); jtDetailKey = null;
+      jtExpandedSpans.clear(); jtDetailTabMap.clear(); jtDetailKey = null;
       document.getElementById('completionArea').innerHTML = '';
       renderAll();
       // 捲到頂部
@@ -3008,7 +3016,7 @@
       viewMode = 'single';
       currentPage = idx;
       activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null;
-      jtExpandedSpans.clear(); jtDetailKey = null;
+      jtExpandedSpans.clear(); jtDetailTabMap.clear(); jtDetailKey = null;
       renderAll();
       document.getElementById('mainContent').scrollTo(0, 0);
     }
@@ -3836,7 +3844,7 @@
       if (tab) dashboardTab = tab;
       viewMode = 'single'; // 用 single 框架但顯示 dashboard
       activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null;
-      jtExpandedSpans.clear(); jtDetailKey = null;
+      jtExpandedSpans.clear(); jtDetailTabMap.clear(); jtDetailKey = null;
 
       const mainEl = document.getElementById('mainContent');
       mainEl.classList.remove('quiz-active');
