@@ -3823,54 +3823,7 @@
           <div class="mastery-summary-card"><div class="ms-val blue">${newCount}</div><div class="ms-label">🆕 未作答</div></div>
         </div>`;
 
-      // ── Jaeger Trace 視覺化 ──
-      const traceHtml = renderDtQuestionsTrace();
-
-      const heatmapHtml = questions.map((q, idx) => {
-        const score = getMasteryScore(q.id);
-        const stats = getQStats(q.id);
-        let lvl = 'lvl-none';
-        if (stats.rounds === 0) lvl = 'lvl-none';
-        else if (score >= 80) lvl = 'lvl-perfect';
-        else if (score >= 50) lvl = 'lvl-good';
-        else if (score >= 20) lvl = 'lvl-mid';
-        else lvl = 'lvl-low';
-        const detail = stats.rounds > 0 ? `${stats.rounds}輪・正確${stats.firstTry}次` : '尚未作答';
-        return `<div class="mastery-cell ${lvl}" onclick="goToPage(${idx})" title="Q${q.id} ${detail}">
-          <div class="mc-id">Q${q.id}</div>
-          <div class="mc-score">${stats.rounds > 0 ? score + '%' : '—'}</div>
-          <div class="mc-bar"><div class="mc-bar-fill" style="width:${score}%"></div></div>
-        </div>`;
-      }).join('');
-
-      const sorted = questions.map((q, idx) => ({ q, idx, score: getMasteryScore(q.id), stats: getQStats(q.id) }))
-        .sort((a, b) => a.score - b.score);
-
-      const rankingHtml = sorted.map((item, rank) => {
-        const { q, idx, score, stats } = item;
-        const preview = q.question.length > 30 ? q.question.slice(0, 30) + '…' : q.question;
-        const barCls = score >= 80 ? 'green' : score >= 40 ? 'amber' : score > 0 ? 'red' : 'gray';
-        const detail = stats.rounds > 0 ? `${stats.rounds}輪・${stats.firstTry}/${stats.rounds}正確` : '未作答';
-        return `<div class="mastery-rank-row" onclick="goToPage(${idx})">
-          <div class="mastery-rank-num">${rank + 1}</div>
-          <div style="min-width:36px;font-size:0.78rem;font-weight:700;color:#888;">Q${q.id}</div>
-          <div class="mastery-rank-bar-wrap">
-            <div class="mastery-rank-bar ${barCls}" style="width:${Math.max(score, 3)}%"></div>
-            <div class="mastery-rank-label">${score}%</div>
-          </div>
-          <div class="mastery-rank-text" title="${q.question}">${preview}</div>
-          <div class="mastery-rank-detail">${detail}</div>
-        </div>`;
-      }).join('');
-
-      return `${summaryHtml}
-        ${traceHtml}
-        <div style="font-size:0.82rem;font-weight:700;color:#d97706;margin-bottom:8px;">🗺️ 掌握度熱力圖</div>
-        <div class="mastery-heatmap">${heatmapHtml}</div>
-        <div class="mastery-ranking">
-          <div class="mastery-ranking-title">📋 複習優先順序（掌握度低 → 高）</div>
-          ${rankingHtml}
-        </div>`;
+      return `${summaryHtml}${renderDtQuestionsTrace()}`;
     }
 
     // ── Questions Tab: Jaeger Trace ──
@@ -4136,68 +4089,7 @@
           <div class="option-summary-item"><div class="os-val" style="color:#dc2626;">${confusedOpts}</div><div class="os-label">曾放錯</div></div>
         </div>`;
 
-      // ── Jaeger Trace 視覺化 ──
-      const traceHtml = renderDtOptionsTrace();
-
-      // 按題目分組
-      const groupsHtml = questions.map((q, qIdx) => {
-        const preview = q.question.length > 40 ? q.question.slice(0, 40) + '…' : q.question;
-        const correctAns = q.options[q.correctIndex];
-
-        const rowsHtml = q.options.map((opt, i) => {
-          const chipId = `ans-q${q.id}-${i}`;
-          const isCorrect = i === q.correctIndex;
-          const att = optionAttempts.get(chipId) || { correct: 0, wrong: 0, wrongTargets: [] };
-          const totalAtt = att.correct + att.wrong;
-          const accPct = totalAtt > 0 ? Math.round(att.correct / totalAtt * 100) : -1;
-          const barCls = accPct < 0 ? 'gray' : accPct >= 80 ? 'green' : accPct >= 50 ? 'amber' : 'red';
-          const barW = accPct < 0 ? 0 : accPct;
-
-          // 混淆資訊
-          let confusionHint = '';
-          if (att.wrong > 0 && att.wrongTargets.length > 0) {
-            const targetQids = [...new Set(att.wrongTargets)].slice(0, 3);
-            const qLabels = targetQids.map(tid => `Q${tid}`).join(', ');
-            confusionHint = `<span style="font-size:0.62rem;color:#ef4444;">曾誤放入 ${qLabels}</span>`;
-          }
-
-          return `<div class="chip-mastery-row">
-            <div class="cmr-label">(${q.labels[i]})</div>
-            ${isCorrect ? '<span class="cmr-correct-badge">✓ 正解</span>' : '<span class="cmr-wrong-badge" style="opacity:0.5">✗</span>'}
-            <div class="cmr-text">${opt}</div>
-            <div class="cmr-stats">
-              ${totalAtt > 0 ? `
-                <span class="cmr-stat good">✓ ${att.correct}</span>
-                <span class="cmr-stat bad">✗ ${att.wrong}</span>
-              ` : '<span class="cmr-stat neutral">尚未嘗試</span>'}
-              <div class="cmr-mini-bar"><div class="cmr-mini-bar-fill ${barCls}" style="width:${barW}%"></div></div>
-            </div>
-          </div>
-          ${confusionHint ? `<div style="padding:0 16px 6px 46px;">${confusionHint}</div>` : ''}`;
-        }).join('');
-
-        // 判斷此題有無操作紀錄
-        const hasData = q.options.some((_, i) => {
-          const att = optionAttempts.get(`ans-q${q.id}-${i}`);
-          return att && (att.correct + att.wrong) > 0;
-        });
-        const expandCls = hasData ? ' expanded' : '';
-
-        return `<div class="chip-mastery-group${expandCls}">
-          <div class="chip-mastery-group-header" onclick="toggleChipGroup(this)">
-            <span class="cmg-qid">Q${q.id}</span>
-            <span class="cmg-question">${preview}</span>
-            <span style="font-size:0.68rem;color:#16a34a;font-weight:600;">正解: (${q.labels[q.correctIndex]}) ${correctAns}</span>
-            <span class="cmg-arrow">▶</span>
-          </div>
-          <div class="chip-mastery-group-body">${rowsHtml}</div>
-        </div>`;
-      }).join('');
-
-      return `${summaryHtml}
-        ${traceHtml}
-        <div style="font-size:0.82rem;font-weight:700;color:#4a7c59;margin-bottom:10px;">🏷️ 各題選項操作紀錄</div>
-        ${groupsHtml}`;
+      return `${summaryHtml}${renderDtOptionsTrace()}`;
     }
 
     // ── Options Tab: Jaeger Trace ──
@@ -4419,67 +4311,7 @@
           <div class="option-summary-item"><div class="os-val" style="color:#f59e0b;">${fullyPlacedCount}/${questions.length}</div><div class="os-label">完成全部詳解</div></div>
         </div>`;
 
-      // ── Jaeger Trace 視覺化 ──
-      const traceHtml = renderDtExpPartsTrace();
-
-      // 按題目分組
-      const groupsHtml = questions.map((q, qIdx) => {
-        if (q.expParts.length === 0) return '';
-        const preview = q.question.length > 40 ? q.question.slice(0, 40) + '…' : q.question;
-        const isCompleted = expCompletedSet.has(q.id);
-        const placedArr = getExpPlaced(q.id);
-
-        const rowsHtml = q.expParts.map((part, i) => {
-          const chipId = `exp-q${q.id}-${i}`;
-          const att = expPartAttempts.get(chipId) || { correct: 0, wrong: 0 };
-          const totalAtt = att.correct + att.wrong;
-          const isPlaced = placedArr.includes(chipId);
-          const accPct = totalAtt > 0 ? Math.round(att.correct / totalAtt * 100) : -1;
-          const barCls = accPct < 0 ? 'gray' : accPct >= 80 ? 'green' : accPct >= 50 ? 'amber' : 'red';
-          const barW = accPct < 0 ? 0 : accPct;
-
-          const partPreview = part.length > 60 ? part.slice(0, 60) + '…' : part;
-
-          return `<div class="chip-mastery-row">
-            <div class="cmr-idx">${i + 1}</div>
-            ${isPlaced ? '<span class="cmr-correct-badge">✓ 已歸位</span>' : '<span class="cmr-wrong-badge" style="opacity:0.4;background:#f3f4f6;color:#999;">未放入</span>'}
-            <div class="cmr-text">${partPreview}</div>
-            <div class="cmr-stats">
-              ${totalAtt > 0 ? `
-                <span class="cmr-stat good">✓ ${att.correct}</span>
-                <span class="cmr-stat bad">✗ ${att.wrong}</span>
-              ` : '<span class="cmr-stat neutral">—</span>'}
-              <div class="cmr-mini-bar"><div class="cmr-mini-bar-fill ${barCls}" style="width:${barW}%"></div></div>
-            </div>
-          </div>`;
-        }).join('');
-
-        // 展開有資料的或已完成的
-        const hasData = q.expParts.some((_, i) => {
-          const att = expPartAttempts.get(`exp-q${q.id}-${i}`);
-          return att && (att.correct + att.wrong) > 0;
-        }) || isCompleted;
-        const expandCls = hasData ? ' expanded' : '';
-
-        const statusBadge = isCompleted
-          ? '<span style="font-size:0.65rem;padding:2px 8px;border-radius:6px;background:#dcfce7;color:#16a34a;font-weight:600;">全部完成 ✓</span>'
-          : `<span style="font-size:0.65rem;padding:2px 8px;border-radius:6px;background:#fef9c3;color:#ca8a04;font-weight:600;">${placedArr.length}/${q.expParts.length}</span>`;
-
-        return `<div class="chip-mastery-group${expandCls}">
-          <div class="chip-mastery-group-header" onclick="toggleChipGroup(this)">
-            <span class="cmg-qid">Q${q.id}</span>
-            <span class="cmg-question">${preview}</span>
-            ${statusBadge}
-            <span class="cmg-arrow">▶</span>
-          </div>
-          <div class="chip-mastery-group-body">${rowsHtml}</div>
-        </div>`;
-      }).join('');
-
-      return `${summaryHtml}
-        ${traceHtml}
-        <div style="font-size:0.82rem;font-weight:700;color:#7fa886;margin-bottom:10px;">📝 各題詳解小卡狀態</div>
-        ${groupsHtml}`;
+      return `${summaryHtml}${renderDtExpPartsTrace()}`;
     }
 
     // ── Exp Parts Tab: Jaeger Trace ──
