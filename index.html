@@ -1943,15 +1943,16 @@
       // 按 category 分組
       const catMap = new Map();
       questions.forEach((q, idx) => {
-        const cat = q.category || '未分類';
+        const cat = String(q.category || '') || '未分類';
         if (!catMap.has(cat)) catMap.set(cat, []);
         catMap.get(cat).push({ q, idx });
       });
       // 分類圖示對應
       const catIcons = { '導遊': '🏛️', '領隊': '✈️' };
       const getCatIcon = (cat) => {
-        if (cat.includes('導遊')) return '🏛️';
-        if (cat.includes('領隊')) return '✈️';
+        const s = String(cat || '');
+        if (s.includes('導遊')) return '🏛️';
+        if (s.includes('領隊')) return '✈️';
         return '📂';
       };
       // 判斷當前題目所在的 category 是否展開
@@ -2378,7 +2379,7 @@
         const q = qEntry.question;
         const idx = questions.indexOf(q);
         const color = jtColor(qi);
-        const cat = q.category || '';
+        const cat = String(q.category || '');
 
         // 按 source 分類
         const sourceGroups = {};
