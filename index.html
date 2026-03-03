@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Flashcard v5.0</title>
+  <title>Flashcard v6.0</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1795,6 +1795,9 @@
       else if (activeOptionKey) state.backlink = { kind: 'option', key: activeOptionKey };
       else if (activeExpKey) state.backlink = { kind: 'exp', key: activeExpKey };
       else if (activeWordKey) state.backlink = { kind: 'word', key: activeWordKey };
+      // 記錄捲動位置，返回時可恢復
+      const scroller = document.getElementById('mainContent');
+      if (scroller) state.scrollTop = scroller.scrollTop;
       return state;
     }
 
@@ -1808,6 +1811,13 @@
       if (state.type === 'dashboard') {
         dashboardTab = state.tab || 'questions';
         showDashboard(null, true);
+        // 恢復捲動位置（setTimeout 確保 DOM 已更新）
+        if (state.scrollTop != null) {
+          setTimeout(() => {
+            const mc = document.getElementById('mainContent');
+            if (mc) mc.scrollTop = state.scrollTop;
+          }, 0);
+        }
       } else if (state.type === 'quiz') {
         startQuiz(true);
       } else {
@@ -1823,7 +1833,15 @@
         }
         jtExpandedSpans.clear(); jtDetailTabMap.clear(); jtDetailKey = null;
         renderAll();
-        document.getElementById('mainContent').scrollTo(0, 0);
+        // 恢復捲動位置
+        if (state.scrollTop != null) {
+          setTimeout(() => {
+            const mc = document.getElementById('mainContent');
+            if (mc) mc.scrollTop = state.scrollTop;
+          }, 0);
+        } else {
+          document.getElementById('mainContent').scrollTo(0, 0);
+        }
       }
     }
 
@@ -2040,13 +2058,15 @@
     }
 
     function selectAnswerIndex(ansText) {
+      const wasDashboard = isDashboardVisible();
+      if (wasDashboard) pushNavState();
       if (activeAnswerKey === ansText) {
         activeAnswerKey = null;
       } else {
         activeAnswerKey = ansText;
         activeOptionKey = null; activeExpKey = null; activeWordKey = null;
       }
-      if (isDashboardVisible()) { renderAll(); } else { rerenderBacklinkOnly(); }
+      if (wasDashboard) { renderAll(); updateNavButtons(); } else { rerenderBacklinkOnly(); }
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -2682,13 +2702,15 @@
     }
 
     function selectOptionIndex(optText) {
+      const wasDashboard = isDashboardVisible();
+      if (wasDashboard) pushNavState();
       if (activeOptionKey === optText) {
         activeOptionKey = null;
       } else {
         activeOptionKey = optText;
         activeAnswerKey = null; activeExpKey = null; activeWordKey = null;
       }
-      if (isDashboardVisible()) { renderAll(); } else { rerenderBacklinkOnly(); }
+      if (wasDashboard) { renderAll(); updateNavButtons(); } else { rerenderBacklinkOnly(); }
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -2829,13 +2851,15 @@
     }
 
     function selectWordIndex(key) {
+      const wasDashboard = isDashboardVisible();
+      if (wasDashboard) pushNavState();
       if (activeWordKey === key) {
         activeWordKey = null;
       } else {
         activeWordKey = key;
         activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
       }
-      if (isDashboardVisible()) { renderAll(); } else { rerenderBacklinkOnly(); }
+      if (wasDashboard) { renderAll(); updateNavButtons(); } else { rerenderBacklinkOnly(); }
       if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -2843,13 +2867,15 @@
     function clickWord(word) {
       const key = word.toLowerCase();
       if (key.length < 1) return;
+      const wasDashboard = isDashboardVisible();
+      if (wasDashboard) pushNavState(); // 離開 Dashboard 前記錄狀態
       if (activeWordKey === key) {
         activeWordKey = null;
       } else {
         activeWordKey = key;
         activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
       }
-      if (isDashboardVisible()) { renderAll(); } else { rerenderBacklinkOnly(); }
+      if (wasDashboard) { renderAll(); updateNavButtons(); } else { rerenderBacklinkOnly(); }
     }
 
     // 把文字中的德文單字變成可點擊連結（用於 Dashboard 等處）
