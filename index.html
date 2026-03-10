@@ -1991,7 +1991,11 @@
       const folder = document.getElementById('answerIndexFolder');
       if (!folder) return;
       const indexMap = buildAnswerIndex();
-      const entries = [...indexMap.entries()].sort((a, b) => a[0].localeCompare(b[0], 'de'));
+      // 依反向連結數由大到小排序，同數量再按字母排序
+      const entries = [...indexMap.entries()].sort((a, b) => {
+        if (b[1].length !== a[1].length) return b[1].length - a[1].length;
+        return a[0].localeCompare(b[0], 'de');
+      });
       const MAX_SHOW = 200;
       const limited = entries.slice(0, MAX_SHOW);
       folder.innerHTML = limited.map(([ansText, qs]) => {
@@ -2749,7 +2753,11 @@
       const folder = document.getElementById('optionIndexFolder');
       if (!folder) return;
       const indexMap = buildOptionIndex();
-      const entries = [...indexMap.entries()].sort((a, b) => a[0].localeCompare(b[0], 'de'));
+      // 依反向連結數由大到小排序，同數量再按字母排序
+      const entries = [...indexMap.entries()].sort((a, b) => {
+        if (b[1].length !== a[1].length) return b[1].length - a[1].length;
+        return a[0].localeCompare(b[0], 'de');
+      });
       const MAX_SHOW = 200;
       const limited = entries.slice(0, MAX_SHOW);
       folder.innerHTML = limited.map(([optText, items]) => {
@@ -3487,6 +3495,7 @@
         if (!chip || chip.partIndex !== idx) wrongIndices.push(idx);
       });
       orderCheckResults.set(qid, { correct: wrongIndices.length === 0, wrongIndices });
+      scheduleSaveLocal();
       renderAll();
       if (wrongIndices.length === 0) {
         if (navigator.vibrate) navigator.vibrate([50, 50, 100]);
@@ -3688,6 +3697,7 @@
       document.removeEventListener('pointerup', onDragEnd);
       document.removeEventListener('pointercancel', onDragEnd);
       dragState = null;
+      scheduleSaveLocal(); // ⚡ 每次拖放後自動儲存進度
     }
 
     // ==================== 詳解排序 ====================
@@ -4254,6 +4264,8 @@
       currentPage = 0;
       shuffle(answerChips); buildExpChips(); rebuildChipIndex();
       document.getElementById('completionArea').innerHTML = '';
+      // 注意：restart 只清除當輪作答狀態，保留歷史統計（questionStats, optionAttempts, expPartAttempts）
+      scheduleSaveLocal();
       if (questions.length >= 4) {
         startQuiz();
       } else {
@@ -4483,6 +4495,7 @@
         _indexNeedsUpdate = true;
         currentPage = Math.min(currentPage, questions.length - 1);
         renderAll();
+        saveProgressLocal(); // 遠端進度同步到本地
         updateSyncStatus('success');
       } catch (err) {
         console.error('Load error:', err);
@@ -4492,6 +4505,9 @@
     }
 
     // ── 進度序列化 / 還原 ──
+    const PROGRESS_STORAGE_KEY = 'flashcard_progress';
+    let _saveTimer = null;
+
     function buildProgressJson() {
       return {
         questionStats: [...questionStats.entries()].map(([k, v]) => [k, v]),
@@ -4501,6 +4517,7 @@
         expPlacedMap: [...expPlacedMap.entries()].map(([k, v]) => [k, v]),
         expCompletedSet: [...expCompletedSet],
         orderCheckResults: [...orderCheckResults.entries()].map(([k, v]) => [k, v]),
+        currentPage: currentPage,
         savedAt: new Date().toISOString()
       };
     }
@@ -4522,12 +4539,51 @@
         if (progress.expCompletedSet) progress.expCompletedSet.forEach(id => expCompletedSet.add(id));
         orderCheckResults.clear();
         if (progress.orderCheckResults) progress.orderCheckResults.forEach(([k, v]) => orderCheckResults.set(k, v));
+        if (typeof progress.currentPage === 'number') currentPage = progress.currentPage;
       } catch (e) {
         console.warn('Failed to restore progress:', e);
       }
     }
 
+    // ── localStorage 持久化 ──
+    function saveProgressLocal() {
+      try {
+        const json = buildProgressJson();
+        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(json));
+      } catch (e) {
+        console.warn('無法儲存進度至 localStorage:', e);
+      }
+    }
+
+    // 防抖儲存：避免拖放時頻繁寫入，延遲 500ms
+    function scheduleSaveLocal() {
+      if (_saveTimer) clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(saveProgressLocal, 500);
+    }
+
+    function loadProgressLocal() {
+      try {
+        const raw = localStorage.getItem(PROGRESS_STORAGE_KEY);
+        if (!raw) return false;
+        const progress = JSON.parse(raw);
+        restoreProgress(progress);
+        console.log('✅ 已從 localStorage 還原進度', progress.savedAt ? `(${progress.savedAt})` : '');
+        return true;
+      } catch (e) {
+        console.warn('無法從 localStorage 載入進度:', e);
+        return false;
+      }
+    }
+
+    function clearProgressLocal() {
+      localStorage.removeItem(PROGRESS_STORAGE_KEY);
+      console.log('🗑️ 已清除本地進度');
+    }
+
     // ==================== 啟動 ====================
+    // 先從 localStorage 還原進度
+    loadProgressLocal();
+
     // 初始進入 quiz 模式（先用本地題庫）
     if (questions.length >= 4) {
       startQuiz();
@@ -4535,6 +4591,9 @@
       viewMode = 'single';
       renderAll();
     }
+
+    // 瀏覽器關閉/跳走前自動儲存
+    window.addEventListener('beforeunload', saveProgressLocal);
 
     // 初始化 Google Sign-In
     renderAuthUI();
