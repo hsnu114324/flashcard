@@ -72345,6 +72345,32 @@
     shuffle(answerChips);
     buildExpChips();
 
+    // ⚡ 按 questionId 分組的快速查詢表（避免每次 filter 全部 13,000+ chips）
+    let _answerChipsByQid = new Map();
+    let _expChipsByQid = new Map();
+    function rebuildChipIndex() {
+      _answerChipsByQid = new Map();
+      answerChips.forEach(c => {
+        if (!_answerChipsByQid.has(c.questionId)) _answerChipsByQid.set(c.questionId, []);
+        _answerChipsByQid.get(c.questionId).push(c);
+      });
+      _expChipsByQid = new Map();
+      expChips.forEach(c => {
+        if (!_expChipsByQid.has(c.questionId)) _expChipsByQid.set(c.questionId, []);
+        _expChipsByQid.get(c.questionId).push(c);
+      });
+    }
+    rebuildChipIndex();
+
+    function getChipsForQids(chipMap, qids) {
+      const result = [];
+      for (const qid of qids) {
+        const arr = chipMap.get(qid);
+        if (arr) result.push(...arr);
+      }
+      return result;
+    }
+
     // ==================== 狀態 ====================
     let currentPage = 0;
     let solvedSet = new Set();
@@ -72572,30 +72598,37 @@
       }
     }
 
-    function renderSidebar() {
-      const container = document.getElementById('categoryFolders');
-      // 按 category 分組
-      const catMap = new Map();
+    // ── 快取分類索引（只在題目變動時重建） ──
+    let _catMapCache = null;
+    let _catMapQLen = -1;
+    function getCatMap() {
+      if (_catMapCache && _catMapQLen === questions.length) return _catMapCache;
+      _catMapCache = new Map();
       questions.forEach((q, idx) => {
         const cat = String(q.category || '') || '未分類';
-        if (!catMap.has(cat)) catMap.set(cat, []);
-        catMap.get(cat).push({ q, idx });
+        if (!_catMapCache.has(cat)) _catMapCache.set(cat, []);
+        _catMapCache.get(cat).push({ q, idx });
       });
-      // 分類圖示對應
-      const catIcons = { '導遊': '🏛️', '領隊': '✈️' };
+      _catMapQLen = questions.length;
+      return _catMapCache;
+    }
+
+    function renderSidebar() {
+      const container = document.getElementById('categoryFolders');
+      const catMap = getCatMap();
       const getCatIcon = (cat) => {
         const s = String(cat || '');
         if (s.includes('導遊')) return '🏛️';
         if (s.includes('領隊')) return '✈️';
         return '📂';
       };
-      // 判斷當前題目所在的 category 是否展開
       const currentCat = (viewMode === 'single' && questions.length > 0) ? (questions[currentPage]?.category || '未分類') : '';
       const quizQidSet = viewMode === 'quiz' ? new Set(quizIndices.map(i => questions[i]?.id)) : new Set();
       container.innerHTML = [...catMap.entries()].map(([cat, items]) => {
         const isExpanded = cat === currentCat || (viewMode === 'quiz' && items.some(it => quizQidSet.has(it.q.id)));
         const solvedCount = items.filter(it => solvedSet.has(it.q.id)).length;
-        const itemsHtml = items.map(({ q, idx }) => {
+        // ⚡ 只渲染展開分類的子項，未展開的不產生 DOM
+        const itemsHtml = isExpanded ? items.map(({ q, idx }) => {
           const isSolved = solvedSet.has(q.id);
           const expDone = expCompletedSet.has(q.id);
           let statusClass = '';
@@ -72608,7 +72641,7 @@
             <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">第${q.id}題 ${preview}</span>
             <span class="file-status ${statusClass}"></span>
           </div>`;
-        }).join('');
+        }).join('') : '';
         return `
           <div class="folder-item ${isExpanded ? 'expanded' : ''}" onclick="toggleFolder(this)">
             <span class="folder-icon">${getCatIcon(cat)}</span>
@@ -72640,14 +72673,19 @@
     // ==================== 答案索引（反向連結）====================
     let activeAnswerKey = null; // 當前選中的答案文字
 
+    // ── 快取答案索引 ──
+    let _answerIndexCache = null;
+    let _answerIndexQLen = -1;
     function buildAnswerIndex() {
-      // 收集所有正確答案 → 對應的題目
-      const map = new Map(); // answerText → [question objects]
+      if (_answerIndexCache && _answerIndexQLen === questions.length) return _answerIndexCache;
+      const map = new Map();
       questions.forEach(q => {
         const correctText = q.options[q.correctIndex];
         if (!map.has(correctText)) map.set(correctText, []);
         map.get(correctText).push(q);
       });
+      _answerIndexCache = map;
+      _answerIndexQLen = questions.length;
       return map;
     }
 
@@ -72655,9 +72693,10 @@
       const folder = document.getElementById('answerIndexFolder');
       if (!folder) return;
       const indexMap = buildAnswerIndex();
-      // 按答案字母排序
       const entries = [...indexMap.entries()].sort((a, b) => a[0].localeCompare(b[0], 'de'));
-      folder.innerHTML = entries.map(([ansText, qs]) => {
+      const MAX_SHOW = 200;
+      const limited = entries.slice(0, MAX_SHOW);
+      folder.innerHTML = limited.map(([ansText, qs]) => {
         const isActive = activeAnswerKey === ansText;
         return `<div class="answer-index-item ${isActive ? 'active-answer' : ''}" onclick="selectAnswerIndex('${ansText.replace(/'/g, "\\'")}')">
           <span class="ai-icon">💡</span>
@@ -73391,15 +73430,20 @@
     // ==================== 選項索引（全選項反向連結）====================
     let activeOptionKey = null;
 
+    // ── 快取選項索引 ──
+    let _optionIndexCache = null;
+    let _optionIndexQLen = -1;
     function buildOptionIndex() {
-      // 收集所有選項文字 → 出現在哪些題目（標記是否為正確答案）
-      const map = new Map(); // optionText → [{question, isCorrect}]
+      if (_optionIndexCache && _optionIndexQLen === questions.length) return _optionIndexCache;
+      const map = new Map();
       questions.forEach(q => {
         q.options.forEach((opt, i) => {
           if (!map.has(opt)) map.set(opt, []);
           map.get(opt).push({ question: q, isCorrect: i === q.correctIndex });
         });
       });
+      _optionIndexCache = map;
+      _optionIndexQLen = questions.length;
       return map;
     }
 
@@ -73408,7 +73452,9 @@
       if (!folder) return;
       const indexMap = buildOptionIndex();
       const entries = [...indexMap.entries()].sort((a, b) => a[0].localeCompare(b[0], 'de'));
-      folder.innerHTML = entries.map(([optText, items]) => {
+      const MAX_SHOW = 200;
+      const limited = entries.slice(0, MAX_SHOW);
+      folder.innerHTML = limited.map(([optText, items]) => {
         const isActive = activeOptionKey === optText;
         return `<div class="option-index-item ${isActive ? 'active-option' : ''}" onclick="selectOptionIndex('${optText.replace(/'/g, "\\'")}')">
           <span class="oi-icon">📌</span>
@@ -73434,22 +73480,30 @@
     // ==================== 詳解索引（反向連結）====================
     let activeExpKey = null; // 格式: "qid-partIndex"
 
+    // ── 快取詳解索引 ──
+    let _expIndexCache = null;
+    let _expIndexQLen = -1;
     function buildExpIndex() {
-      // 收集所有詳解卡片 → {key, text, questionId, question}
+      if (_expIndexCache && _expIndexQLen === questions.length) return _expIndexCache;
       const items = [];
       questions.forEach(q => {
         q.expParts.forEach((part, i) => {
           items.push({ key: `${q.id}-${i}`, text: part, questionId: q.id, question: q });
         });
       });
+      _expIndexCache = items;
+      _expIndexQLen = questions.length;
       return items;
     }
 
     function renderExpIndex() {
       const folder = document.getElementById('expIndexFolder');
       if (!folder) return;
+      // ⚡ 只渲染當前分類的詳解，而非全部（原本會產生 ~27,000 個 DOM 節點）
+      const currentCat = (viewMode === 'single' && questions.length > 0) ? (questions[currentPage]?.category || '') : '';
       const items = buildExpIndex();
-      folder.innerHTML = items.map(item => {
+      const filtered = currentCat ? items.filter(it => it.question.category === currentCat) : items.slice(0, 200);
+      folder.innerHTML = filtered.map(item => {
         const isActive = activeExpKey === item.key;
         const preview = item.text.length > 40 ? item.text.slice(0, 40) + '…' : item.text;
         return `<div class="exp-index-item ${isActive ? 'active-exp' : ''}" onclick="selectExpIndex('${item.key}')">
@@ -73488,11 +73542,14 @@
       return matches.filter(w => w.length >= 2 && !STOP_WORDS.has(w.toLowerCase()));
     }
 
+    // ── 快取單字索引（最耗效能的運算） ──
+    let _wordIndexCache = null;
+    let _wordIndexQLen = -1;
+    let _wordIndexSorted = null;
     function buildWordIndex() {
-      // word (小寫) → { original (最常見原形), sources: [{question, context, source}] }
+      if (_wordIndexCache && _wordIndexQLen === questions.length) return _wordIndexCache;
       const map = new Map();
       questions.forEach(q => {
-        // 從題目取詞
         const qWords = extractGermanWords(q.question);
         const seenInQ = new Set();
         qWords.forEach(w => {
@@ -73501,11 +73558,9 @@
           seenInQ.add(key);
           if (!map.has(key)) map.set(key, { original: w, sources: [] });
           const entry = map.get(key);
-          // 保留最長的原形（大寫版本優先）
           if (w[0] === w[0].toUpperCase() && w.length >= entry.original.length) entry.original = w;
           entry.sources.push({ question: q, context: q.question, source: '題目' });
         });
-        // 從選項取詞
         q.options.forEach((opt, oi) => {
           const oWords = extractGermanWords(opt);
           const seenInOpt = new Set();
@@ -73520,30 +73575,40 @@
           });
         });
       });
+      _wordIndexCache = map;
+      _wordIndexQLen = questions.length;
+      _wordIndexSorted = null; // 清除排序快取
       return map;
     }
 
-    function renderWordIndex() {
-      const folder = document.getElementById('wordIndexFolder');
-      if (!folder) return;
+    function getSortedWordEntries() {
+      if (_wordIndexSorted) return _wordIndexSorted;
       const indexMap = buildWordIndex();
-      // 按出現題數排序（多的在前），同數量則按字母排序
-      const entries = [...indexMap.entries()].sort((a, b) => {
-        // 先比較出現在多少不同題目
+      _wordIndexSorted = [...indexMap.entries()].sort((a, b) => {
         const aQids = new Set(a[1].sources.map(s => s.question.id));
         const bQids = new Set(b[1].sources.map(s => s.question.id));
         if (bQids.size !== aQids.size) return bQids.size - aQids.size;
         return a[0].localeCompare(b[0], 'de');
       });
+      return _wordIndexSorted;
+    }
 
-      // 分兩組：多題共用 vs 單題
+    function renderWordIndex() {
+      const folder = document.getElementById('wordIndexFolder');
+      if (!folder) return;
+      const entries = getSortedWordEntries();
+
+      // ⚡ 限制 DOM 數量，只顯示前 300 個
+      const MAX_SHOW = 300;
       const multi = entries.filter(([,v]) => new Set(v.sources.map(s => s.question.id)).size > 1);
       const single = entries.filter(([,v]) => new Set(v.sources.map(s => s.question.id)).size === 1);
+      const multiLimited = multi.slice(0, MAX_SHOW);
+      const singleLimited = single.slice(0, Math.max(0, MAX_SHOW - multiLimited.length));
 
       let html = '';
       if (multi.length > 0) {
-        html += `<div class="word-index-section-label">🔥 跨題共用 (${multi.length})</div>`;
-        html += multi.map(([key, val]) => {
+        html += `<div class="word-index-section-label">🔥 跨題共用 (${multi.length}${multi.length > MAX_SHOW ? '，顯示前'+MAX_SHOW : ''})</div>`;
+        html += multiLimited.map(([key, val]) => {
           const qCount = new Set(val.sources.map(s => s.question.id)).size;
           const isActive = activeWordKey === key;
           return `<div class="word-index-item ${isActive ? 'active-word' : ''}" onclick="selectWordIndex('${key.replace(/'/g, "\\'")}')">
@@ -73554,8 +73619,8 @@
         }).join('');
       }
       if (single.length > 0) {
-        html += `<div class="word-index-section-label">📝 單題出現 (${single.length})</div>`;
-        html += single.map(([key, val]) => {
+        html += `<div class="word-index-section-label">📝 單題出現 (${single.length}${single.length > singleLimited.length ? '，顯示前'+singleLimited.length : ''})</div>`;
+        html += singleLimited.map(([key, val]) => {
           const isActive = activeWordKey === key;
           return `<div class="word-index-item ${isActive ? 'active-word' : ''}" onclick="selectWordIndex('${key.replace(/'/g, "\\'")}')">
             <span class="wi-icon" style="opacity:0.4">·</span>
@@ -73999,7 +74064,7 @@
         divider.textContent = '⬇ 拖動答案到題目 · 點擊可反向查詢 ⬇';
       }
 
-      const currentChips = answerChips.filter(c => activeQids.has(c.questionId));
+      const currentChips = getChipsForQids(_answerChipsByQid, activeQids);
       pool.innerHTML = currentChips.map(chip => {
         // quiz 模式：已解答的題目的所有選項都標為 placed
         const isPlaced = viewMode === 'quiz'
@@ -74032,7 +74097,7 @@
         pool.classList.remove('section-hidden');
         divider.textContent = '⬇ 詳解卡池 · 拖入已答對的題目卡 ⬇';
 
-        const currentExpChips = expChips.filter(c => activeQids.has(c.questionId));
+        const currentExpChips = getChipsForQids(_expChipsByQid, activeQids);
         // 隱藏已放入的
         pool.innerHTML = currentExpChips.map(chip => {
           const placedArr = getExpPlaced(chip.questionId);
@@ -74069,7 +74134,7 @@
       pool.classList.remove('section-hidden');
       divider.textContent = '⬇ 拖動詳解到已答對的題目 ⬇';
 
-      const currentExpChips = expChips.filter(c => needExpQids.includes(c.questionId));
+      const currentExpChips = getChipsForQids(_expChipsByQid, new Set(needExpQids));
       pool.innerHTML = currentExpChips.map(chip => {
         const placedArr = getExpPlaced(chip.questionId);
         const isPlaced = placedArr.includes(chip.chipId);
@@ -74461,6 +74526,11 @@
     });
 
     // ==================== 渲染全部 ====================
+    // ⚡ 追蹤上次渲染的分類，避免不必要的索引重建
+    let _lastRenderedCat = null;
+    let _lastRenderedView = null;
+    let _indexNeedsUpdate = true;
+
     function renderAll() {
       const mainEl = document.getElementById('mainContent');
       const statsBar = document.getElementById('quizStatsBar');
@@ -74471,7 +74541,6 @@
         mainEl.classList.remove('quiz-active');
         statsBar.classList.add('hidden');
       }
-      // 更新 header 副標題
       const sub = document.getElementById('headerSubtitle');
       if (sub) sub.textContent = viewMode === 'quiz'
         ? '🎲 隨機四題挑戰模式 · 把答案與詳解拖進正確的題目卡'
@@ -74484,11 +74553,21 @@
       renderExpPool();
       renderQuizStatsBar();
       renderSidebar();
-      renderAnswerIndex();
-      renderOptionIndex();
-      renderExpIndex();
-      renderWordIndex();
+
+      // ⚡ 索引只在切換分類/頁面/模式時才重新渲染
+      const curCat = questions.length > 0 ? (questions[currentPage]?.category || '') : '';
+      if (_indexNeedsUpdate || curCat !== _lastRenderedCat || viewMode !== _lastRenderedView) {
+        renderAnswerIndex();
+        renderOptionIndex();
+        renderExpIndex();
+        renderWordIndex();
+        _lastRenderedCat = curCat;
+        _lastRenderedView = viewMode;
+        _indexNeedsUpdate = false;
+      }
     }
+
+    function invalidateIndexes() { _indexNeedsUpdate = true; }
 
     // ==================== 完成 ====================
     function checkCompletion() {
@@ -74875,7 +74954,7 @@
       solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear(); orderCheckResults.clear();
       quizAttempts.clear(); navHistory = []; navForwardHistory = [];
       currentPage = 0;
-      shuffle(answerChips); buildExpChips();
+      shuffle(answerChips); buildExpChips(); rebuildChipIndex();
       document.getElementById('completionArea').innerHTML = '';
       if (questions.length >= 4) {
         startQuiz();
@@ -75101,6 +75180,9 @@
         });
         shuffle(answerChips);
         buildExpChips();
+        rebuildChipIndex();
+        _catMapQLen = -1; _answerIndexQLen = -1; _optionIndexQLen = -1; _expIndexQLen = -1; _wordIndexQLen = -1;
+        _indexNeedsUpdate = true;
         currentPage = Math.min(currentPage, questions.length - 1);
         renderAll();
         updateSyncStatus('success');
