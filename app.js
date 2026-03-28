@@ -1657,10 +1657,10 @@ function buildCardHtml(q) {
         ${masteryBadge}
       </div>
       <div class="q-text">${clickableQuestion}</div>
-      <div class="q-chinese-toggle" onclick="toggleCh(this, ${q.id})">
+      <div class="q-chinese-toggle ${chineseOpenSet.has(q.id) ? 'open' : ''}" onclick="toggleCh(this, ${q.id})">
         <span class="arrow">▶</span> 中文翻譯
       </div>
-      <div class="q-chinese" id="ch-${q.id}">${q.chinese}</div>
+      <div class="q-chinese ${chineseOpenSet.has(q.id) ? 'show' : ''}" id="ch-${q.id}">${q.chinese}</div>
       <div class="q-drop-zone" id="dz-${q.id}">
         ${isSolved ? `✅ (${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}` : '將答案拖到這裡'}
       </div>
@@ -1698,10 +1698,10 @@ function buildQuizCardHtml(q) {
         ${q.category ? `<span style="font-size:0.65rem;color:#999;background:#f0f4f1;padding:1px 6px;border-radius:5px;">${q.category}</span>` : ''}
       </div>
       <div class="q-text">${clickableQuestion}</div>
-      <div class="q-chinese-toggle" onclick="toggleCh(this, ${q.id})">
+      <div class="q-chinese-toggle ${chineseOpenSet.has(q.id) ? 'open' : ''}" onclick="toggleCh(this, ${q.id})">
         <span class="arrow">▶</span> 中文
       </div>
-      <div class="q-chinese" id="ch-${q.id}">${q.chinese}</div>
+      <div class="q-chinese ${chineseOpenSet.has(q.id) ? 'show' : ''}" id="ch-${q.id}">${q.chinese}</div>
       <div class="q-drop-zone" id="dz-${q.id}">
         ${isSolved ? `✅ (${q.labels[q.correctIndex]}) ${q.options[q.correctIndex]}` : '將答案拖到這裡'}
       </div>
@@ -1856,9 +1856,13 @@ function renderExpPool() {
 }
 
 // ==================== 中文翻譯 ====================
+let chineseOpenSet = new Set();
+
 function toggleCh(btn, qid) {
   btn.classList.toggle('open');
   document.getElementById(`ch-${qid}`).classList.toggle('show');
+  if (chineseOpenSet.has(qid)) chineseOpenSet.delete(qid);
+  else chineseOpenSet.add(qid);
 }
 
 // ==================== 拖放輔助 ====================
@@ -2821,7 +2825,7 @@ function renderDashboardExpParts() {
 
 function restart() {
   solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear(); orderCheckResults.clear();
-  quizAttempts.clear(); navHistory = []; navForwardHistory = [];
+  quizAttempts.clear(); chineseOpenSet.clear(); navHistory = []; navForwardHistory = [];
   currentPage = 0;
   shuffle(answerChips); buildExpChips(); rebuildChipIndex();
   document.getElementById('completionArea').innerHTML = '';
