@@ -2418,11 +2418,28 @@ function filterFullIndex(val) {
 }
 
 function selectFromFullIndex(type, key) {
+  pushNavState();
   fullIndexType = null;
-  if (type === 'answer') { selectAnswerIndex(key); }
-  else if (type === 'option') { selectOptionIndex(key); }
-  else if (type === 'exp') { selectExpIndex(key); }
-  else if (type === 'word') { selectWordIndex(key); }
+  if (type === 'answer') {
+    activeAnswerKey = key;
+    activeOptionKey = null; activeExpKey = null; activeWordKey = null;
+  } else if (type === 'option') {
+    activeOptionKey = key;
+    activeAnswerKey = null; activeExpKey = null; activeWordKey = null;
+  } else if (type === 'exp') {
+    activeExpKey = key;
+    activeAnswerKey = null; activeOptionKey = null; activeWordKey = null;
+    const [qid] = key.split('-').map(Number);
+    const idx = questions.findIndex(q => q.id === qid);
+    if (idx >= 0) currentPage = idx;
+  } else if (type === 'word') {
+    activeWordKey = key;
+    activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
+  }
+  viewMode = 'single';
+  renderAll();
+  updateNavButtons();
+  document.getElementById('mainContent').scrollTo(0, 0);
 }
 
 function renderFullIndex(type, filter) {
