@@ -69,6 +69,23 @@ let expPlacedMap = new Map();
 let expCompletedSet = new Set();
 let orderCheckResults = new Map();
 
+// Quiz 模式詳解池的穩定隨機順序快取
+let _quizExpShuffleCache = null;
+let _quizExpShuffleCacheKey = '';
+
+function getQuizShuffledExpChips(activeQids) {
+  const key = [...activeQids].sort().join(',');
+  if (_quizExpShuffleCache && _quizExpShuffleCacheKey === key) return _quizExpShuffleCache;
+  _quizExpShuffleCache = shuffle([...getChipsForQids(_expChipsByQid, activeQids)]);
+  _quizExpShuffleCacheKey = key;
+  return _quizExpShuffleCache;
+}
+
+function clearQuizExpShuffleCache() {
+  _quizExpShuffleCache = null;
+  _quizExpShuffleCacheKey = '';
+}
+
 // 導航歷史（返回 / 前進功能）
 let navHistory = [];
 let navForwardHistory = [];
@@ -1514,9 +1531,10 @@ function startQuiz(suppressPush) {
       solvedSet.delete(q.id);
     }
   });
-  // 清除反向連結狀態
+  // 清除反向連結狀態與詳解池快取
   activeAnswerKey = null; activeOptionKey = null; activeExpKey = null; activeWordKey = null;
   jtExpandedSpans.clear(); jtDetailTabMap.clear(); jtDetailKey = null;
+  clearQuizExpShuffleCache();
   document.getElementById('completionArea').innerHTML = '';
   renderAll();
   // 捲到頂部
@@ -1803,8 +1821,7 @@ function renderExpPool() {
     pool.classList.remove('section-hidden');
     divider.textContent = '⬇ 詳解卡池 · 拖入已答對的題目卡 ⬇';
 
-    const currentExpChips = getChipsForQids(_expChipsByQid, activeQids);
-    // 隱藏已放入的
+    const currentExpChips = getQuizShuffledExpChips(activeQids);
     pool.innerHTML = currentExpChips.map(chip => {
       const placedArr = getExpPlaced(chip.questionId);
       const isPlaced = placedArr.includes(chip.chipId);
@@ -2825,7 +2842,8 @@ function renderDashboardExpParts() {
 
 function restart() {
   solvedSet.clear(); expPlacedMap.clear(); expCompletedSet.clear(); orderCheckResults.clear();
-  quizAttempts.clear(); chineseOpenSet.clear(); navHistory = []; navForwardHistory = [];
+  quizAttempts.clear(); chineseOpenSet.clear(); clearQuizExpShuffleCache();
+  navHistory = []; navForwardHistory = [];
   currentPage = 0;
   shuffle(answerChips); buildExpChips(); rebuildChipIndex();
   document.getElementById('completionArea').innerHTML = '';
