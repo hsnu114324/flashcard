@@ -340,7 +340,7 @@ function renderSidebar() {
   const currentCat = (viewMode === 'single' && questions.length > 0) ? (questions[currentPage]?.category || '未分類') : '';
   const quizQidSet = viewMode === 'quiz' ? new Set(quizIndices.map(i => questions[i]?.id)) : new Set();
   container.innerHTML = [...catMap.entries()].map(([cat, items]) => {
-    const isExpanded = cat === currentCat || (viewMode === 'quiz' && items.some(it => quizQidSet.has(it.q.id)));
+    const isExpanded = cat === currentCat;
     const solvedCount = items.filter(it => solvedSet.has(it.q.id)).length;
     // ⚡ 只渲染展開分類的子項，未展開的不產生 DOM
     const itemsHtml = isExpanded ? items.map(({ q, idx }) => {
