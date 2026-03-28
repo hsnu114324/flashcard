@@ -2417,9 +2417,14 @@ function filterFullIndex(val) {
   document.getElementById('cardArea').innerHTML = renderFullIndex(fullIndexType, fullIndexFilter);
 }
 
-function selectFromFullIndex(type, key) {
+let _fullIndexClickData = [];
+
+function selectFromFullIndex(idx) {
+  const data = _fullIndexClickData[idx];
+  if (!data) return;
   pushNavState();
   fullIndexType = null;
+  const { type, key } = data;
   if (type === 'answer') {
     activeAnswerKey = key;
     activeOptionKey = null; activeExpKey = null; activeWordKey = null;
@@ -2430,8 +2435,8 @@ function selectFromFullIndex(type, key) {
     activeExpKey = key;
     activeAnswerKey = null; activeOptionKey = null; activeWordKey = null;
     const [qid] = key.split('-').map(Number);
-    const idx = questions.findIndex(q => q.id === qid);
-    if (idx >= 0) currentPage = idx;
+    const qIdx = questions.findIndex(q => q.id === qid);
+    if (qIdx >= 0) currentPage = qIdx;
   } else if (type === 'word') {
     activeWordKey = key;
     activeAnswerKey = null; activeOptionKey = null; activeExpKey = null;
@@ -2442,7 +2447,19 @@ function selectFromFullIndex(type, key) {
   document.getElementById('mainContent').scrollTo(0, 0);
 }
 
+function _escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function _fiItem(type, key, innerHtml, extraClass) {
+  const idx = _fullIndexClickData.length;
+  _fullIndexClickData.push({ type, key });
+  return `<div class="fi-item${extraClass ? ' ' + extraClass : ''}" onclick="selectFromFullIndex(${idx})">${innerHtml}</div>`;
+}
+
 function renderFullIndex(type, filter) {
+  _fullIndexClickData = [];
+
   const configs = {
     answer: { icon: '🔗', title: '正確答案索引', color: '#4a7c59' },
     option: { icon: '📋', title: '全選項索引', color: '#16a34a' },
@@ -2465,14 +2482,12 @@ function renderFullIndex(type, filter) {
     totalCount = entries.length;
     const filtered = filter ? entries.filter(([k]) => k.toLowerCase().includes(filter)) : entries;
     shownCount = filtered.length;
-    itemsHtml = filtered.map(([ansText, qs]) => {
-      const escaped = ansText.replace(/'/g, "\\'");
-      return `<div class="fi-item" onclick="selectFromFullIndex('answer','${escaped}')">
+    itemsHtml = filtered.map(([ansText, qs]) =>
+      _fiItem('answer', ansText, `
         <span class="fi-icon">💡</span>
-        <span class="fi-text">${ansText}</span>
-        <span class="fi-badge" style="background:#dce6de;color:#4a7c59;">${qs.length} 題</span>
-      </div>`;
-    }).join('');
+        <span class="fi-text">${_escHtml(ansText)}</span>
+        <span class="fi-badge" style="background:#dce6de;color:#4a7c59;">${qs.length} 題</span>`)
+    ).join('');
   }
 
   else if (type === 'option') {
@@ -2486,13 +2501,11 @@ function renderFullIndex(type, filter) {
     shownCount = filtered.length;
     itemsHtml = filtered.map(([optText, items]) => {
       const correctCount = items.filter(it => it.isCorrect).length;
-      const escaped = optText.replace(/'/g, "\\'");
-      return `<div class="fi-item" onclick="selectFromFullIndex('option','${escaped}')">
+      return _fiItem('option', optText, `
         <span class="fi-icon">📌</span>
-        <span class="fi-text">${optText}</span>
+        <span class="fi-text">${_escHtml(optText)}</span>
         <span class="fi-badge" style="background:#dcfce7;color:#16a34a;">${items.length} 題</span>
-        ${correctCount > 0 ? `<span class="fi-badge" style="background:#fef9c3;color:#ca8a04;">✓${correctCount}</span>` : ''}
-      </div>`;
+        ${correctCount > 0 ? `<span class="fi-badge" style="background:#fef9c3;color:#ca8a04;">✓${correctCount}</span>` : ''}`);
     }).join('');
   }
 
@@ -2503,11 +2516,10 @@ function renderFullIndex(type, filter) {
     shownCount = filtered.length;
     itemsHtml = filtered.map(item => {
       const preview = item.text.length > 80 ? item.text.slice(0, 80) + '…' : item.text;
-      return `<div class="fi-item fi-item-exp" onclick="selectFromFullIndex('exp','${item.key}')">
+      return _fiItem('exp', item.key, `
         <span class="fi-icon">📝</span>
         <span class="fi-badge" style="background:#f3e8ff;color:#7c3aed;min-width:36px;">Q${item.questionId}</span>
-        <span class="fi-text fi-text-long">${preview}</span>
-      </div>`;
+        <span class="fi-text fi-text-long">${_escHtml(preview)}</span>`, 'fi-item-exp');
     }).join('');
   }
 
@@ -2523,28 +2535,24 @@ function renderFullIndex(type, filter) {
       itemsHtml += `<div class="fi-section-label">🔥 跨題共用 (${multi.length})</div>`;
       itemsHtml += multi.map(([key, val]) => {
         const qCount = new Set(val.sources.map(s => s.question.id)).size;
-        const escaped = key.replace(/'/g, "\\'");
-        return `<div class="fi-item" onclick="selectFromFullIndex('word','${escaped}')">
+        return _fiItem('word', key, `
           <span class="fi-icon">🔤</span>
-          <span class="fi-text" style="font-family:Georgia,serif;font-style:italic;">${val.original}</span>
-          <span class="fi-badge" style="background:#ffedd5;color:#ea580c;">${qCount} 題</span>
-        </div>`;
+          <span class="fi-text" style="font-family:Georgia,serif;font-style:italic;">${_escHtml(val.original)}</span>
+          <span class="fi-badge" style="background:#ffedd5;color:#ea580c;">${qCount} 題</span>`);
       }).join('');
     }
     if (single.length > 0) {
       itemsHtml += `<div class="fi-section-label">📝 單題出現 (${single.length})</div>`;
-      itemsHtml += single.map(([key, val]) => {
-        const escaped = key.replace(/'/g, "\\'");
-        return `<div class="fi-item" onclick="selectFromFullIndex('word','${escaped}')">
+      itemsHtml += single.map(([key, val]) =>
+        _fiItem('word', key, `
           <span class="fi-icon" style="opacity:0.4">·</span>
-          <span class="fi-text" style="font-family:Georgia,serif;font-style:italic;">${val.original}</span>
-          <span class="fi-badge" style="background:#f3f4f6;color:#999;">1</span>
-        </div>`;
-      }).join('');
+          <span class="fi-text" style="font-family:Georgia,serif;font-style:italic;">${_escHtml(val.original)}</span>
+          <span class="fi-badge" style="background:#f3f4f6;color:#999;">1</span>`)
+      ).join('');
     }
   }
 
-  const filterInfo = filter ? `（符合「${filter}」：${shownCount} / ${totalCount}）` : `（共 ${totalCount} 項）`;
+  const filterInfo = filter ? `（符合「${_escHtml(filter)}」：${shownCount} / ${totalCount}）` : `（共 ${totalCount} 項）`;
 
   return `<div class="full-index">
     <div class="fi-header" style="border-color:${cfg.color}">
@@ -2553,7 +2561,7 @@ function renderFullIndex(type, filter) {
     </div>
     <div class="fi-search">
       <span class="fi-search-icon">🔍</span>
-      <input type="text" class="fi-search-input" placeholder="搜尋..." value="${filter}" oninput="filterFullIndex(this.value)" autofocus>
+      <input type="text" class="fi-search-input" placeholder="搜尋..." value="${_escHtml(filter)}" oninput="filterFullIndex(this.value)" autofocus>
     </div>
     <div class="fi-list">${itemsHtml || '<div class="fi-empty">沒有符合的結果</div>'}</div>
   </div>`;
